@@ -50,21 +50,18 @@ def config_settings_view(request):
                 ip_address=request.META.get('REMOTE_ADDR')
             )
             
+            # 清除缓存
+            cache_key = f'config__{key}'
+            cache.delete(cache_key)
+            
             messages.success(request, _('系统配置已成功保存'))
             return redirect('admin_panel:config_settings')
-    
-    # 初始化表单数据（用于新建）
-    form_data = {
-        'key': '',
-        'value': '',
-        'description': '',
-        'is_active': True
-    }
     
     context = {
         'title': _('系统配置管理'),
         'config_settings': config_settings,
-        'form_data': form_data
+        'module': 'settings',
+        'section': 'config_settings',
     }
     
     return render(request, 'admin/config_settings.html', context)
@@ -76,6 +73,7 @@ def edit_config_setting(request, config_id):
     config = get_object_or_404(ConfigSettings, id=config_id)
     
     if request.method == 'POST':
+        # 不允许修改配置键，只更新值、描述和状态
         config.value = request.POST.get('value')
         config.description = request.POST.get('description')
         config.is_active = request.POST.get('is_active') == 'on'
@@ -88,21 +86,30 @@ def edit_config_setting(request, config_id):
             ip_address=request.META.get('REMOTE_ADDR')
         )
         
+        # 清除缓存
+        cache_key = f'config__{config.key}'
+        cache.delete(cache_key)
+        
         messages.success(request, _('系统配置已成功更新'))
         return redirect('admin_panel:config_settings')
     
-    context = {
-        'title': _('编辑系统配置'),
-        'config': config
-    }
-    
-    return render(request, 'admin/edit_config_setting.html', context)
+    # 如果是GET请求，重定向到配置列表页面
+    return redirect('admin_panel:config_settings')
 
 @custom_staff_member_required
 @permission_required('admin_panel.setting_edit', raise_exception=True)
 @require_http_methods(["POST"])
 def delete_config_setting(request, config_id):
-    """删除系统配置"""
+    """
+    删除系统配置功能已被禁用
+    为防止误删除配置导致系统崩溃，此功能已被移除
+    """
+    # 功能已禁用
+    messages.warning(request, _('为保护系统稳定性，删除配置功能已被禁用'))
+    return redirect('admin_panel:config_settings')
+    
+    # 原代码已注释
+    """
     config = get_object_or_404(ConfigSettings, id=config_id)
     key = config.key
     config.delete()
@@ -114,8 +121,13 @@ def delete_config_setting(request, config_id):
         ip_address=request.META.get('REMOTE_ADDR')
     )
     
+    # 清除配置缓存
+    cache_key = f'config__{key}'
+    cache.delete(cache_key)
+    
     messages.success(request, _('系统配置已成功删除'))
     return redirect('admin_panel:config_settings')
+    """
 
 @custom_staff_member_required
 @permission_required('admin_panel.setting_edit', raise_exception=True)

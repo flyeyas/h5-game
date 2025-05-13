@@ -13,6 +13,8 @@ from urllib3.util.retry import Retry
 import logging
 import json
 import traceback
+from admin_panel.models import ConfigSettings
+from django.http import HttpResponseRedirect
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +42,14 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     
     def is_open_for_signup(self, request):
         """是否开放注册功能"""
-        # 可以根据实际需求修改，例如：只允许邀请注册
-        return True
+        # 从配置中获取是否开放注册
+        enable_register = ConfigSettings.get_config('enable_register', True)
+        
+        # 如果配置值是字符串的'false'或'0'，则认为是False
+        if isinstance(enable_register, str):
+            enable_register = enable_register.lower() not in ('false', '0')
+            
+        return enable_register
     
     def render_template(self, template_name, request, context):
         """
@@ -66,6 +74,23 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         """
         context = super().get_signup_context(request, **kwargs)
         return context
+
+    def pre_authenticate(self, request):
+        """
+        认证前检查是否允许登录
+        """
+        # 从配置中获取是否开放登录
+        enable_login = ConfigSettings.get_config('enable_login', True)
+        
+        # 如果配置值是字符串的'false'或'0'，则认为是False
+        if isinstance(enable_login, str):
+            enable_login = enable_login.lower() not in ('false', '0')
+            
+        if not enable_login:
+            # 如果不允许登录，重定向到首页
+            return HttpResponseRedirect('/')
+        
+        return None
 
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):

@@ -245,6 +245,16 @@ def favorite_toggle(request, game_id=None):
 @require_POST
 def comment_like(request, comment_id):
     """点赞评论的AJAX处理函数"""
+    # 检查评论功能是否开启
+    from admin_panel.models import ConfigSettings
+    enable_comments = ConfigSettings.get_config('enable_comments', True)
+    if not enable_comments:
+        return JsonResponse({
+            'success': False,
+            'message': '评论功能已关闭',
+            'code': 'comments_disabled'
+        })
+        
     comment = get_object_or_404(FrontGameComment, id=comment_id)
     user_id = request.user.id
     
@@ -277,6 +287,16 @@ def comment_like(request, comment_id):
 def comment_submit(request):
     """提交评论的AJAX处理函数"""
     try:
+        # 检查评论功能是否开启
+        from admin_panel.models import ConfigSettings
+        enable_comments = ConfigSettings.get_config('enable_comments', True)
+        if not enable_comments:
+            return api_response(
+                success=False,
+                message='评论功能已关闭',
+                code='comments_disabled'
+            )
+            
         user = request.user
         game_id = request.POST.get('game_id')
         content = request.POST.get('content')
@@ -1005,6 +1025,28 @@ def clear_all_history_ajax(request):
 def get_game_comments(request, game_id):
     """获取游戏评论列表的API"""
     try:
+        # 检查评论功能是否开启
+        from admin_panel.models import ConfigSettings
+        enable_comments = ConfigSettings.get_config('enable_comments', True)
+        if not enable_comments:
+            # 评论功能关闭时，返回空列表而不是错误，前端可以显示相应提示
+            return api_response(
+                success=True,
+                data={
+                    'comments': [],
+                    'has_next': False,
+                    'has_previous': False,
+                    'current_page': 1,
+                    'total_pages': 0,
+                    'next_page': None,
+                    'previous_page': None,
+                    'total_comments': 0,
+                    'per_page': 10,
+                    'comments_disabled': True  # 添加标志表示评论已禁用
+                },
+                message="评论功能已关闭"
+            )
+        
         # 直接使用game_id，避免不必要的JOIN查询
         page = int(request.GET.get('page', 1))
         per_page = int(request.GET.get('per_page', 10))

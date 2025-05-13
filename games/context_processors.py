@@ -84,3 +84,26 @@ def member_content_settings(request):
     return {
         'show_member_content': show_member_content,
     } 
+
+def auth_settings(request):
+    """添加认证功能设置到模板上下文"""
+    from admin_panel.models import ConfigSettings
+    
+    # 获取登录注册功能的开关状态
+    enable_login = ConfigSettings.get_config('enable_login', True)
+    enable_register = ConfigSettings.get_config('enable_register', True)
+    enable_comments = ConfigSettings.get_config('enable_comments', True)
+    
+    # 如果配置值是字符串，则转换为布尔值
+    if isinstance(enable_login, str):
+        enable_login = enable_login.lower() not in ('false', '0')
+    if isinstance(enable_register, str):
+        enable_register = enable_register.lower() not in ('false', '0')
+    if isinstance(enable_comments, str):
+        enable_comments = enable_comments.lower() not in ('false', '0')
+        
+    return {
+        'enable_login': enable_login,
+        'enable_register': enable_register,
+        'enable_comments': enable_comments,
+    } 

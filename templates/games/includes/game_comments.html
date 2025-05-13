@@ -1,6 +1,11 @@
 <section class="comment-section">
     <h2 class="section-title">玩家评论 ({{ comment_count|default:"0" }})</h2>
     
+    {% if not enable_comments %}
+    <div class="alert alert-warning mb-4">
+        <p class="mb-0">评论功能已关闭</p>
+    </div>
+    {% else %}
     <!-- 评论表单 -->
     {% if user.is_authenticated %}
     <div class="card mb-4">
@@ -31,6 +36,7 @@
         <p class="mb-0">请<a href="{% url 'games:login' %}?next={{ request.path }}">登录</a>后发表评论</p>
     </div>
     {% endif %}
+    {% endif %}
     
     <!-- 评论列表 - 使用异步加载 -->
     <div class="comment-list" id="comment-list">
@@ -46,7 +52,13 @@
         <div id="comments-container"></div>
         
         <!-- 无评论提示 -->
-        <p class="text-muted d-none" id="no-comments-message">暂无评论，成为第一个评论者吧！</p>
+        <p class="text-muted d-none" id="no-comments-message">
+            {% if enable_comments %}
+            暂无评论，成为第一个评论者吧！
+            {% else %}
+            评论功能已关闭
+            {% endif %}
+        </p>
     </div>
     
     <!-- 加载更多按钮 -->
@@ -277,24 +289,7 @@
                     }
                     
                     // 创建新评论元素
-                    const template = document.getElementById('comment-template');
-                    const commentElement = document.importNode(template.content, true);
-                    
-                    // 设置评论数据
-                    commentElement.querySelector('.template-avatar').src = newComment.user.avatar_url || 'https://randomuser.me/api/portraits/men/1.jpg';
-                    commentElement.querySelector('.template-avatar').alt = newComment.user.username;
-                    commentElement.querySelector('.template-author').textContent = newComment.user.username;
-                    commentElement.querySelector('.template-date').textContent = newComment.created_at;
-                    commentElement.querySelector('.template-content').textContent = newComment.content;
-                    
-                    // 设置评分星星
-                    const ratingContainer = commentElement.querySelector('.template-rating');
-                    ratingContainer.innerHTML = '';
-                    for (let i = 1; i <= 5; i++) {
-                        const star = document.createElement('i');
-                        star.classList.add(i <= newComment.rating ? 'fas' : 'far', 'fa-star');
-                        ratingContainer.appendChild(star);
-                    }
+                    const commentElement = createCommentElement(newComment);
                     
                     // 添加到容器顶部
                     const commentsContainer = document.getElementById('comments-container');
@@ -341,6 +336,30 @@
         });
     }
     
+    // 创建评论元素的函数
+    function createCommentElement(comment) {
+        const template = document.getElementById('comment-template');
+        const commentElement = document.importNode(template.content, true);
+        
+        // 设置评论数据
+        commentElement.querySelector('.template-avatar').src = comment.user.avatar_url || 'https://randomuser.me/api/portraits/men/1.jpg';
+        commentElement.querySelector('.template-avatar').alt = comment.user.username;
+        commentElement.querySelector('.template-author').textContent = comment.user.username;
+        commentElement.querySelector('.template-date').textContent = comment.created_at;
+        commentElement.querySelector('.template-content').textContent = comment.content;
+        
+        // 设置评分星星
+        const ratingContainer = commentElement.querySelector('.template-rating');
+        ratingContainer.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('i');
+            star.classList.add(i <= comment.rating ? 'fas' : 'far', 'fa-star');
+            ratingContainer.appendChild(star);
+        }
+        
+        return commentElement;
+    }
+    
     // 加载评论函数
     function loadComments(page, gameId, callback) {
         if (!gameId) {
@@ -366,90 +385,86 @@
         }
         
         // 发起API请求 - 确保page参数是纯数字
-        fetch(`/api/game/${gameId}/comments/?page=${page}&per_page=10`)
-            .then(response => response.json())
-            .then(data => {
+        page = parseInt(page);
+        
+        apiRequest({
+            url: `/api/game/${gameId}/comments/`,
+            method: 'GET',
+            data: { page: page, per_page: 10 },
+            showMessage: false,
+            onSuccess: function(response) {
+                const data = response.data;
+                
+                // 隐藏加载状态
+                loadingElement.classList.add('d-none');
+                
+                // 如果评论功能已关闭
+                if (data.comments_disabled) {
+                    noCommentsMessage.textContent = '评论功能已关闭';
+                    noCommentsMessage.classList.remove('d-none');
+                    
+                    // 隐藏加载更多按钮
+                    if (loadMoreContainer) {
+                        loadMoreContainer.classList.add('d-none');
+                    }
+                    return;
+                }
+                
+                // 处理评论数据
+                if (data.comments && data.comments.length > 0) {
+                    // 遍历评论，添加到容器中
+                    data.comments.forEach(comment => {
+                        const commentElement = createCommentElement(comment);
+                        document.getElementById('comments-container').appendChild(commentElement);
+                    });
+                } else if (page === 1) {
+                    // 如果是第一页且没有评论，显示无评论提示
+                    noCommentsMessage.classList.remove('d-none');
+                }
+                
+                // 更新加载更多按钮状态
+                if (data.has_next) {
+                    loadMoreBtn.setAttribute('data-next-page', data.next_page);
+                    if (loadMoreContainer) {
+                        loadMoreContainer.classList.remove('d-none');
+                    }
+                } else {
+                    // 没有更多评论
+                    if (loadMoreContainer) {
+                        loadMoreContainer.classList.add('d-none');
+                    }
+                }
+                
+                // 处理回调
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            },
+            onError: function(error) {
+                console.error('加载评论失败:', error.message);
+                
+                // 显示错误信息
+                if (page === 1) {
+                    const commentsContainer = document.getElementById('comments-container');
+                    commentsContainer.innerHTML = `<div class="alert alert-danger">加载评论失败: ${error.message || '未知错误'}</div>`;
+                }
+            },
+            onComplete: function() {
                 // 隐藏加载状态
                 loadingElement.classList.add('d-none');
                 loadingSpinner.classList.add('d-none');
                 
-                if (data.success) {
-                    const comments = data.data.comments;
-                    const commentsContainer = document.getElementById('comments-container');
-                    
-                    // 如果是第一页且没有评论
-                    if (page === 1 && comments.length === 0) {
-                        noCommentsMessage.classList.remove('d-none');
-                        loadMoreContainer.classList.add('d-none');
-                        return;
-                    }
-                    
-                    // 渲染评论
-                    const template = document.getElementById('comment-template');
-                    
-                    comments.forEach(comment => {
-                        const commentElement = document.importNode(template.content, true);
-                        
-                        // 设置评论数据
-                        commentElement.querySelector('.template-avatar').src = comment.user.avatar_url || 'https://randomuser.me/api/portraits/men/1.jpg';
-                        commentElement.querySelector('.template-avatar').alt = comment.user.username;
-                        commentElement.querySelector('.template-author').textContent = comment.user.username;
-                        commentElement.querySelector('.template-date').textContent = comment.created_at;
-                        commentElement.querySelector('.template-content').textContent = comment.content;
-                        
-                        // 设置评分星星
-                        const ratingContainer = commentElement.querySelector('.template-rating');
-                        ratingContainer.innerHTML = '';
-                        for (let i = 1; i <= 5; i++) {
-                            const star = document.createElement('i');
-                            star.classList.add(i <= comment.rating ? 'fas' : 'far', 'fa-star');
-                            ratingContainer.appendChild(star);
-                        }
-                        
-                        // 添加到容器
-                        commentsContainer.appendChild(commentElement);
-                    });
-                    
-                    // 更新加载更多按钮状态
-                    if (data.data.has_next) {
-                        loadMoreBtn.setAttribute('data-next-page', data.data.next_page);
-                        loadMoreBtn.classList.remove('d-none');
-                        loadMoreContainer.classList.remove('d-none');
-                    } else {
-                        loadMoreContainer.classList.add('d-none');
-                    }
-                } else {
-                    // 显示错误消息
-                    console.error('加载评论失败:', data.message);
-                    if (page === 1) {
-                        const commentsContainer = document.getElementById('comments-container');
-                        commentsContainer.innerHTML = `<div class="alert alert-danger">加载评论失败: ${data.message}</div>`;
-                    }
-                }
-                
-                // 加载完成后恢复按钮状态
-                if (callback) {
-                    callback();
-                }
-            })
-            .catch(error => {
-                console.error('加载评论请求错误:', error);
-                loadingElement.classList.add('d-none');
-                loadingSpinner.classList.add('d-none');
-                
-                // 显示错误消息
-                if (page === 1) {
-                    const commentsContainer = document.getElementById('comments-container');
-                    commentsContainer.innerHTML = '<div class="alert alert-danger">网络错误，请稍后再试</div>';
-                } else {
+                // 如果是加载更多，恢复按钮状态
+                if (page > 1 && loadMoreBtn) {
                     loadMoreBtn.classList.remove('d-none');
                 }
                 
-                // 加载完成后恢复按钮状态
-                if (callback) {
+                // 执行回调
+                if (typeof callback === 'function') {
                     callback();
                 }
-            });
+            }
+        });
     }
     </script>
 </section> 

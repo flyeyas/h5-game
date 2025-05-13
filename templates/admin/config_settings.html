@@ -74,14 +74,24 @@
     <p class="mb-4">管理系统配置项，影响网站的各项功能和行为</p>
 
     <div class="row">
-        <!-- 现有配置列表 -->
-        <div class="col-lg-8 mb-4">
+        <!-- 配置列表 -->
+        <div class="col-lg-12 mb-4">
             <div class="settings-container">
-                <h5 class="settings-header">
-                    <i class="fas fa-cogs me-2"></i>配置项列表
+                <h5 class="settings-header d-flex justify-content-between align-items-center">
+                    <div><i class="fas fa-cogs me-2"></i>配置项列表</div>
+                    {% if perms.admin_panel.setting_edit %}
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addConfigModal">
+                        <i class="fas fa-plus me-1"></i> 添加配置
+                    </button>
+                    {% endif %}
                 </h5>
                 
                 <div class="p-3">
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>注意：</strong> 为保护系统稳定性，配置项不允许删除。请通过停用不需要的配置项来禁用其功能。
+                    </div>
+                    
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
@@ -114,15 +124,15 @@
                                     </td>
                                     <td class="table-action-buttons">
                                         {% if perms.admin_panel.setting_edit %}
-                                        <a href="{% url 'admin_panel:edit_config_setting' config.id %}" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-danger" 
+                                        <button type="button" class="btn btn-sm btn-primary edit-config-btn" 
                                                 data-bs-toggle="modal" 
-                                                data-bs-target="#deleteConfigModal" 
-                                                data-config-id="{{ config.id }}" 
-                                                data-config-key="{{ config.key }}">
-                                            <i class="fas fa-trash"></i>
+                                                data-bs-target="#editConfigModal" 
+                                                data-config-id="{{ config.id }}"
+                                                data-config-key="{{ config.key }}"
+                                                data-config-value="{{ config.value }}"
+                                                data-config-description="{{ config.description }}"
+                                                data-config-is-active="{{ config.is_active|yesno:'true,false' }}">
+                                            <i class="fas fa-edit"></i>
                                         </button>
                                         {% endif %}
                                     </td>
@@ -146,61 +156,104 @@
                 </div>
             </div>
         </div>
-        
-        <!-- 添加/编辑配置表单 -->
-        {% if perms.admin_panel.setting_edit %}
-        <div class="col-lg-4">
-            <div class="settings-container">
-                <h5 class="settings-header">
-                    <i class="fas fa-plus-circle me-2"></i>添加新配置
-                </h5>
-                
-                <div class="settings-form">
-                    <form method="post" action="{% url 'admin_panel:config_settings' %}">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3 required-field">
-                            <label for="key" class="form-label">配置键</label>
-                            <input type="text" class="form-control" id="key" name="key" 
-                                   value="{{ form_data.key }}" required>
-                            <small class="form-text text-muted">配置项的唯一标识，例如: show_member_content</small>
-                        </div>
-                        
-                        <div class="mb-3 required-field">
-                            <label for="value" class="form-label">配置值</label>
-                            <textarea class="form-control" id="value" name="value" 
-                                      rows="3" required>{{ form_data.value }}</textarea>
-                            <small class="form-text text-muted">可以是布尔值(true/false)、文本或JSON格式</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="description" class="form-label">描述</label>
-                            <input type="text" class="form-control" id="description" name="description" 
-                                   value="{{ form_data.description }}">
-                            <small class="form-text text-muted">配置项的用途描述</small>
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
-                                   {% if form_data.is_active %}checked{% endif %}>
-                            <label class="form-check-label" for="is_active">启用此配置</label>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i> 保存配置
-                            </button>
-                        </div>
-                    </form>
-                </div>
+    </div>
+</div>
+
+{% if perms.admin_panel.setting_edit %}
+<!-- 添加配置模态框 -->
+<div class="modal fade" id="addConfigModal" tabindex="-1" aria-labelledby="addConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addConfigModalLabel"><i class="fas fa-plus-circle me-2"></i>添加新配置</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form method="post" action="{% url 'admin_panel:config_settings' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3 required-field">
+                        <label for="add_key" class="form-label">配置键</label>
+                        <input type="text" class="form-control" id="add_key" name="key" required>
+                        <small class="form-text text-muted">配置项的唯一标识，例如: show_member_content</small>
+                    </div>
+                    
+                    <div class="mb-3 required-field">
+                        <label for="add_value" class="form-label">配置值</label>
+                        <textarea class="form-control" id="add_value" name="value" rows="3" required></textarea>
+                        <small class="form-text text-muted">可以是布尔值(true/false)、文本或JSON格式</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_description" class="form-label">描述</label>
+                        <input type="text" class="form-control" id="add_description" name="description">
+                        <small class="form-text text-muted">配置项的用途描述</small>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="add_is_active" name="is_active" checked>
+                        <label class="form-check-label" for="add_is_active">启用此配置</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> 保存配置
+                    </button>
+                </div>
+            </form>
         </div>
-        {% endif %}
+    </div>
+</div>
+
+<!-- 编辑配置模态框 -->
+<div class="modal fade" id="editConfigModal" tabindex="-1" aria-labelledby="editConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editConfigModalLabel"><i class="fas fa-edit me-2"></i>编辑配置</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editConfigForm" method="post" action="">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="edit_key" class="form-label">配置键</label>
+                        <input type="text" class="form-control" id="edit_key" name="key" readonly>
+                        <small class="form-text text-muted">配置项的唯一标识，不可修改</small>
+                    </div>
+                    
+                    <div class="mb-3 required-field">
+                        <label for="edit_value" class="form-label">配置值</label>
+                        <textarea class="form-control" id="edit_value" name="value" rows="5" required></textarea>
+                        <small class="form-text text-muted">可以是布尔值(true/false)、文本或JSON格式</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">描述</label>
+                        <input type="text" class="form-control" id="edit_description" name="description">
+                        <small class="form-text text-muted">配置项的用途描述</small>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="edit_is_active" name="is_active">
+                        <label class="form-check-label" for="edit_is_active">启用此配置</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> 保存配置
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <!-- 删除配置确认模态框 -->
-{% if perms.admin_panel.setting_edit %}
+{% comment %}
 <div class="modal fade" id="deleteConfigModal" tabindex="-1" aria-labelledby="deleteConfigModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -221,6 +274,7 @@
         </div>
     </div>
 </div>
+{% endcomment %}
 {% endif %}
 {% endblock %}
 
@@ -229,6 +283,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // 删除配置模态框处理
+        {% comment %}
         const deleteConfigModal = document.getElementById('deleteConfigModal');
         if (deleteConfigModal) {
             deleteConfigModal.addEventListener('show.bs.modal', function(event) {
@@ -238,6 +293,27 @@
                 
                 document.getElementById('configKeyToDelete').textContent = configKey;
                 document.getElementById('deleteConfigForm').action = "{% url 'admin_panel:delete_config_setting' 0 %}".replace('0', configId);
+            });
+        }
+        {% endcomment %}
+        
+        // 编辑配置模态框处理
+        const editConfigModal = document.getElementById('editConfigModal');
+        if (editConfigModal) {
+            editConfigModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const configId = button.getAttribute('data-config-id');
+                const configKey = button.getAttribute('data-config-key');
+                const configValue = button.getAttribute('data-config-value');
+                const configDescription = button.getAttribute('data-config-description');
+                const configIsActive = button.getAttribute('data-config-is-active') === 'true';
+                
+                document.getElementById('edit_key').value = configKey;
+                document.getElementById('edit_value').value = configValue;
+                document.getElementById('edit_description').value = configDescription;
+                document.getElementById('edit_is_active').checked = configIsActive;
+                
+                document.getElementById('editConfigForm').action = "{% url 'admin_panel:edit_config_setting' 0 %}".replace('0', configId);
             });
         }
         

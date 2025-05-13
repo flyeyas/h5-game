@@ -132,8 +132,12 @@
                             </ul>
                         </div>
                         {% else %}
+                        {% if enable_login %}
                         <a class="btn login-btn me-2" href="{% url 'games:login' %}">登录</a>
+                        {% endif %}
+                        {% if enable_register %}
                         <a class="btn register-btn" href="{% url 'games:login' %}?tab=register">注册</a>
+                        {% endif %}
                         {% endif %}
                     </div>
                 </div>

@@ -1,0 +1,264 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        overflow: hidden;
+    }
+    
+    .settings-header {
+        background-color: #f8f9fc;
+        padding: 15px;
+        border-bottom: 1px solid #e3e6f0;
+        margin-bottom: 0;
+    }
+    
+    .settings-form {
+        padding: 20px;
+    }
+    
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+    
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #2196F3;
+    }
+    
+    input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+    }
+    
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <h1 class="h3 mb-2 text-gray-800">{{ title }}</h1>
+    <p class="mb-4">配置前台用户认证功能，包括是否允许用户登录和注册</p>
+
+    <!-- 认证设置表单 -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="settings-container">
+                <h5 class="settings-header">
+                    <i class="fas fa-user-lock me-2"></i>认证功能设置
+                </h5>
+                
+                <div class="settings-form">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label d-block">允许用户登录</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_login" name="enable_login" {% if enable_login %}checked{% endif %}>
+                                        <label class="form-check-label" for="enable_login">
+                                            {% if enable_login %}
+                                            <span class="text-success">已启用</span>
+                                            {% else %}
+                                            <span class="text-danger">已禁用</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        禁用后，用户将无法登录网站
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label d-block">允许新用户注册</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_register" name="enable_register" {% if enable_register %}checked{% endif %}>
+                                        <label class="form-check-label" for="enable_register">
+                                            {% if enable_register %}
+                                            <span class="text-success">已启用</span>
+                                            {% else %}
+                                            <span class="text-danger">已禁用</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        禁用后，新用户将无法注册账号
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label d-block">允许游戏评论</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_comments" name="enable_comments" {% if enable_comments %}checked{% endif %}>
+                                        <label class="form-check-label" for="enable_comments">
+                                            {% if enable_comments %}
+                                            <span class="text-success">已启用</span>
+                                            {% else %}
+                                            <span class="text-danger">已禁用</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        禁用后，用户将无法查看和发表游戏评论
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label d-block">显示会员相关内容</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="show_member_content" name="show_member_content" {% if show_member_content %}checked{% endif %}>
+                                        <label class="form-check-label" for="show_member_content">
+                                            {% if show_member_content %}
+                                            <span class="text-success">已启用</span>
+                                            {% else %}
+                                            <span class="text-danger">已禁用</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        禁用后，前台将不会显示会员功能相关的内容
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> 保存设置
+                            </button>
+                            <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-times me-1"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 提示卡片 -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-info-circle me-2"></i>关于认证功能</h6>
+                </div>
+                <div class="card-body">
+                    <p>通过此页面您可以控制前台用户的登录和注册功能：</p>
+                    <ul>
+                        <li><strong>登录功能</strong>: 控制是否允许用户登录网站</li>
+                        <li><strong>注册功能</strong>: 控制是否允许新用户注册账号</li>
+                        <li><strong>评论功能</strong>: 控制是否允许用户查看和发表游戏评论</li>
+                        <li><strong>会员内容</strong>: 控制是否在前台显示会员相关内容和功能</li>
+                    </ul>
+                    <p class="mb-0 text-muted">这些设置即时生效，注意关闭相关功能会影响用户体验。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 切换开关标签文本
+    document.addEventListener('DOMContentLoaded', function() {
+        const enableLoginSwitch = document.getElementById('enable_login');
+        const enableRegisterSwitch = document.getElementById('enable_register');
+        const enableCommentsSwitch = document.getElementById('enable_comments');
+        
+        // 更新登录开关标签
+        enableLoginSwitch.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.innerHTML = '<span class="text-success">已启用</span>';
+            } else {
+                label.innerHTML = '<span class="text-danger">已禁用</span>';
+            }
+        });
+        
+        // 更新注册开关标签
+        enableRegisterSwitch.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.innerHTML = '<span class="text-success">已启用</span>';
+            } else {
+                label.innerHTML = '<span class="text-danger">已禁用</span>';
+            }
+        });
+
+        // 更新评论开关标签
+        enableCommentsSwitch.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.innerHTML = '<span class="text-success">已启用</span>';
+            } else {
+                label.innerHTML = '<span class="text-danger">已禁用</span>';
+            }
+        });
+        
+        // 更新会员内容开关标签
+        const showMemberContentSwitch = document.getElementById('show_member_content');
+        showMemberContentSwitch.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.innerHTML = '<span class="text-success">已启用</span>';
+            } else {
+                label.innerHTML = '<span class="text-danger">已禁用</span>';
+            }
+        });
+    });
+</script>
+{% endblock %} 

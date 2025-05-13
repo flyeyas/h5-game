@@ -533,6 +533,9 @@ class GameDetailView(DetailView):
         context['user_played'] = user_played
         context['user_rating'] = user_rating
         
+        # 获取评论功能开关状态
+        context['enable_comments'] = ConfigSettings.get_config('enable_comments', True)
+        
         return context
 
 
@@ -1730,6 +1733,16 @@ def register(request):
     from django.contrib.auth import login as auth_login
     from .forms import UserRegistrationForm
 
+    # 检查注册功能是否开启
+    enable_register = ConfigSettings.get_config('enable_register', True)
+    if isinstance(enable_register, str):
+        enable_register = enable_register.lower() not in ('false', '0')
+    
+    if not enable_register:
+        # 如果注册功能关闭，添加提示并重定向到首页
+        messages.warning(request, _('注册功能当前已关闭'))
+        return redirect('games:home')
+
     if request.user.is_authenticated:
         # 用户已登录，重定向到首页
         return redirect('games:home')
@@ -1787,11 +1800,31 @@ class FrontendLoginView(LoginView):
     form_class = LoginForm  # 使用自定义登录表单
     redirect_authenticated_user = True  # 启用对已认证用户的重定向
     
+    def dispatch(self, request, *args, **kwargs):
+        """检查是否允许登录"""
+        # 从配置中获取是否开放登录
+        enable_login = ConfigSettings.get_config('enable_login', True)
+        
+        # 如果配置值是字符串的'false'或'0'，则认为是False
+        if isinstance(enable_login, str):
+            enable_login = enable_login.lower() not in ('false', '0')
+            
+        if not enable_login:
+            # 如果不允许登录，重定向到首页并添加消息
+            messages.warning(request, _('登录功能当前已关闭'))
+            return redirect('games:home')
+            
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # 添加 allauth_enabled 标记和 login_form 变量，使模板能正确识别 django-allauth 的表单
         context['allauth_enabled'] = True
         context['login_form'] = context.get('form')
+        
+        # 获取tab参数，用于确定显示登录还是注册选项卡
+        context['tab'] = self.request.GET.get('tab', 'login')
+        
         return context
     
     def get_success_url(self):

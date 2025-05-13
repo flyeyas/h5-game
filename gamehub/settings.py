@@ -79,6 +79,7 @@ TEMPLATES = [
                 'games.context_processors.game_categories',  # 添加游戏分类数据
                 'games.context_processors.user_login_status',  # 添加用户登录状态信息
                 'games.context_processors.member_content_settings',  # 添加会员内容显示配置
+                'games.context_processors.auth_settings',  # 添加登录注册功能控制配置
             ],
         },
     },

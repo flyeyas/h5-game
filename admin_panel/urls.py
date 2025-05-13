@@ -1,6 +1,6 @@
 from django.urls import path, include
 from django.contrib.auth.decorators import login_required
-from . import views, admin_user_views, role_views, menu_views, permission_views, game_category_views, game_views, tag_views, site_settings_views, seo_settings_views, email_settings_views, sites_views, social_app_views, front_user_views
+from . import views, admin_user_views, role_views, menu_views, permission_views, game_category_views, game_views, tag_views, site_settings_views, seo_settings_views, email_settings_views, sites_views, social_app_views, front_user_views, auth_settings_views
 from .payment_views import PaymentGatewayListView, PaymentGatewayCreateView, PaymentGatewayUpdateView, PaymentGatewayDeleteView, PaymentGatewayConfigView, PaymentGatewayTestView, SubscriptionPlanListView, SubscriptionPlanCreateView, SubscriptionPlanUpdateView, SubscriptionPlanDeleteView, SubscriptionListView, SubscriptionDetailView, SubscriptionUpdateView
 from .admin_auth_views import login_view, ajax_login_view
 from django.contrib.auth.views import LogoutView
@@ -130,6 +130,9 @@ urlpatterns = [
     path('config-settings/<int:config_id>/edit/', admin_login_required(edit_config_setting), name='edit_config_setting'),
     path('config-settings/<int:config_id>/delete/', admin_login_required(delete_config_setting), name='delete_config_setting'),
     path('config-settings/clear-cache/', admin_login_required(clear_config_cache), name='clear_config_cache'),
+    
+    # 用户认证设置
+    path('auth-settings/', admin_login_required(auth_settings_views.auth_settings_view), name='auth_settings'),
 
     # 支付网关管理
     path('payment/gateways/', admin_login_required(PaymentGatewayListView.as_view()), name='payment_gateway_list'),
