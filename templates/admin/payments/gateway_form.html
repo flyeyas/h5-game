@@ -1,0 +1,111 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:payment_gateway_list' %}">{% trans '支付网关管理' %}</a></li>
+    <li class="breadcrumb-item active">{% if is_add %}{% trans '添加网关' %}{% else %}{% trans '编辑网关' %}{% endif %}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">{% if is_add %}{% trans '添加支付网关' %}{% else %}{% trans '编辑支付网关' %}{% endif %}</h3>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <p>{% trans '请更正以下错误:' %}</p>
+                        <ul>
+                            {% for field in form %}
+                            {% if field.errors %}
+                            <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}">{% trans '网关名称' %}</label>
+                        {{ form.name }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.gateway_type.id_for_label }}">{% trans '网关类型' %}</label>
+                        {{ form.gateway_type }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            {{ form.is_active }}
+                            <label class="custom-control-label" for="{{ form.is_active.id_for_label }}">{% trans '启用' %}</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            {{ form.is_default }}
+                            <label class="custom-control-label" for="{{ form.is_default.id_for_label }}">{% trans '设为默认' %}</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            {{ form.test_mode }}
+                            <label class="custom-control-label" for="{{ form.test_mode.id_for_label }}">{% trans '测试模式' %}</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.display_order.id_for_label }}">{% trans '显示顺序' %}</label>
+                        {{ form.display_order }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.success_url.id_for_label }}">{% trans '支付成功跳转URL' %}</label>
+                        {{ form.success_url }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.cancel_url.id_for_label }}">{% trans '取消支付跳转URL' %}</label>
+                        {{ form.cancel_url }}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{% trans '保存' %}</button>
+                    <a href="{% url 'admin_panel:payment_gateway_list' %}" class="btn btn-default">{% trans '取消' %}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $(function() {
+        // 表单样式美化
+        $('#{{ form.name.id_for_label }}').addClass('form-control');
+        $('#{{ form.gateway_type.id_for_label }}').addClass('form-control select2');
+        $('#{{ form.is_active.id_for_label }}').addClass('custom-control-input');
+        $('#{{ form.is_default.id_for_label }}').addClass('custom-control-input');
+        $('#{{ form.test_mode.id_for_label }}').addClass('custom-control-input');
+        $('#{{ form.display_order.id_for_label }}').addClass('form-control');
+        $('#{{ form.success_url.id_for_label }}').addClass('form-control');
+        $('#{{ form.cancel_url.id_for_label }}').addClass('form-control');
+        
+        // Select2初始化
+        $('.select2').select2();
+    });
+</script>
+{% endblock %} 

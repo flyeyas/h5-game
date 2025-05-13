@@ -1,0 +1,73 @@
+{% load static %}
+<!-- 通用会员广告条 -->
+<div class="premium-banner-wrapper" style="width: 100%; max-width: 1320px; margin: 0 auto 20px auto;">
+    <div class="premium-banner" style="background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; position: relative;">
+        <!-- 左侧装饰图案 - 在小屏幕上隐藏 -->
+        <div class="banner-decoration d-none d-md-block" style="position: absolute; left: 0; top: 0; height: 100%; width: 120px; opacity: 0.1;">
+            <svg width="120" height="100%" viewBox="0 0 120 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,0 L120,0 L60,300 L0,300 Z" fill="#FFFFFF"/>
+                <path d="M40,0 L120,0 L80,300 L20,300 Z" fill="#FFFFFF"/>
+            </svg>
+        </div>
+        
+        <!-- 右侧装饰图案 - 在小屏幕上隐藏 -->
+        <div class="banner-decoration d-none d-md-block" style="position: absolute; right: 0; top: 0; height: 100%; width: 80px; opacity: 0.1;">
+            <svg width="80" height="100%" viewBox="0 0 80 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="50" r="60" fill="#FFFFFF"/>
+                <circle cx="40" cy="150" r="40" fill="#FFFFFF"/>
+                <circle cx="40" cy="250" r="30" fill="#FFFFFF"/>
+            </svg>
+        </div>
+        
+        <!-- 内容区域 -->
+        <div class="content-wrapper" style="padding: 20px; position: relative; z-index: 10;">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <div class="banner-text" style="color: white;">
+                        <h4 style="margin-bottom: 5px; font-weight: 600;" class="mb-1">升级为会员，畅享无广告体验!</h4>
+                        <p style="margin-bottom: 0; opacity: 0.9; font-size: 0.95rem;" class="d-none d-md-block">
+                            <i class="fas fa-check-circle me-1"></i> 去除所有广告干扰，享受纯净游戏体验
+                        </p>
+                        <!-- 移动设备上显示的简化版本 -->
+                        <p style="margin-bottom: 0; opacity: 0.9; font-size: 0.9rem;" class="d-md-none">
+                            <i class="fas fa-check-circle me-1"></i> 去除所有广告干扰
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-5 text-md-end text-center mt-3 mt-md-0">
+                    <a href="{% url 'games:subscription_plans' %}" class="btn btn-light px-4 py-2" style="font-weight: 600; border-radius: 50px; transition: all 0.3s ease;">
+                        <i class="fas fa-crown me-2" style="color: #FFC107;"></i>立即升级会员
+                    </a>
+                    <span class="d-block mt-2 d-none d-md-block" style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">已有超过10,000名玩家选择无广告体验</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面中添加会员广告条的样式 -->
+<style>
+    .premium-banner {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .premium-banner:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .premium-banner .btn-light:hover {
+        background-color: #FFC107 !important;
+        color: #212529 !important;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .premium-banner .fas.fa-crown {
+        animation: pulse 2s infinite;
+    }
+</style> 

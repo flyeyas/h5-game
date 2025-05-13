@@ -1,0 +1,62 @@
+{% comment %}
+筛选侧边栏组件 - 提供游戏筛选功能
+参数:
+- categories: 游戏分类列表
+- current_sort: 当前排序方式
+- selected_category: 当前选中的分类(slug)
+{% endcomment %}
+
+<div class="filter-sidebar sticky-md-top" style="top: 20px; z-index: 999;">
+    <h5 class="filter-title">筛选选项</h5>
+    
+    <form method="get" action="">
+        {% if search_query %}
+        <input type="hidden" name="q" value="{{ search_query }}">
+        {% endif %}
+        
+        <div class="filter-group">
+            <h6>排序方式</h6>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sort" id="sortPopular" value="popular" {% if not current_sort or current_sort == 'popular' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="sortPopular">最受欢迎</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sort" id="sortRating" value="rating" {% if current_sort == 'rating' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="sortRating">评分最高</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sort" id="sortNewest" value="newest" {% if current_sort == 'newest' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="sortNewest">最新上线</label>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <h6>游戏类型</h6>
+            {% for category in categories %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="category{{ category.id }}" name="category" value="{{ category.slug }}" {% if selected_category == category.slug %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="category{{ category.id }}">{{ category.name }}</label>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="filter-group">
+            <h6>评分</h6>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating5" name="rating" value="5" {% if '5' in request.GET.rating|default:'' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="rating5">5星</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating4" name="rating" value="4" {% if '4' in request.GET.rating|default:'' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="rating4">4星及以上</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating3" name="rating" value="3" {% if '3' in request.GET.rating|default:'' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="rating3">3星及以上</label>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 mt-3">应用筛选</button>
+        <a href="{% url 'games:hot_games' %}" class="btn btn-outline-secondary w-100 mt-2">重置</a>
+    </form>
+</div> 

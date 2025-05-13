@@ -1,0 +1,372 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style id="game-categories-styles">
+    /* 游戏分类表格样式 */
+    .category-color-box {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+    
+    .action-icons {
+        white-space: nowrap;
+    }
+    
+    .action-icons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+        
+        .action-icons .btn {
+            padding: 0.2rem 0.4rem;
+        }
+        
+        .category-color-box {
+            width: 20px;
+            height: 20px;
+        }
+    }
+    
+    .icon-preview-container {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    /* 分页样式优化 */
+    .pagination {
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #4e73df;
+        border-color: #4e73df;
+        color: #ffffff !important;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(78, 115, 223, 0.3);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .pagination .page-link {
+        color: #343a40;
+        padding: 8px 15px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        margin: 0 3px;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: #eaecf4;
+        border-color: #eaecf4;
+        color: #4e73df;
+        z-index: 2;
+    }
+    
+    /* 分页信息样式 */
+    .pagination-info {
+        text-align: center;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+    
+    /* 页面大小选择器样式 */
+    .page-size-selector {
+        width: auto;
+        display: inline-block;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    {% include "admin/includes/top_navbar.html" with page_title=_('游戏分类管理') %}
+
+    <!-- 游戏分类卡片 -->
+    <div class="card mb-4">
+        {% include "admin/includes/card_header.html" with card_title=_('游戏分类列表') add_text=_('添加分类') show_add_button=True modal_target="#addCategoryModal" %}
+        <div class="card-body">
+            <!-- 搜索和过滤 -->
+            <div class="row mb-4">
+                <div class="col-md-6 col-lg-4 mb-3 mb-md-0">
+                    <form method="get" id="search-form" class="d-flex">
+                        <div class="input-group">
+                            <input type="text" name="search" id="search-input" class="form-control" placeholder="{% trans '搜索分类...' %}" value="{{ search_query }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            {% if search_query %}
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="col-md-6 col-lg-8">
+                    <div class="d-flex justify-content-md-end">
+                        <!-- 状态过滤 -->
+                        <div class="btn-group me-2">
+                            <button class="btn {% if not status_filter %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="filterByStatus('')">
+                                全部 <span class="badge bg-light text-dark">{{ total_count }}</span>
+                            </button>
+                            <button class="btn {% if status_filter == 'active' %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="filterByStatus('active')">
+                                已启用 <span class="badge bg-light text-dark">{{ active_count }}</span>
+                            </button>
+                            <button class="btn {% if status_filter == 'inactive' %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="filterByStatus('inactive')">
+                                已禁用 <span class="badge bg-light text-dark">{{ inactive_count }}</span>
+                            </button>
+                        </div>
+                        
+                        <!-- 排序选择 -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-sort me-1"></i> {% trans '排序' %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                                <li><a class="dropdown-item {% if order_by == 'order' %}active{% endif %}" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}order_by=order">{% trans '按排序值 (升序)' %}</a></li>
+                                <li><a class="dropdown-item {% if order_by == '-order' %}active{% endif %}" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}order_by=-order">{% trans '按排序值 (降序)' %}</a></li>
+                                <li><a class="dropdown-item {% if order_by == 'name' %}active{% endif %}" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}order_by=name">{% trans '按名称 (A-Z)' %}</a></li>
+                                <li><a class="dropdown-item {% if order_by == '-name' %}active{% endif %}" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}order_by=-name">{% trans '按名称 (Z-A)' %}</a></li>
+                                <li><a class="dropdown-item {% if order_by == 'game_count' %}active{% endif %}" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}order_by=game_count">{% trans '按游戏数量 (升序)' %}</a></li>
+                                <li><a class="dropdown-item {% if order_by == '-game_count' %}active{% endif %}" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}order_by=-game_count">{% trans '按游戏数量 (降序)' %}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 分类列表表格 -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle" id="categories-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>{% trans '分类名称' %}</th>
+                            <th>{% trans '图标' %}</th>
+                            <th>{% trans '描述' %}</th>
+                            <th>{% trans '父级分类' %}</th>
+                            <th>{% trans '游戏数量' %}</th>
+                            <th>{% trans '排序' %}</th>
+                            <th>{% trans '状态' %}</th>
+                            <th style="width: 150px;">{% trans '操作' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr data-id="{{ category.id }}">
+                            <td>{{ category.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="category-color-box" data-color="{{ category.color }}"></span>
+                                    {{ category.name }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="icon-preview-container">
+                                    <i class="{{ category.icon|default:'fas fa-gamepad' }}"></i>
+                                </div>
+                            </td>
+                            <td>
+                                {% if category.description %}
+                                    {{ category.description|truncatechars:60 }}
+                                {% else %}
+                                    <span class="text-muted">{% trans '暂无描述' %}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if category.parent %}
+                                    {{ category.parent.name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ category.game_count }}</td>
+                            <td>{{ category.order }}</td>
+                            <td>
+                                {% if category.is_active %}
+                                    <span class="badge bg-success">{% trans '已启用' %}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{% trans '已禁用' %}</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-icons">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-primary edit-category-btn" 
+                                        data-id="{{ category.id }}"
+                                        title="{% trans '编辑' %}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-info view-category-btn"
+                                        data-id="{{ category.id }}"
+                                        title="{% trans '查看' %}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm {% if category.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %} toggle-status-btn" 
+                                        data-id="{{ category.id }}"
+                                        title="{% if category.is_active %}{% trans '禁用' %}{% else %}{% trans '启用' %}{% endif %}">
+                                    <i class="fas {% if category.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger delete-category-btn"
+                                        data-id="{{ category.id }}"
+                                        data-name="{{ category.name|escapejs }}"
+                                        title="{% trans '删除' %}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                    <p>{% trans '暂无游戏分类' %}</p>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                                        <i class="fas fa-plus me-1"></i> {% trans '添加分类' %}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分页 -->
+            {% if page.total_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}{% if page.page_size != 10 %}&page_size={{ page.page_size }}{% endif %}" aria-label="First">
+                            &laquo; {% trans '首页' %}
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}{% if page.page_size != 10 %}&page_size={{ page.page_size }}{% endif %}" aria-label="Previous">
+                            {% trans '上一页' %}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="First">
+                            &laquo; {% trans '首页' %}
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            {% trans '上一页' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% with ''|center:page.total_pages as range %}
+                    {% for _ in range %}
+                        {% with forloop.counter as i %}
+                        {% if page.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% elif i > page.number|add:'-3' and i < page.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}{% if page.page_size != 10 %}&page_size={{ page.page_size }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                    {% endwith %}
+                    
+                    {% if page.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}{% if page.page_size != 10 %}&page_size={{ page.page_size }}{% endif %}" aria-label="Next">
+                            {% trans '下一页' %}
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page.total_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}{% if page.page_size != 10 %}&page_size={{ page.page_size }}{% endif %}" aria-label="Last">
+                            {% trans '末页' %} &raquo;
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Next">
+                            {% trans '下一页' %}
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Last">
+                            {% trans '末页' %} &raquo;
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <div class="pagination-info">
+                <small>{% trans '显示' %} {{ page.start_index }}-{{ page.end_index }} {% trans '共' %} {{ page.total_items }} {% trans '条记录' %}</small>
+                <select class="form-select form-select-sm page-size-selector" onchange="changePageSize(this.value)">
+                    <option value="10" {% if page.page_size == 10 %}selected{% endif %}>10 {% trans '条/页' %}</option>
+                    <option value="20" {% if page.page_size == 20 %}selected{% endif %}>20 {% trans '条/页' %}</option>
+                    <option value="50" {% if page.page_size == 50 %}selected{% endif %}>50 {% trans '条/页' %}</option>
+                    <option value="100" {% if page.page_size == 100 %}selected{% endif %}>100 {% trans '条/页' %}</option>
+                </select>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-footer bg-light text-muted">
+            <small><i class="fas fa-info-circle me-1"></i>{% trans '共 ' %}{{ total_count }}{% trans ' 个分类，' %}{{ active_count }}{% trans ' 个启用，' %}{{ inactive_count }}{% trans ' 个禁用' %}{% if filtered_count != total_count %}，{% trans '当前筛选' %} {{ filtered_count }} {% trans '个' %}{% endif %}</small>
+        </div>
+    </div>
+</div>
+
+<!-- 包含模态框 -->
+{% include "admin/game_categories_modals.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Font Awesome 6.0.0 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+<!-- 使用外部JS文件替代内嵌脚本 -->
+<script src="{% static 'js/admin/game_categories.js' %}"></script>
+{% endblock %} 

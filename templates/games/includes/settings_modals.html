@@ -1,0 +1,32 @@
+{% load static %}
+
+<!-- 删除账号确认模态框 -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAccountModalLabel">确认删除账号</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger">警告：此操作无法撤销。删除账号后，您将永久失去所有数据，包括：</p>
+                <ul>
+                    <li>个人资料和设置</li>
+                    <li>游戏进度和成就</li>
+                    <li>购买记录和会员信息</li>
+                    <li>收藏的游戏和评论</li>
+                </ul>
+                <div class="mb-3">
+                    <label for="deleteConfirm" class="form-label">请输入"DELETE"确认删除</label>
+                    <input type="text" class="form-control" id="deleteConfirm">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteAccount">
+                    <i class="fas fa-trash-alt me-2"></i>永久删除账号
+                </button>
+            </div>
+        </div>
+    </div>
+</div> 

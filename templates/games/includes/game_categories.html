@@ -1,0 +1,45 @@
+{% load static %}
+
+<section class="mt-5">
+    <h2 class="section-title">游戏分类 <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#categoriesCollapse" aria-expanded="false" aria-controls="categoriesCollapse" id="categoryCollapseBtn">
+            <i class="fas fa-chevron-down"></i> <span>显示更多</span>
+        </button></h2>
+    <div class="row category-first-row">
+        {% for category in categories|slice:":6" %}
+        <div class="col-6 col-md-2 mb-3">
+            <a href="{% url 'games:category_detail' category.slug %}" class="text-decoration-none">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="{{ category.icon }} mb-3 fa-3x"></i>
+                        <h5 class="card-title">{{ category.name }}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="collapse" id="categoriesCollapse">
+        <div class="row">
+            {% for category in categories|slice:"6:" %}
+            <div class="col-6 col-md-2 mb-3">
+                <a href="{% url 'games:category_detail' category.slug %}" class="text-decoration-none">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="{{ category.icon }} mb-3 fa-3x"></i>
+                            <h5 class="card-title">{{ category.name }}</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            {% endfor %}
+        </div>
+    </div>
+    {% if not categories %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">暂无游戏分类</div>
+        </div>
+    </div>
+    {% endif %}
+</section> 

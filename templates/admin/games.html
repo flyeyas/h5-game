@@ -1,0 +1,1402 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<!-- SimpleMDE Markdown编辑器的CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+<style id="game-list-styles">
+  /* 游戏列表样式 */
+  .game-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .game-thumbnail-placeholder {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    color: #aaa;
+  }
+  
+  .star-rating .fa-star.filled {
+    color: #FFD700;
+  }
+  
+  .star-rating .fa-star.half {
+    position: relative;
+  }
+  
+  .star-rating .fa-star.half:before {
+    content: "\f089";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 50%;
+    overflow: hidden;
+    color: #FFD700;
+  }
+  
+  .action-icons {
+    white-space: nowrap;
+  }
+  
+  .action-icons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .table-responsive {
+      font-size: 0.9rem;
+    }
+    
+    .action-icons .btn {
+      padding: 0.2rem 0.4rem;
+    }
+    
+    .game-thumbnail,
+    .game-thumbnail-placeholder {
+      width: 50px;
+      height: 50px;
+    }
+  }
+
+  /* SimpleMDE编辑器样式调整 */
+  .CodeMirror, .CodeMirror-scroll {
+    min-height: 150px;
+  }
+  
+  .editor-toolbar {
+    border-radius: 0.25rem 0.25rem 0 0;
+  }
+  
+  .CodeMirror {
+    border-radius: 0 0 0.25rem 0.25rem;
+  }
+  
+  /* Markdown内容样式 */
+  .markdown-content {
+    line-height: 1.6;
+  }
+  
+  .markdown-content h1,
+  .markdown-content h2,
+  .markdown-content h3,
+  .markdown-content h4,
+  .markdown-content h5,
+  .markdown-content h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  
+  .markdown-content h1 {
+    font-size: 1.8rem;
+  }
+  
+  .markdown-content h2 {
+    font-size: 1.6rem;
+  }
+  
+  .markdown-content h3 {
+    font-size: 1.4rem;
+  }
+  
+  .markdown-content p,
+  .markdown-content ul,
+  .markdown-content ol {
+    margin-bottom: 1rem;
+  }
+  
+  .markdown-content code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.2rem;
+    font-size: 0.875rem;
+  }
+  
+  .markdown-content pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+  }
+  
+  .markdown-content pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+  
+  .markdown-content blockquote {
+    padding: 0.5rem 1rem;
+    border-left: 4px solid #6EBD6E;
+    background-color: #f8f9fa;
+    margin-bottom: 1rem;
+  }
+  
+  .markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+  }
+  
+  .markdown-content a {
+    color: #0d6efd;
+    text-decoration: none;
+  }
+  
+  .markdown-content a:hover {
+    text-decoration: underline;
+  }
+  
+  .markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+  }
+  
+  .markdown-content table th,
+  .markdown-content table td {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+  }
+  
+  .markdown-content table th {
+    background-color: #f8f9fa;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% include "admin/includes/top_navbar.html" with page_title=_('游戏管理') %}
+
+  <!-- 游戏管理卡片 -->
+  <div class="card mb-4">
+    {% include "admin/includes/card_header.html" with card_title=_('游戏列表') add_text=_('添加游戏') show_add_button=True add_button_id="addGameBtn" modal_target="#addGameModal" %}
+    
+    <div class="card-body">
+      <!-- 搜索和过滤 -->
+      <div class="row mb-4">
+        <div class="col-md-6 col-lg-4 mb-3 mb-md-0">
+          <form method="get" id="search-form" class="d-flex">
+            <div class="input-group">
+              <input type="text" name="search" id="search-input" class="form-control" 
+                     placeholder="{% trans '搜索游戏...' %}" value="{{ search_query }}">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+              </button>
+              {% if search_query %}
+              <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()">
+                <i class="fas fa-times"></i>
+              </button>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+        
+        <div class="col-md-6 col-lg-8">
+          <div class="d-flex justify-content-md-end">
+            <!-- 状态过滤 -->
+            <div class="btn-group me-2">
+              <button class="btn {% if not status_filter %}btn-primary{% else %}btn-outline-primary{% endif %}" 
+                      onclick="filterByStatus('')">
+                {% trans '全部' %} <span class="badge bg-light text-dark">{{ total_count }}</span>
+              </button>
+              <button class="btn {% if status_filter == 'online' %}btn-primary{% else %}btn-outline-primary{% endif %}" 
+                      onclick="filterByStatus('online')">
+                {% trans '已上线' %} <span class="badge bg-light text-dark">{{ online_count }}</span>
+              </button>
+              <button class="btn {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline-primary{% endif %}" 
+                      onclick="filterByStatus('pending')">
+                {% trans '待审核' %} <span class="badge bg-light text-dark">{{ pending_count }}</span>
+              </button>
+              <button class="btn {% if status_filter == 'offline' %}btn-primary{% else %}btn-outline-primary{% endif %}" 
+                      onclick="filterByStatus('offline')">
+                {% trans '已下线' %} <span class="badge bg-light text-dark">{{ offline_count }}</span>
+              </button>
+            </div>
+            
+            <!-- 分类过滤下拉菜单 -->
+            <div class="dropdown me-2">
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                      id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-tags me-1"></i> {% trans '分类' %}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="categoryDropdown">
+                <li><a class="dropdown-item {% if not category_filter %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if order_by %}order_by={{ order_by }}{% endif %}">
+                  {% trans '所有分类' %}
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                {% for category in categories %}
+                <li><a class="dropdown-item {% if category_filter == category.id|stringformat:'i' %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}category={{ category.id }}{% if order_by %}&order_by={{ order_by }}{% endif %}">
+                  {{ category.name }}
+                </a></li>
+                {% endfor %}
+              </ul>
+            </div>
+            
+            <!-- 排序下拉菜单 -->
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                      id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-sort me-1"></i> {% trans '排序' %}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                <li><a class="dropdown-item {% if order_by == '-created_at' %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}order_by=-created_at">
+                  {% trans '最新添加' %}
+                </a></li>
+                <li><a class="dropdown-item {% if order_by == 'created_at' %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}order_by=created_at">
+                  {% trans '最早添加' %}
+                </a></li>
+                <li><a class="dropdown-item {% if order_by == '-play_count' %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}order_by=-play_count">
+                  {% trans '游玩次数 (降序)' %}
+                </a></li>
+                <li><a class="dropdown-item {% if order_by == 'play_count' %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}order_by=play_count">
+                  {% trans '游玩次数 (升序)' %}
+                </a></li>
+                <li><a class="dropdown-item {% if order_by == 'title' %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}order_by=title">
+                  {% trans '名称 (A-Z)' %}
+                </a></li>
+                <li><a class="dropdown-item {% if order_by == '-title' %}active{% endif %}" 
+                       href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}order_by=-title">
+                  {% trans '名称 (Z-A)' %}
+                </a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 游戏列表表格 -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle" id="games-table">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 50px;">ID</th>
+              <th style="width: 80px;">{% trans '缩略图' %}</th>
+              <th>{% trans '游戏名称' %}</th>
+              <th>{% trans '分类' %}</th>
+              <th>{% trans '添加日期' %}</th>
+              <th>{% trans '游玩次数' %}</th>
+              <th>{% trans '评分' %}</th>
+              <th>{% trans '状态' %}</th>
+              <th style="width: 150px;">{% trans '操作' %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for game in games %}
+            <tr data-id="{{ game.id }}">
+              <td>{{ game.id }}</td>
+              <td>
+                {% if game.thumbnail %}
+                <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}" class="game-thumbnail">
+                {% else %}
+                <div class="game-thumbnail-placeholder">
+                  <i class="fas fa-image"></i>
+                </div>
+                {% endif %}
+              </td>
+              <td>{{ game.title }}</td>
+              <td>
+                {% for category in game.categories.all %}
+                  {% if forloop.first %}
+                    {{ category.name }}
+                  {% endif %}
+                {% empty %}
+                -
+                {% endfor %}
+              </td>
+              <td>{{ game.created_at|date:"Y-m-d" }}</td>
+              <td>{{ game.play_count }}</td>
+              <td>
+                <div class="star-rating">
+                  {% for i in "12345" %}
+                  {% with forloop.counter as star %}
+                  {% if game.rating >= star %}
+                  <i class="fas fa-star filled"></i>
+                  {% elif game.rating >= star|add:"-0.5" %}
+                  <i class="fas fa-star half"></i>
+                  {% else %}
+                  <i class="far fa-star"></i>
+                  {% endif %}
+                  {% endwith %}
+                  {% endfor %}
+                  <span class="ms-1">{{ game.rating }}</span>
+                </div>
+              </td>
+              <td>
+                {% if game.status == 'online' %}
+                <span class="badge bg-success">{% trans '已上线' %}</span>
+                {% elif game.status == 'offline' %}
+                <span class="badge bg-danger">{% trans '已下线' %}</span>
+                {% else %}
+                <span class="badge bg-warning">{% trans '待审核' %}</span>
+                {% endif %}
+              </td>
+              <td class="action-icons">
+                <button type="button" 
+                   class="btn btn-sm btn-outline-info view-game-btn" 
+                   data-id="{{ game.id }}"
+                   title="{% trans '查看详情' %}">
+                  <i class="fas fa-eye"></i>
+                </button>
+                
+                <a href="{% url 'admin_panel:game_update' game.id %}" 
+                   class="btn btn-sm btn-outline-primary" 
+                   title="{% trans '编辑' %}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                
+                <button type="button" 
+                        class="btn btn-sm {% if game.status == 'online' %}btn-outline-warning{% elif game.status == 'offline' %}btn-outline-success{% else %}btn-outline-success{% endif %} toggle-status-btn" 
+                        data-id="{{ game.id }}"
+                        data-status="{% if game.status == 'online' %}offline{% else %}online{% endif %}"
+                        title="{% if game.status == 'online' %}{% trans '下线' %}{% elif game.status == 'offline' %}{% trans '上线' %}{% else %}{% trans '审核通过' %}{% endif %}">
+                  <i class="fas {% if game.status == 'online' %}fa-ban{% else %}fa-check{% endif %}"></i>
+                </button>
+                
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger delete-game-btn"
+                        data-id="{{ game.id }}"
+                        data-name="{{ game.title|escapejs }}"
+                        title="{% trans '删除' %}">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="text-center py-4">
+                <div class="empty-state">
+                  <i class="fas fa-gamepad fa-3x text-muted mb-3"></i>
+                  <p>{% trans '暂无游戏' %}</p>
+                  <button class="btn btn-primary add-game-btn">
+                    <i class="fas fa-plus me-1"></i> {% trans '添加游戏' %}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 分页 -->
+      {% if page_obj.has_other_pages %}
+      <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}" aria-label="First">
+              <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="First">
+              <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% endif %}
+          
+          {% for i in page_obj.num_pages|range_num %}
+            {% if page_obj.number == i %}
+              <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+              <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}">{{ i }}</a></li>
+            {% endif %}
+          {% endfor %}
+          
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}" aria-label="Last">
+              <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Last">
+              <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      
+      <div class="text-center text-muted mt-2">
+        {% trans '共' %} {{ page_obj.num_pages }} {% trans '页，当前第' %} {{ page_obj.number }} {% trans '页，共' %} {{ total_count }} {% trans '款游戏' %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- 游戏详情模态框 -->
+<div class="modal fade" id="viewGameModal" tabindex="-1" aria-labelledby="viewGameModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewGameModalLabel">{% trans '游戏详情' %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-4 text-center">
+            <div class="mb-3">
+              <img id="view-game-thumbnail" src="" alt="游戏缩略图" class="img-fluid img-thumbnail" style="max-height: 200px;">
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-center">
+                <div class="star-rating" id="view-game-rating-stars">
+                  <!-- 评分星星将通过JavaScript动态生成 -->
+                </div>
+              </div>
+              <span class="badge bg-primary" id="view-game-player-count">0 次游玩</span>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <table class="table table-bordered">
+              <tbody>
+                <tr>
+                  <th style="width: 120px;">{% trans '游戏名称' %}</th>
+                  <td id="view-game-name"></td>
+                </tr>
+                <tr>
+                  <th>{% trans '简单介绍' %}</th>
+                  <td id="view-game-summary"></td>
+                </tr>
+                <tr>
+                  <th>{% trans '分类' %}</th>
+                  <td id="view-game-category"></td>
+                </tr>
+                <tr>
+                  <th>{% trans '状态' %}</th>
+                  <td id="view-game-status"></td>
+                </tr>
+                <tr>
+                  <th>{% trans '添加日期' %}</th>
+                  <td id="view-game-created-at"></td>
+                </tr>
+                <tr>
+                  <th>{% trans '游戏标签' %}</th>
+                  <td id="view-game-tags"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="card mt-3">
+          <div class="card-header">
+            <h6 class="mb-0">{% trans '游戏描述' %}</h6>
+          </div>
+          <div class="card-body">
+            <div id="view-game-description" class="markdown-content"></div>
+          </div>
+        </div>
+        
+        <div class="card mt-3">
+          <div class="card-header">
+            <h6 class="mb-0">{% trans 'iframe 设置' %}</h6>
+          </div>
+          <div class="card-body">
+            <table class="table table-bordered mb-0">
+              <tbody>
+                <tr>
+                  <th style="width: 120px;">{% trans 'URL' %}</th>
+                  <td id="view-game-iframe-url"></td>
+                </tr>
+                <tr>
+                  <th>{% trans '宽度' %}</th>
+                  <td id="view-game-iframe-width"></td>
+                </tr>
+                <tr>
+                  <th>{% trans '高度' %}</th>
+                  <td id="view-game-iframe-height"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- SEO信息 -->
+        <div class="card mt-3">
+          <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+              <i class="fas fa-search"></i> {% trans 'SEO 信息' %}
+            </h6>
+          </div>
+          <div class="card-body">
+            <table class="table table-bordered mb-0">
+              <tbody>
+                <tr>
+                  <th style="width: 120px;">{% trans 'Meta 标题' %}</th>
+                  <td id="view-game-meta-title"></td>
+                </tr>
+                <tr>
+                  <th>{% trans 'Meta 描述' %}</th>
+                  <td id="view-game-meta-description"></td>
+                </tr>
+                <tr>
+                  <th>{% trans 'Meta 关键词' %}</th>
+                  <td id="view-game-meta-keywords"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '关闭' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 消息模态框 -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="messageModalTitle">{% trans '提示' %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="messageModalBody">
+        <!-- 动态内容 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans '确定' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 包含游戏模态框 -->
+{% include "admin/game_modals.html" %}
+
+<!-- 状态切换确认模态框 -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans '切换游戏状态' %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="statusModalBody">
+        <!-- 动态内容 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+        <button type="button" class="btn btn-primary" id="confirmStatus">{% trans '确定' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans '删除游戏' %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="deleteModalBody">
+        <!-- 动态内容 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">{% trans '确定删除' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+{% include "admin/game_modals.html" %}
+<!-- SimpleMDE Markdown编辑器的JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+<!-- Marked.js用于解析Markdown内容 -->
+<script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+<!-- 自定义Markdown编辑器初始化 -->
+<script>
+  // 定义编辑器实例变量
+  var addEditor = null;
+  var editEditor = null;
+  
+  // 监听模态框事件
+  $(document).ready(function() {
+    console.log('文档准备就绪，注册模态框事件');
+    
+    // 添加游戏模态框显示时初始化编辑器
+    $('#addGameModal').on('shown.bs.modal', function() {
+      console.log('添加游戏模态框显示，初始化编辑器');
+      var addGameDescription = document.getElementById('add-game-description');
+      
+      // 如果编辑器已经初始化，则刷新
+      if (addEditor) {
+        console.log('添加游戏编辑器已存在，刷新');
+        addEditor.codemirror.refresh();
+        return;
+      }
+      
+      // 初始化编辑器
+      if (addGameDescription) {
+        console.log('初始化添加游戏描述编辑器');
+        addEditor = new SimpleMDE({
+          element: addGameDescription,
+          spellChecker: false,
+          status: ['lines', 'words', 'cursor'],
+          placeholder: '{% trans "输入游戏描述，支持Markdown格式..." %}',
+          toolbar: [
+            'bold', 'italic', 'heading', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'image', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+          ]
+        });
+        console.log('添加游戏描述编辑器初始化完成');
+      } else {
+        console.warn('未找到添加游戏描述文本区域(#add-game-description)');
+      }
+    });
+    
+    // 添加游戏模态框隐藏时清空编辑器内容
+    $('#addGameModal').on('hidden.bs.modal', function() {
+      console.log('添加游戏模态框隐藏');
+      if (addEditor) {
+        console.log('清空添加游戏编辑器内容');
+        addEditor.value('');
+      }
+    });
+    
+    // 编辑游戏模态框显示时初始化编辑器
+    $('#editGameModal').on('shown.bs.modal', function() {
+      console.log('编辑游戏模态框显示，初始化编辑器');
+      var editGameDescription = document.getElementById('edit-game-description');
+      
+      // 如果编辑器已经初始化，则刷新
+      if (editEditor) {
+        console.log('编辑游戏编辑器已存在，刷新');
+        editEditor.codemirror.refresh();
+        return;
+      }
+      
+      // 初始化编辑器
+      if (editGameDescription) {
+        console.log('初始化编辑游戏描述编辑器');
+        editEditor = new SimpleMDE({
+          element: editGameDescription,
+          spellChecker: false,
+          status: ['lines', 'words', 'cursor'],
+          placeholder: '{% trans "输入游戏描述，支持Markdown格式..." %}',
+          toolbar: [
+            'bold', 'italic', 'heading', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'image', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+          ]
+        });
+        console.log('编辑游戏描述编辑器初始化完成');
+      } else {
+        console.warn('未找到编辑游戏描述文本区域(#edit-game-description)');
+      }
+    });
+  });
+</script>
+<!-- 自定义js脚本 -->
+<script>
+  // 清除搜索
+  function clearSearch() {
+    window.location.href = window.location.pathname + 
+      '{% if status_filter %}?status={{ status_filter }}{% endif %}' +
+      '{% if status_filter and category_filter %}&{% elif category_filter %}?{% endif %}' +
+      '{% if category_filter %}category={{ category_filter }}{% endif %}' +
+      '{% if order_by %}{% if status_filter or category_filter %}&{% else %}?{% endif %}order_by={{ order_by }}{% endif %}';
+  }
+  
+  // 按状态筛选
+  function filterByStatus(status) {
+    let url = window.location.pathname;
+    let params = new URLSearchParams(window.location.search);
+    
+    if (status) {
+      params.set('status', status);
+    } else {
+      params.delete('status');
+    }
+    
+    // 保留页码为1
+    params.set('page', 1);
+    
+    window.location.href = url + (params.toString() ? '?' + params.toString() : '');
+  }
+  
+  $(document).ready(function() {
+    // 确保模态框正确初始化
+    var addGameModal = new bootstrap.Modal(document.getElementById('addGameModal'));
+    
+    // 添加游戏按钮点击事件 - 这是为空状态下的按钮添加的事件绑定
+    $('.add-game-btn').on('click', function(e) {
+      e.preventDefault();
+      addGameModal.show();
+    });
+
+    // 兜底方案：手动为顶部的添加按钮添加事件监听
+    // 卡片头部中的添加按钮可能没有正确绑定data-bs-toggle和data-bs-target
+    $('.card-header .btn-primary').on('click', function(e) {
+      if (!$(this).attr('data-bs-target')) {
+        e.preventDefault();
+        addGameModal.show();
+      }
+    });
+
+    // 添加游戏表单提交
+    $('#add-game-form').on('submit', function(e) {
+      e.preventDefault();
+      
+      // 如果SimpleMDE编辑器已初始化，则将其内容同步到表单
+      if (addEditor) {
+        $('#add-game-description').val(addEditor.value());
+      }
+      
+      // 验证标签数量
+      const selectedTagsCount = $('#add-game-tags-container .tag-checkbox:checked').length;
+      if (selectedTagsCount > 5) {
+        showToast('error', '{% trans "最多只能选择5个标签" %}');
+        return false;
+      }
+      
+      const formData = new FormData(this);
+      
+      $.ajax({
+        url: '{% url "admin_panel:game_create" %}',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(response) {
+          if (response.status === 'success') {
+            showToast('success', response.message || '{% trans "添加成功" %}');
+            $('#addGameModal').modal('hide');
+            setTimeout(function() {
+              location.reload();
+            }, 1500);
+          } else {
+            showToast('error', response.message || '{% trans "添加失败" %}');
+            // 如果有表单错误，显示错误信息
+            if (response.errors) {
+              showFormErrors(response.errors, '#add-game-form');
+            }
+          }
+        },
+        error: function(xhr) {
+          let errorMsg = '{% trans "服务器错误" %}';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          showToast('error', errorMsg);
+        }
+      });
+    });
+
+    // 编辑游戏表单提交
+    $('#edit-game-form').on('submit', function(e) {
+      e.preventDefault();
+      
+      // 如果SimpleMDE编辑器已初始化，则将其内容同步到表单
+      if (editEditor) {
+        $('#edit-game-description').val(editEditor.value());
+      }
+      
+      const gameId = $('#edit-game-id').val();
+      const categoryId = $('#edit-game-category').val();
+      
+      // 检查分类ID是否存在
+      if (!categoryId) {
+        showToast('error', '{% trans "请选择游戏分类" %}');
+        return false;
+      }
+      
+      // 验证标签数量
+      const selectedTagsCount = $('#edit-game-tags-container .tag-checkbox:checked').length;
+      if (selectedTagsCount > 5) {
+        showToast('error', '{% trans "最多只能选择5个标签" %}');
+        return false;
+      }
+      
+      // 打印关键数据
+      console.log('提交表单 - 游戏ID:', gameId);
+      console.log('提交表单 - 分类ID:', categoryId);
+      
+      // 手动创建FormData确保重要字段包含在内
+      const formData = new FormData(this);
+      
+      // 确保分类ID被正确添加
+      if (!formData.has('category')) {
+        formData.append('category', categoryId);
+      }
+      
+      $.ajax({
+        url: `{% url 'admin_panel:game_update' 0 %}`.replace('0', gameId),
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(response) {
+          if (response.status === 'success') {
+            showToast('success', response.message || '{% trans "更新成功" %}');
+            $('#editGameModal').modal('hide');
+            setTimeout(function() {
+              location.reload();
+            }, 1500);
+          } else {
+            showToast('error', response.message || '{% trans "更新失败" %}');
+          }
+        },
+        error: function(xhr) {
+          let errorMsg = '{% trans "服务器错误" %}';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          showToast('error', errorMsg);
+        }
+      });
+    });
+
+    // 缩略图预览
+    $('#add-game-thumbnail').on('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          $('#thumbnail-preview').attr('src', e.target.result);
+          $('#thumbnail-preview-container').show();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    $('#remove-thumbnail').on('click', function() {
+      $('#add-game-thumbnail').val('');
+      $('#thumbnail-preview-container').hide();
+    });
+
+    $('#edit-game-thumbnail').on('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          $('#edit-thumbnail-preview').attr('src', e.target.result);
+          $('#edit-thumbnail-preview-container').show();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    $('#edit-remove-thumbnail').on('click', function() {
+      $('#edit-game-thumbnail').val('');
+      $('#edit-thumbnail-preview').attr('src', '');
+      $('#edit-thumbnail-preview-container').hide();
+    });
+
+    // 编辑游戏按钮点击
+    $('.btn-outline-primary').on('click', function(e) {
+      if ($(this).attr('title') === '{% trans "编辑" %}') {
+        e.preventDefault();
+        const gameId = $(this).closest('tr').data('id');
+        
+        // 通过AJAX获取游戏详情
+        $.ajax({
+          url: `{% url 'admin_panel:game_detail' 0 %}`.replace('0', gameId),
+          type: 'GET',
+          success: function(response) {
+            if (response.status === 'success') {
+              const game = response.data;
+              
+              // 填充表单
+              $('#edit-game-id').val(game.id);
+              $('#edit-game-name').val(game.title);
+              $('#edit-game-summary').val(game.summary || '{% trans "无简单介绍" %}');
+              
+              // 确保正确设置分类ID
+              if (game.category_id) {
+                $('#edit-game-category').val(game.category_id);
+                console.log('设置分类ID:', game.category_id);
+              } else {
+                $('#edit-game-category').val('');
+                console.log('没有分类ID');
+              }
+              
+              // 设置描述 - 需要在编辑器初始化后设置
+              $('#edit-game-description').val(game.description);
+              
+              // 如果SimpleMDE编辑器已经初始化，则设置其内容
+              if (editEditor) {
+                console.log('更新编辑器内容');
+                editEditor.value(game.description || '');
+              }
+              
+              // 其他字段
+              $('#edit-game-status').val(game.status);
+              $('#edit-game-iframe-url').val(game.iframe_url);
+              $('#edit-game-iframe-width').val(game.iframe_width);
+              $('#edit-game-iframe-height').val(game.iframe_height);
+              
+              // 设置SEO元数据字段
+              $('#edit-game-meta-title').val(game.meta_title || '');
+              $('#edit-game-meta-description').val(game.meta_description || '');
+              $('#edit-game-meta-keywords').val(game.meta_keywords || '');
+              
+              // 设置游戏标签
+              // 由于标签是通过AJAX加载的，需要确保标签已加载完成再设置选中状态
+              function checkAndSetTags() {
+                if ($('#edit-game-tags-container .form-check').length > 0) {
+                  // 标签已加载，可以设置选中状态
+                  if (game.tags && game.tags.length > 0) {
+                    // 先取消所有选中状态
+                    $('#edit-game-tags-container input[type="checkbox"]').prop('checked', false);
+                    
+                    // 设置选中状态，最多5个
+                    const tagsToSet = game.tags.slice(0, 5);
+                    tagsToSet.forEach(function(tagId) {
+                      $(`#edit-tag-${tagId}`).prop('checked', true);
+                    });
+                    
+                    // 如果超过了5个标签，显示提示信息
+                    if (game.tags.length > 5) {
+                      showToast('warning', '{% trans "游戏原有标签超过5个，已自动选择前5个" %}');
+                    }
+                  }
+                } else {
+                  // 标签尚未加载完成，稍后再试
+                  setTimeout(checkAndSetTags, 100);
+                }
+              }
+              
+              // 开始检查并设置标签
+              checkAndSetTags();
+              
+              // 缩略图预览
+              if (game.thumbnail_url) {
+                $('#edit-thumbnail-preview').attr('src', game.thumbnail_url);
+                $('#edit-thumbnail-preview-container').show();
+              } else {
+                $('#edit-thumbnail-preview-container').hide();
+              }
+              
+              // 显示统计信息
+              $('#edit-game-player-count').text(game.play_count);
+              $('#edit-game-rating').text(parseFloat(game.rating || 0).toFixed(1));
+              
+              // 显示模态框
+              $('#editGameModal').modal('show');
+            } else {
+              showToast('error', response.message || '{% trans "获取游戏详情失败" %}');
+            }
+          },
+          error: function() {
+            showToast('error', '{% trans "服务器错误" %}');
+          }
+        });
+      }
+    });
+
+    // 设置分类颜色方块
+    $('.category-color-box').each(function() {
+      let color = $(this).data('color') || '#eeeeee';
+      $(this).css('background-color', color);
+    });
+    
+    // 加载游戏标签
+    function loadGameTags() {
+      // 发送请求获取所有标签
+      $.ajax({
+        url: '{% url "admin_panel:get_all_tags" %}',
+        type: 'GET',
+        data: {
+          active_only: 'true'  // 只获取已激活的标签
+        },
+        success: function(response) {
+          if (response.status === 'success') {
+            renderTags(response.tags, 'add');
+            renderTags(response.tags, 'edit');
+          } else {
+            console.error('加载标签失败:', response.message);
+            showErrorInTagsContainer('add');
+            showErrorInTagsContainer('edit');
+          }
+        },
+        error: function(xhr) {
+          console.error('加载标签请求失败:', xhr.status);
+          showErrorInTagsContainer('add');
+          showErrorInTagsContainer('edit');
+        }
+      });
+    }
+    
+    // 渲染标签到容器
+    function renderTags(tags, prefix) {
+      const containerId = `#${prefix}-game-tags-container`;
+      const $container = $(containerId);
+      
+      // 清空容器
+      $container.empty();
+      
+      if (tags.length === 0) {
+        $container.html('<div class="alert alert-info py-2">没有可用的标签。请先在标签管理中添加标签。</div>');
+        return;
+      }
+      
+      // 添加标签选择限制提示
+      $container.append('<div class="alert alert-warning py-2 mb-3">{% trans "最多可选择5个标签" %}</div>');
+      
+      // 为每个标签创建复选框
+      tags.forEach(function(tag) {
+        const checkboxId = `${prefix}-tag-${tag.id}`;
+        const checkboxHtml = `
+          <div class="form-check">
+            <input class="form-check-input tag-checkbox" type="checkbox" id="${checkboxId}" name="tags" value="${tag.id}">
+            <label class="form-check-label" for="${checkboxId}">${tag.name}</label>
+          </div>
+        `;
+        $container.append(checkboxHtml);
+      });
+      
+      // 添加标签选择限制逻辑
+      $container.find('.tag-checkbox').on('change', function() {
+        const checkedCount = $container.find('.tag-checkbox:checked').length;
+        if (checkedCount > 5) {
+          $(this).prop('checked', false);
+          showToast('error', '{% trans "最多只能选择5个标签" %}');
+        }
+      });
+    }
+    
+    // 显示标签加载错误
+    function showErrorInTagsContainer(prefix) {
+      const containerId = `#${prefix}-game-tags-container`;
+      $(containerId).html('<div class="alert alert-danger py-2">加载标签失败，请刷新重试。</div>');
+    }
+    
+    // 当添加游戏模态框显示时，加载标签
+    $('#addGameModal').on('show.bs.modal', function() {
+      loadGameTags();
+    });
+    
+    // 当编辑游戏模态框显示时，处理相关逻辑
+    $('#editGameModal').on('show.bs.modal', function(event) {
+      // 只加载标签，不重复执行其他加载逻辑
+      loadGameTags();
+    });
+    
+    // 显示消息模态框
+    function showMessageModal(title, message, callback) {
+      $('#messageModalTitle').text(title || '{% trans "提示" %}');
+      $('#messageModalBody').html(`<p>${message}</p>`);
+      
+      const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+      messageModal.show();
+      
+      // 如果提供了回调函数，在模态框隐藏后执行
+      if (typeof callback === 'function') {
+        $('#messageModal').one('hidden.bs.modal', callback);
+      }
+    }
+    
+    // Toast提示函数
+    function showToast(type, message) {
+      const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+      const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+      
+      const toast = `
+        <div class="toast align-items-center text-white ${bgClass}" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div class="toast-body">
+              <i class="${iconClass} me-2"></i> ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+      `;
+      
+      $('#toast-container').append(toast);
+      const toastElement = $('.toast').last();
+      const bsToast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: 3000
+      });
+      bsToast.show();
+      
+      // 自动移除
+      toastElement.on('hidden.bs.toast', function() {
+        $(this).remove();
+      });
+    }
+    
+    // 状态切换功能
+    let gameId = null;
+    let statusValue = null;
+    
+    $('.toggle-status-btn').on('click', function() {
+      gameId = $(this).data('id');
+      statusValue = $(this).data('status');
+      const gameName = $(this).closest('tr').find('td:nth-child(3)').text();
+      
+      let statusText = statusValue === 'online' ? '{% trans "上线" %}' : '{% trans "下线" %}';
+      if ($(this).attr('title').includes('审核')) {
+        statusText = '{% trans "审核通过" %}';
+      }
+      
+      $('#statusModalBody').html(
+        `<p>{% trans '确定要将游戏' %} <strong>${gameName}</strong> {% trans '切换为' %} <strong>${statusText}</strong> {% trans '状态吗？' %}</p>`
+      );
+      
+      $('#statusModal').modal('show');
+    });
+    
+    $('#confirmStatus').on('click', function() {
+      if (gameId && statusValue) {
+        $.ajax({
+          url: `{% url 'admin_panel:game_toggle_status' 0 %}`.replace('0', gameId),
+          type: 'POST',
+          data: {
+            status: statusValue,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            if (response.status === 'success') {
+              // 显示成功消息并刷新页面
+              $('#statusModal').modal('hide');
+              showMessageModal('{% trans "操作成功" %}', response.message, function() {
+                location.reload();
+              });
+            } else {
+              showMessageModal('{% trans "操作失败" %}', response.message || '{% trans "操作失败" %}');
+            }
+          },
+          error: function() {
+            showMessageModal('{% trans "错误" %}', '{% trans "服务器错误" %}');
+          }
+        });
+      }
+    });
+    
+    // 删除游戏功能
+    let deleteId = null;
+    
+    $('.delete-game-btn').on('click', function() {
+      deleteId = $(this).data('id');
+      const gameName = $(this).data('name');
+      
+      $('#deleteModalBody').html(
+        `<p>{% trans '确定要删除游戏' %} <strong>${gameName}</strong> {% trans '吗？此操作不可恢复！' %}</p>`
+      );
+      
+      $('#deleteModal').modal('show');
+    });
+    
+    $('#confirmDelete').on('click', function() {
+      if (deleteId) {
+        $.ajax({
+          url: `{% url 'admin_panel:game_delete' 0 %}`.replace('0', deleteId),
+          type: 'POST',
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            if (response.status === 'success') {
+              // 显示成功消息并刷新页面
+              $('#deleteModal').modal('hide');
+              showMessageModal('{% trans "删除成功" %}', response.message, function() {
+                location.reload();
+              });
+            } else {
+              showMessageModal('{% trans "删除失败" %}', response.message || '{% trans "删除失败" %}');
+            }
+          },
+          error: function() {
+            showMessageModal('{% trans "错误" %}', '{% trans "服务器错误" %}');
+          }
+        });
+      }
+    });
+
+    // 获取CSRF Token的辅助函数
+    function getCsrfToken() {
+      // 优先从meta标签中获取，这是base_site.html中定义的
+      return $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token }}';
+    }
+
+    // 查看游戏详情功能
+    $('.view-game-btn').on('click', function() {
+      const gameId = $(this).data('id');
+      
+      // 通过AJAX获取游戏详情
+      $.ajax({
+        url: `{% url 'admin_panel:game_detail' 0 %}`.replace('0', gameId),
+        type: 'GET',
+        success: function(response) {
+          if (response.status === 'success') {
+            const game = response.data;
+            
+            // 填充游戏信息
+            $('#view-game-name').text(game.title);
+            
+            // 设置简单介绍
+            $('#view-game-summary').text(game.summary || '{% trans "无简单介绍" %}');
+            
+            // 设置分类显示 - 只显示一个分类
+            if (game.categories && game.categories.length > 0) {
+              $('#view-game-category').text(game.categories[0].name);
+            } else {
+              $('#view-game-category').text('未分类');
+            }
+            
+            // 设置状态显示
+            let statusText = '';
+            let statusClass = '';
+            if (game.status === 'online') {
+              statusText = '{% trans "已上线" %}';
+              statusClass = 'bg-success';
+            } else if (game.status === 'offline') {
+              statusText = '{% trans "已下线" %}';
+              statusClass = 'bg-danger';
+            } else {
+              statusText = '{% trans "待审核" %}';
+              statusClass = 'bg-warning';
+            }
+            $('#view-game-status').html(`<span class="badge ${statusClass}">${statusText}</span>`);
+            
+            // 设置添加日期
+            $('#view-game-created-at').text(game.created_at || '-');
+            
+            // 设置描述 - 使用marked.js渲染Markdown
+            const description = game.description || '{% trans "无描述" %}';
+            if (typeof marked !== 'undefined') {
+              // 设置marked选项
+              marked.setOptions({
+                breaks: true,                 // 将换行符转换为<br>
+                gfm: true,                    // 启用GitHub风格的Markdown
+                headerIds: true,              // 为标题添加id
+                sanitize: false,              // 不过滤HTML标签
+                smartLists: true,             // 使用更智能的列表行为
+                xhtml: false                  // 不使用XHTML语法
+              });
+              $('#view-game-description').html(marked.parse(description));
+            } else {
+              // 如果marked.js未加载，则使用普通文本
+              $('#view-game-description').text(description);
+            }
+            
+            // 设置iframe信息
+            $('#view-game-iframe-url').text(game.iframe_url || '-');
+            $('#view-game-iframe-width').text(game.iframe_width || '100%');
+            $('#view-game-iframe-height').text(game.iframe_height || '600');
+            
+            // 设置缩略图
+            if (game.thumbnail_url) {
+              $('#view-game-thumbnail').attr('src', game.thumbnail_url).show();
+            } else {
+              $('#view-game-thumbnail').attr('src', '/static/images/placeholder.png').show();
+            }
+            
+            // 设置游玩次数
+            $('#view-game-player-count').text(`${game.play_count || 0} {% trans "次游玩" %}`);
+            
+            // 设置评分星星
+            $('#view-game-rating-stars').empty();
+            const rating = parseFloat(game.rating || 0);
+            for (let i = 1; i <= 5; i++) {
+              let starClass = 'far fa-star';
+              if (rating >= i) {
+                starClass = 'fas fa-star filled';
+              } else if (rating >= i - 0.5) {
+                starClass = 'fas fa-star-half-alt filled';
+              }
+              $('#view-game-rating-stars').append(`<i class="${starClass} me-1"></i>`);
+            }
+            $('#view-game-rating-stars').append(`<span class="ms-1">${rating.toFixed(1)}</span>`);
+            
+            // 设置标签
+            if (game.tags && game.tags.length > 0 && game.tag_names && game.tag_names.length > 0) {
+              const tagHtml = game.tag_names.map(tag => `<span class="badge bg-info me-1">${tag}</span>`).join(' ');
+              $('#view-game-tags').html(tagHtml);
+            } else {
+              $('#view-game-tags').html('<em>{% trans "无标签" %}</em>');
+            }
+            
+            // 设置SEO信息
+            $('#view-game-meta-title').text(game.meta_title || '{% trans "未命名游戏" %}');
+            $('#view-game-meta-description').text(game.meta_description || '{% trans "无描述" %}');
+            $('#view-game-meta-keywords').text(game.meta_keywords || '{% trans "未命名游戏" %}');
+            
+            // 设置编辑按钮链接
+            $('#view-game-edit-btn').attr('href', `{% url 'admin_panel:game_update' 0 %}`.replace('0', game.id));
+            
+            // 显示模态框
+            $('#viewGameModal').modal('show');
+          } else {
+            showMessageModal('{% trans "错误" %}', response.message || '{% trans "获取游戏详情失败" %}');
+          }
+        },
+        error: function() {
+          showMessageModal('{% trans "错误" %}', '{% trans "服务器错误" %}');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %} 

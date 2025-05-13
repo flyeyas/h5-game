@@ -1,0 +1,145 @@
+{% load static %}
+{% include "games/includes/profile_tabs_styles.html" %}
+
+<div class="profile-tabs-container">
+    <ul class="nav profile-tabs mb-4" id="profileTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'games' %}active{% endif %}" href="{% url 'games:profile' %}">
+                <i class="fas fa-gamepad"></i>
+                <span>我的游戏</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'history' %}active{% endif %}" href="{% url 'games:profile_history' %}">
+                <i class="fas fa-history"></i>
+                <span>游戏历史</span>
+            </a>
+        </li>
+        {% if show_member_content %}
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'membership' %}active{% endif %}" href="{% url 'games:profile_membership' %}">
+                <i class="fas fa-crown"></i>
+                <span>会员信息</span>
+            </a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'settings' %}active{% endif %}" href="{% url 'games:profile_settings' %}">
+                <i class="fas fa-cog"></i>
+                <span>账号设置</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<style>
+    .profile-tabs-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    .profile-tabs {
+        display: flex;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0;
+        margin-bottom: 25px;
+        position: relative;
+    }
+    
+    .profile-tabs:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(to right, rgba(106, 17, 203, 0.05), rgba(37, 117, 252, 0.05));
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    
+    .profile-tabs .nav-item {
+        margin-right: 2.5rem;
+    }
+    
+    .profile-tabs .nav-link {
+        font-weight: 500;
+        color: #666;
+        padding: 0.85rem 1rem;
+        border: none;
+        background: transparent;
+        font-size: 1.05rem;
+        position: relative;
+        transition: all 0.3s ease;
+        letter-spacing: 0.02em;
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .profile-tabs .nav-link:hover {
+        color: #6a11cb;
+        text-decoration: none;
+        background-color: rgba(106, 17, 203, 0.05);
+    }
+    
+    .profile-tabs .nav-link.active {
+        color: white;
+        font-weight: 600;
+        position: relative;
+        background-color: #6a11cb;
+        border-radius: 4px 4px 0 0;
+        padding: 0.85rem 1rem;
+        margin-bottom: -1px;
+        box-shadow: 0 -2px 8px rgba(106, 17, 203, 0.2);
+        animation: tabBgActivate 0.3s ease-out;
+    }
+    
+    @keyframes tabBgActivate {
+        0% {
+            background-color: transparent;
+            color: #666;
+        }
+        100% {
+            background-color: #6a11cb;
+            color: white;
+        }
+    }
+    
+    .profile-tabs .nav-link.active:after {
+        display: none;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-tabs {
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding-bottom: 5px;
+        }
+        
+        .profile-tabs .nav-item {
+            margin-right: 0;
+            width: 48%;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .profile-tabs .nav-link {
+            font-size: 0.95rem;
+            padding: 0.6rem 0.75rem;
+        }
+        
+        .profile-tabs .nav-link.active {
+            padding: 0.6rem 0.75rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .profile-tabs .nav-item {
+            width: 100%;
+            margin-bottom: 6px;
+        }
+        
+        .profile-tabs .nav-link, 
+        .profile-tabs .nav-link.active {
+            border-radius: 4px;
+            margin-bottom: 0;
+        }
+    }
+</style> 

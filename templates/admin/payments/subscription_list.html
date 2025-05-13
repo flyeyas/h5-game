@@ -1,0 +1,495 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+{% load payment_tags %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item active">{% trans '会员订阅管理' %}</li>
+</ol>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* 订阅列表页面样式 */
+  .subscription-table {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: visible;
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .subscription-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 8px 5px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .subscription-table td {
+    padding: 8px 5px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+  
+  .subscription-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+  }
+  
+  /* 自定义状态标签样式 */
+  .status-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .status-active {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+  }
+  
+  .status-trial {
+    background-color: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+    border: 1px solid rgba(23, 162, 184, 0.3);
+  }
+  
+  .status-expired {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+  }
+  
+  .status-cancelled {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+  }
+  
+  .status-pending {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+  }
+  
+  .status-suspended {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+  }
+  
+  .status-yes {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+  }
+  
+  .status-no {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+  }
+  
+  /* 操作按钮样式 */
+  .action-buttons .btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    margin-right: 2px !important;
+  }
+  
+  .action-buttons .btn-group {
+    display: inline-block;
+  }
+  
+  /* 空状态样式 */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  /* 统计卡片样式 */
+  .stats-card {
+    padding: 12px !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-align: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .stats-card .stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 auto 5px !important;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+  }
+  
+  .stats-card .stat-value {
+    font-size: 1.6rem !important;
+    margin-bottom: 2px !important;
+    font-weight: 600;
+    color: white;
+  }
+  
+  .stats-card .stat-label {
+    font-size: 0.85rem !important;
+    color: white;
+  }
+  
+  .bg-blue {
+    background-color: #4e73df;
+  }
+  
+  .bg-green {
+    background-color: #1cc88a;
+  }
+  
+  .bg-orange {
+    background-color: #f6c23e;
+  }
+  
+  .bg-purple {
+    background-color: #6f42c1;
+  }
+  
+  .bg-red {
+    background-color: #e74a3b;
+  }
+  
+  .bg-teal {
+    background-color: #17a2b8;
+  }
+  
+  /* 搜索框样式 */
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-box .form-control {
+    border-radius: 20px;
+    padding-left: 35px;
+  }
+  
+  .search-box .search-icon {
+    position: absolute;
+    left: 12px;
+    color: #6c757d;
+    z-index: 3;
+  }
+  
+  .filter-box select {
+    border-radius: 20px;
+    padding-left: 15px;
+    min-width: 180px;
+  }
+  
+  /* 分页样式 */
+  .pagination {
+    margin-bottom: 0;
+  }
+  
+  .pagination .page-item.active .page-link {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(78, 115, 223, 0.3);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  
+  .pagination .page-link {
+    color: #343a40;
+    padding: 8px 15px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    margin: 0 3px;
+  }
+  
+  .pagination .page-link:hover {
+    background-color: #eaecf4;
+    border-color: #eaecf4;
+    color: #4e73df;
+    z-index: 2;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% include "admin/includes/top_navbar.html" with page_title=_('会员订阅管理') %}
+  
+  <div class="module">
+    <!-- 统计卡片 -->
+    <div class="row mb-3">
+      <div class="col-md-2 col-sm-6">
+        <div class="stats-card bg-purple">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-value">{{ total_subscriptions }}</div>
+          <div class="stat-label">{% trans '总订阅数' %}</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="stats-card bg-green">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-value">{{ active_subscriptions }}</div>
+          <div class="stat-label">{% trans '活跃订阅' %}</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="stats-card bg-teal">
+          <div class="stat-icon">
+            <i class="fas fa-flask"></i>
+          </div>
+          <div class="stat-value">{{ trial_subscriptions }}</div>
+          <div class="stat-label">{% trans '试用订阅' %}</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="stats-card bg-orange">
+          <div class="stat-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="stat-value">{{ cancelled_subscriptions }}</div>
+          <div class="stat-label">{% trans '已取消' %}</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="stats-card bg-red">
+          <div class="stat-icon">
+            <i class="fas fa-calendar-times"></i>
+          </div>
+          <div class="stat-value">{{ expired_subscriptions }}</div>
+          <div class="stat-label">{% trans '已过期' %}</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <div class="stats-card bg-blue">
+          <div class="stat-icon">
+            <i class="fas fa-sync"></i>
+          </div>
+          <div class="stat-value">{{ auto_renew_subscriptions }}</div>
+          <div class="stat-label">{% trans '自动续费' %}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 订阅列表卡片 -->
+    <div class="card card-outline card-primary">
+      <div class="card-header">
+        <h3 class="card-title">{% trans '会员订阅列表' %}</h3>
+        <div class="card-tools">
+          <form method="get" class="form-inline d-flex">
+            <div class="search-box mr-2">
+              <i class="fas fa-search search-icon"></i>
+              <input type="text" name="search" class="form-control form-control-sm" placeholder="{% trans '搜索用户' %}" value="{{ request.GET.search|default:'' }}">
+            </div>
+            <div class="filter-box mr-2" style="min-width: 200px;">
+              <select name="status" class="form-control form-control-sm w-100">
+                <option value="">{% trans '所有状态' %}</option>
+                {% for status_value, status_name in status_choices %}
+                <option value="{{ status_value }}" {% if request.GET.status == status_value %}selected{% endif %}>{{ status_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary">
+              <i class="fas fa-filter"></i> {% trans '筛选' %}
+            </button>
+          </form>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover subscription-table">
+            <thead>
+              <tr>
+                <th width="5%">ID</th>
+                <th width="15%">{% trans '用户' %}</th>
+                <th width="15%">{% trans '计划' %}</th>
+                <th width="10%">{% trans '状态' %}</th>
+                <th width="12%">{% trans '开始日期' %}</th>
+                <th width="12%">{% trans '结束日期' %}</th>
+                <th width="10%">{% trans '自动续费' %}</th>
+                <th width="15%">{% trans '操作' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for subscription in subscriptions %}
+              <tr>
+                <td>{{ subscription.id }}</td>
+                <td><strong>{{ subscription.user.username }}</strong></td>
+                <td>{{ subscription.plan.name }}</td>
+                <td>
+                  {% if subscription.status == 'active' %}
+                  <span class="status-tag status-active"><i class="fas fa-check-circle me-1"></i> {% trans '活跃' %}</span>
+                  {% elif subscription.status == 'trial' %}
+                  <span class="status-tag status-trial"><i class="fas fa-flask me-1"></i> {% trans '试用期' %}</span>
+                  {% elif subscription.status == 'expired' %}
+                  <span class="status-tag status-expired"><i class="fas fa-calendar-times me-1"></i> {% trans '已过期' %}</span>
+                  {% elif subscription.status == 'cancelled' %}
+                  <span class="status-tag status-cancelled"><i class="fas fa-times-circle me-1"></i> {% trans '已取消' %}</span>
+                  {% elif subscription.status == 'pending' %}
+                  <span class="status-tag status-pending"><i class="fas fa-clock me-1"></i> {% trans '待处理' %}</span>
+                  {% else %}
+                  <span class="status-tag status-suspended"><i class="fas fa-ban me-1"></i> {% trans '已暂停' %}</span>
+                  {% endif %}
+                </td>
+                <td>{{ subscription.start_date|date:"Y-m-d" }}</td>
+                <td>{{ subscription.end_date|date:"Y-m-d" }}</td>
+                <td>
+                  {% if subscription.auto_renew %}
+                  <span class="status-tag status-yes"><i class="fas fa-check me-1"></i> {% trans '是' %}</span>
+                  {% else %}
+                  <span class="status-tag status-no"><i class="fas fa-times me-1"></i> {% trans '否' %}</span>
+                  {% endif %}
+                </td>
+                <td class="action-buttons">
+                  <div class="btn-group">
+                    <a href="{% url 'admin_panel:subscription_detail' pk=subscription.id %}" class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="{% trans '详情' %}">
+                      <i class="fas fa-eye"></i> {% trans '详情' %}
+                    </a>
+                    <a href="{% url 'admin_panel:subscription_edit' pk=subscription.id %}" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="{% trans '编辑' %}">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center py-5">
+                  <div class="empty-state">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="lead">{% trans '暂无会员订阅记录' %}</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      {% if is_paginated %}
+      <div class="card-footer d-flex justify-content-center">
+        <nav aria-label="{% trans '分页导航' %}">
+          <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="{% trans '首页' %}">
+                <i class="fas fa-angle-double-left"></i>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="{% trans '上一页' %}">
+                <i class="fas fa-angle-left"></i>
+              </a>
+            </li>
+            {% endif %}
+            
+            {% for i in paginator.page_range %}
+              {% if page_obj.number == i %}
+              <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+              {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+              <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ i }}</a></li>
+              {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="{% trans '下一页' %}">
+                <i class="fas fa-angle-right"></i>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="{% trans '末页' %}">
+                <i class="fas fa-angle-double-right"></i>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+$(function() {
+    // 添加表单筛选提交功能
+    $('select[name="status"]').on('change', function() {
+        $(this).closest('form').submit();
+    });
+    
+    // 为操作按钮添加tooltip
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    
+    // 初始化DataTable
+    $('.subscription-table').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "language": {
+        "url": "{% static 'admin/plugins/datatables/Chinese.json' %}"
+      },
+      "order": [[0, 'desc']],
+      "columnDefs": [
+        { "orderable": false, "targets": 7 }
+      ],
+      "dom": "<'row'<'col-sm-12'tr>>" +
+             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+      "searching": false,
+      "paging": false
+    });
+});
+</script>
+{% endblock %}

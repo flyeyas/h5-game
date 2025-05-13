@@ -1,0 +1,187 @@
+{% extends 'games/base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - 游戏分类{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'games:home' %}">首页</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="category-header mb-4">
+    <h1 class="category-title">
+      {% if category.icon %}
+      <i class="{{ category.icon }}"></i>
+      {% endif %}
+      {{ category.name }}
+    </h1>
+    {% if category.description %}
+    <p class="lead">{{ category.description }}</p>
+    {% endif %}
+  </div>
+
+  {% if subcategories %}
+  <div class="subcategories mb-4">
+    <h3>子分类</h3>
+    <div class="row">
+      {% for subcategory in subcategories %}
+      <div class="col-6 col-md-4 col-lg-3 mb-3">
+        <a href="{% url 'games:category_detail' subcategory.slug %}" class="card subcategory-card h-100">
+          <div class="card-body text-center">
+            {% if subcategory.icon %}
+            <i class="{{ subcategory.icon }} subcategory-icon"></i>
+            {% endif %}
+            <h5 class="subcategory-name">{{ subcategory.name }}</h5>
+            <span class="badge bg-primary">{{ subcategory.game_count }} 款游戏</span>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="games-section">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3>游戏列表</h3>
+      <div class="d-flex">
+        <form class="search-form me-2" method="get" action="">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="搜索游戏" value="{{ request.GET.search|default:'' }}">
+            <button class="btn btn-primary" type="submit">搜索</button>
+          </div>
+        </form>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            排序
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+            <li><a class="dropdown-item {% if sort == 'newest' %}active{% endif %}" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=newest">最新</a></li>
+            <li><a class="dropdown-item {% if sort == 'popular' %}active{% endif %}" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=popular">最热</a></li>
+            <li><a class="dropdown-item {% if sort == 'rating' %}active{% endif %}" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=rating">评分</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% if games %}
+    <div class="row game-grid">
+      {% for game in games %}
+      <div class="col-6 col-md-4 col-lg-3 mb-4">
+        <div class="card game-card h-100">
+          <a href="{% url 'games:game_detail' game.slug %}">
+            {% if game.thumbnail %}
+            <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+            {% else %}
+            <img src="{% static 'img/games/default-thumbnail.jpg' %}" class="card-img-top" alt="{{ game.title }}">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ game.title }}</h5>
+              <div class="d-flex justify-content-between">
+                <div class="game-meta">
+                  <span class="badge bg-primary">{{ game.categories.first.name }}</span>
+                  <div class="rating mt-1">
+                    <i class="fas fa-star"></i> {{ game.rating|floatformat:1 }}
+                  </div>
+                </div>
+                <div class="plays">
+                  <i class="fas fa-gamepad"></i> {{ game.play_count }}
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if games.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% if games.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ games.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link" aria-hidden="true">&laquo;</span>
+        </li>
+        {% endif %}
+        
+        {% for i in games.paginator.page_range %}
+          {% if games.number == i %}
+          <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+          {% elif i > games.number|add:'-3' and i < games.number|add:'3' %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">{{ i }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+        
+        {% if games.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ games.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link" aria-hidden="true">&raquo;</span>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="alert alert-info">
+      当前分类下暂无游戏。
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .category-title {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .subcategory-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .subcategory-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  .subcategory-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+    display: block;
+  }
+  .game-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  .game-card a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .rating {
+    color: #ffc107;
+  }
+</style>
+{% endblock %} 

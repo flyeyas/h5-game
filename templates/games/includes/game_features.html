@@ -1,0 +1,33 @@
+{% comment %}
+游戏特性列表组件 - 显示游戏的主要特性
+参数:
+- game: 游戏对象（可选）
+- features: 特性列表（可选）
+{% endcomment %}
+
+<h5 class="mb-3">游戏特色</h5>
+<ul class="game-features-list">
+    {% if features %}
+        {% for feature in features %}
+        <li><i class="fas fa-check-circle"></i> {{ feature }}</li>
+        {% endfor %}
+    {% else %}
+        <li><i class="fas fa-check-circle"></i> 精美的太空场景视效</li>
+        <li><i class="fas fa-check-circle"></i> 简单上手的操作方式</li>
+        <li><i class="fas fa-check-circle"></i> 丰富多样的关卡设计</li>
+        <li><i class="fas fa-check-circle"></i> 全局飞船数据保存</li>
+        <li><i class="fas fa-check-circle"></i> 安装解压即可游戏</li>
+        <li><i class="fas fa-check-circle"></i> 全屏模式支持</li>
+    {% endif %}
+</ul>
+
+<div class="control-instructions">
+    <h6 class="mb-2">操作说明：</h6>
+    <p class="mb-0 small">
+        {% if game.instructions %}
+            {{ game.instructions }}
+        {% else %}
+            使用鼠标方向和箭头按钮控制飞船，空格键或鼠标左键发射，在生存模式中尝试获得最高分数。
+        {% endif %}
+    </p>
+</div> 

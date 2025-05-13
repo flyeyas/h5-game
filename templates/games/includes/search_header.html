@@ -1,0 +1,26 @@
+<!-- 搜索区域 -->
+<section class="search-header">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center mb-4">
+                <h1>搜索游戏</h1>
+                <p class="lead">在数千款精选HTML5游戏中找到您喜欢的游戏</p>
+            </div>
+            <div class="col-md-10">
+                <form action="{% url 'games:game_search' %}" method="get">
+                    <div class="row">
+                        <div class="col-md-10 mb-3 mb-md-0">
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input class="form-control form-control-lg" type="search" name="q" placeholder="输入游戏名称或关键词..." value="{{ search_query }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-light search-btn" type="submit"><i class="fas fa-search me-2"></i> 搜索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section> 

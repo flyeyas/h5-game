@@ -1,0 +1,347 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+  .thumbnail-preview {
+    width: 200px;
+    height: 200px;
+    border-radius: 5px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .thumbnail-upload {
+    display: none;
+  }
+  .thumbnail-placeholder {
+    width: 200px;
+    height: 200px;
+    border-radius: 5px;
+    border: 1px dashed #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+  .input-group-text {
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">{{ title }}</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'admin_panel:game_list' %}">{% trans '游戏管理' %}</a></li>
+          <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{{ title }}</h3>
+      </div>
+      
+      <form method="post" enctype="multipart/form-data" id="gameForm">
+        {% csrf_token %}
+        <div class="card-body">
+          <div class="row">
+            <!-- 左侧栏 -->
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="title">{% trans '游戏名称' %} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="title" name="title" required 
+                       value="{{ game.title|default:'' }}" placeholder="{% trans '输入游戏名称' %}">
+              </div>
+              
+              <div class="form-group">
+                <label for="description">{% trans '游戏描述' %}</label>
+                <textarea class="form-control" id="description" name="description" rows="4" 
+                          placeholder="{% trans '输入游戏描述' %}">{{ game.description|default:'' }}</textarea>
+              </div>
+              
+              <div class="form-group">
+                <label for="summary">{% trans '游戏摘要' %}</label>
+                <textarea class="form-control" id="summary" name="summary" rows="2" 
+                          placeholder="{% trans '输入游戏摘要（简短描述）' %}">{{ game.summary|default:'' }}</textarea>
+                <small class="form-text text-muted">{% trans '简短描述，用于游戏列表页面显示' %}</small>
+              </div>
+              
+              <!-- SEO优化字段 -->
+              <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                  <h5 class="card-title mb-0">
+                    <i class="fas fa-search"></i> {% trans 'SEO优化设置' %}
+                    <small class="d-block mt-1 text-white-50">{% trans '这些设置将帮助您的游戏在Google等搜索引擎中获得更好的排名' %}</small>
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="meta_title">{% trans 'Meta 标题' %}</label>
+                    <input type="text" class="form-control" id="meta_title" name="meta_title" 
+                           value="{{ game.meta_title|default:'' }}" placeholder="{% trans '例如: 最新3D赛车游戏 - 在线免费玩 | 游戏名称' %}">
+                    <small class="form-text text-muted">{% trans '建议长度: 50-60个字符。搜索结果中显示的标题，对SEO至关重要' %}</small>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="meta_description">{% trans 'Meta 描述' %}</label>
+                    <textarea class="form-control" id="meta_description" name="meta_description" rows="3" 
+                              placeholder="{% trans '例如: 体验最新的3D赛车游戏，完全免费。包含多种赛车和赛道，挑战您的驾驶技能！' %}">{{ game.meta_description|default:'' }}</textarea>
+                    <small class="form-text text-muted">{% trans '建议长度: 120-160个字符。搜索结果中显示的描述，应包含关键词并吸引点击' %}</small>
+                  </div>
+                  
+                  <div class="form-group mb-0">
+                    <label for="meta_keywords">{% trans 'Meta 关键词' %}</label>
+                    <input type="text" class="form-control" id="meta_keywords" name="meta_keywords" 
+                           value="{{ game.meta_keywords|default:'' }}" placeholder="{% trans '例如: 赛车游戏,3D游戏,免费游戏,在线游戏,多人游戏' %}">
+                    <small class="form-text text-muted">{% trans '用逗号分隔的关键词列表。虽然对现代SEO不如以前重要，但仍有一定参考价值' %}</small>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="iframe_url">{% trans '游戏iframe链接' %} <span class="text-danger">*</span></label>
+                <input type="url" class="form-control" id="iframe_url" name="iframe_url" required 
+                       value="{{ game.iframe_url|default:'' }}" placeholder="{% trans '输入完整的iframe URL，例如: https://example.com/games/game1.html' %}">
+                <small class="form-text text-muted">{% trans '输入完整的iframe URL，包含https://前缀' %}</small>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="iframe_width">{% trans 'iframe宽度' %}</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="iframe_width" name="iframe_width" 
+                             value="{{ game.iframe_width|default:'100%' }}" placeholder="例如: 800 或 100%">
+                      <div class="input-group-append">
+                        <span class="input-group-text">px 或 %</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="iframe_height">{% trans 'iframe高度' %}</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="iframe_height" name="iframe_height" 
+                             value="{{ game.iframe_height|default:'600' }}" placeholder="例如: 600">
+                      <div class="input-group-append">
+                        <span class="input-group-text">px</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>{% trans '游戏标签' %}</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="tag_multiplayer" name="tags" value="multiplayer" 
+                         {% if game and 'multiplayer' in game.tags.values_list %}checked{% endif %}>
+                  <label class="form-check-label" for="tag_multiplayer">{% trans '多人游戏' %}</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="tag_3d" name="tags" value="3d" 
+                         {% if game and '3d' in game.tags.values_list %}checked{% endif %}>
+                  <label class="form-check-label" for="tag_3d">{% trans '3D游戏' %}</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="tag_hot" name="tags" value="hot" 
+                         {% if game and 'hot' in game.tags.values_list %}checked{% endif %}>
+                  <label class="form-check-label" for="tag_hot">{% trans '热门' %}</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="tag_new" name="tags" value="new" 
+                         {% if game and 'new' in game.tags.values_list %}checked{% endif %}>
+                  <label class="form-check-label" for="tag_new">{% trans '新游戏' %}</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="tag_recommended" name="tags" value="recommended" 
+                         {% if game and 'recommended' in game.tags.values_list %}checked{% endif %}>
+                  <label class="form-check-label" for="tag_recommended">{% trans '推荐' %}</label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 右侧栏 -->
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="category">{% trans '游戏分类' %} <span class="text-danger">*</span></label>
+                <select class="form-control" id="category" name="category" required>
+                  <option value="">{% trans '请选择分类' %}</option>
+                  {% for category in categories %}
+                  <option value="{{ category.id }}" {% if game and game.categories.all.0.id == category.id %}selected{% endif %}>
+                    {{ category.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <small class="form-text text-muted">{% trans '主要分类（当前仅支持选择一个主要分类）' %}</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="status">{% trans '游戏状态' %}</label>
+                <select class="form-control" id="status" name="status">
+                  <option value="online" {% if game and game.status == 'online' %}selected{% endif %}>{% trans '已上线' %}</option>
+                  <option value="offline" {% if not game or game.status == 'offline' %}selected{% endif %}>{% trans '已下线' %}</option>
+                  <option value="pending" {% if game and game.status == 'pending' %}selected{% endif %}>{% trans '待审核' %}</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>{% trans '游戏缩略图' %}</label>
+                {% if game and game.thumbnail %}
+                <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}" class="thumbnail-preview" id="thumbnailPreview">
+                {% else %}
+                <div class="thumbnail-placeholder" id="thumbnailPlaceholder">
+                  <i class="fas fa-image fa-3x"></i>
+                </div>
+                {% endif %}
+                <input type="file" name="thumbnail" id="thumbnailUpload" class="thumbnail-upload" accept="image/*">
+                <button type="button" class="btn btn-outline-secondary btn-block" id="thumbnailBtn">
+                  <i class="fas fa-upload"></i> {% trans '选择文件' %}
+                </button>
+                <small class="form-text text-muted">{% trans '推荐尺寸: 500x300 像素，最大文件大小: 2MB' %}</small>
+              </div>
+              
+              {% if game %}
+              <div class="form-group">
+                <label>{% trans '游戏统计' %}</label>
+                <div class="info-box">
+                  <span class="info-box-icon bg-info"><i class="fas fa-gamepad"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans '游玩次数' %}</span>
+                    <span class="info-box-number">{{ game.player_count }}</span>
+                  </div>
+                </div>
+                <div class="info-box">
+                  <span class="info-box-icon bg-warning"><i class="fas fa-star"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans '评分' %}</span>
+                    <span class="info-box-number">{{ game.rating }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> {% trans '保存' %}
+          </button>
+          <a href="{% url 'admin_panel:game_list' %}" class="btn btn-default ml-2">
+            <i class="fas fa-times"></i> {% trans '取消' %}
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+  $(document).ready(function() {
+    // 缩略图上传预览
+    $('#thumbnailBtn').on('click', function() {
+      $('#thumbnailUpload').click();
+    });
+    
+    $('#thumbnailUpload').on('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        
+        // 检查文件大小 (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          toastr.error('{% trans "文件大小不能超过2MB" %}');
+          $(this).val('');
+          return;
+        }
+        
+        // 检查文件类型
+        if (!file.type.match('image.*')) {
+          toastr.error('{% trans "只能上传图片文件" %}');
+          $(this).val('');
+          return;
+        }
+        
+        // 显示预览
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          // 如果已有缩略图，更新src
+          if ($('#thumbnailPreview').length) {
+            $('#thumbnailPreview').attr('src', e.target.result);
+          } else {
+            // 否则创建新的预览图并替换占位符
+            const img = $('<img>', {
+              src: e.target.result,
+              id: 'thumbnailPreview',
+              class: 'thumbnail-preview'
+            });
+            $('#thumbnailPlaceholder').replaceWith(img);
+          }
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // 表单验证
+    $('#gameForm').on('submit', function(e) {
+      const title = $('#title').val().trim();
+      const category = $('#category').val();
+      const iframeUrl = $('#iframe_url').val().trim();
+      
+      if (!title) {
+        e.preventDefault();
+        toastr.error('{% trans "请输入游戏名称" %}');
+        $('#title').focus();
+        return false;
+      }
+      
+      if (!category) {
+        e.preventDefault();
+        toastr.error('{% trans "请选择游戏分类" %}');
+        $('#category').focus();
+        return false;
+      }
+      
+      if (!iframeUrl) {
+        e.preventDefault();
+        toastr.error('{% trans "请输入游戏iframe链接" %}');
+        $('#iframe_url').focus();
+        return false;
+      }
+      
+      // 简单URL格式验证
+      if (!/^https?:\/\/.+/i.test(iframeUrl)) {
+        e.preventDefault();
+        toastr.error('{% trans "iframe链接格式不正确，应以http://或https://开头" %}');
+        $('#iframe_url').focus();
+        return false;
+      }
+      
+      return true;
+    });
+  });
+</script>
+{% endblock %} 

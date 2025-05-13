@@ -1,0 +1,679 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* 网站设置页面专用样式 */
+  .settings-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+  }
+  
+  .settings-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .settings-form {
+    padding: 20px;
+  }
+  
+  .settings-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .settings-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #444;
+  }
+  
+  /* 表单元素定制 */
+  .form-control {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+  }
+  
+  .form-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  textarea.form-control {
+    min-height: 100px;
+  }
+  
+  .required-field .form-label:after {
+    content: " *";
+    color: #dc3545;
+  }
+  
+  /* 文件上传样式 */
+  .file-upload-container {
+    position: relative;
+  }
+  
+  .file-preview-container {
+    margin-top: 10px;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    display: inline-block;
+  }
+  
+  .file-preview {
+    max-width: 200px;
+    max-height: 100px;
+    display: block;
+    margin-bottom: 5px;
+    object-fit: contain;
+  }
+  
+  .file-preview.favicon {
+    max-width: 32px;
+    max-height: 32px;
+  }
+  
+  .preview-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+    display: block;
+    text-align: center;
+  }
+  
+  .upload-btn {
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border-color: #ddd;
+  }
+  
+  .upload-btn:hover {
+    background-color: #e9ecef;
+  }
+  
+  .custom-file-input {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  /* 操作按钮区域 */
+  .form-actions {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    text-align: right;
+  }
+  
+  .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    padding: 0.5rem 1.5rem;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+  }
+  
+  .btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+    padding: 0.5rem 1.25rem;
+  }
+  
+  /* 辅助信息文本 */
+  .help-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* 页面标题 */
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 767.98px) {
+    .settings-container {
+      border-radius: 0;
+      box-shadow: none;
+    }
+    
+    .settings-form {
+      padding: 15px;
+    }
+    
+    .form-actions {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .form-actions .btn {
+      width: 100%;
+    }
+  }
+  
+  /* SEO开关样式 */
+  .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    margin-top: 0.25em;
+  }
+  
+  .form-switch .form-check-input {
+    margin-right: 10px;
+  }
+  
+  /* 确保图标在输入框中垂直居中 */
+  .input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem 0 0 0.25rem;
+  }
+  
+  /* 调整按钮垂直对齐 */
+  .input-group > .btn,
+  .input-group > .input-group-text {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Toast通知样式 */
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+  }
+  
+  .toast {
+    min-width: 250px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- 引入顶部导航 -->
+  {% include "admin/includes/top_navbar.html" with page_title=title %}
+
+  <!-- 网站设置内容区 -->
+  <div class="settings-container">
+    <!-- 引入卡片标题 -->
+    
+    <form method="post" enctype="multipart/form-data" id="siteSettingsForm" class="settings-form">
+      {% csrf_token %}
+      
+      <!-- 网站信息部分 -->
+      <div class="settings-section">
+        <h3 class="section-title">{% trans '网站信息' %}</h3>
+        
+        <div class="mb-3 required-field">
+          <label for="{{ form.site_name.id_for_label }}" class="form-label">{{ form.site_name.label }}</label>
+          {{ form.site_name }}
+          <div class="invalid-feedback" id="site_name_error"></div>
+          {% if form.site_name.errors %}
+          <div class="invalid-feedback d-block">{{ form.site_name.errors }}</div>
+          {% endif %}
+          {% if form.site_name.help_text %}
+          <div class="help-text">{{ form.site_name.help_text }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="mb-3">
+          <label for="{{ form.site_description.id_for_label }}" class="form-label">{{ form.site_description.label }}</label>
+          {{ form.site_description }}
+          <div class="invalid-feedback" id="site_description_error"></div>
+          {% if form.site_description.errors %}
+          <div class="invalid-feedback d-block">{{ form.site_description.errors }}</div>
+          {% endif %}
+          {% if form.site_description.help_text %}
+          <div class="help-text">{{ form.site_description.help_text }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="mb-3">
+          <label for="{{ form.site_keywords.id_for_label }}" class="form-label">{{ form.site_keywords.label }}</label>
+          {{ form.site_keywords }}
+          <div class="invalid-feedback" id="site_keywords_error"></div>
+          {% if form.site_keywords.errors %}
+          <div class="invalid-feedback d-block">{{ form.site_keywords.errors }}</div>
+          {% endif %}
+          {% if form.site_keywords.help_text %}
+          <div class="help-text">{{ form.site_keywords.help_text }}</div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- 网站标识部分 -->
+      <div class="settings-section">
+        <h3 class="section-title">{% trans '网站标识' %}</h3>
+        
+        <div class="mb-3">
+          <label for="{{ form.site_logo.id_for_label }}" class="form-label">{{ form.site_logo.label }}</label>
+          <div class="file-upload-container">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-image"></i>
+              </span>
+              <input type="text" class="form-control" readonly id="logoFileText" 
+                     value="{% if settings.site_logo %}已上传{% else %}选择文件{% endif %}">
+              <label class="input-group-text upload-btn">
+                {% trans '浏览' %}
+                {{ form.site_logo }}
+              </label>
+            </div>
+            <div class="invalid-feedback" id="site_logo_error"></div>
+            {% if form.site_logo.errors %}
+            <div class="invalid-feedback d-block">{{ form.site_logo.errors }}</div>
+            {% endif %}
+            {% if form.site_logo.help_text %}
+            <div class="help-text">{{ form.site_logo.help_text }}</div>
+            {% endif %}
+            {% if settings.site_logo %}
+            <div class="file-preview-container mt-2" id="logoPreviewContainer">
+              <img src="{{ settings.site_logo.url }}" class="file-preview" alt="网站Logo" id="logoPreview">
+              <span class="preview-text">当前Logo</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label for="{{ form.site_favicon.id_for_label }}" class="form-label">{{ form.site_favicon.label }}</label>
+          <div class="file-upload-container">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-bookmark"></i>
+              </span>
+              <input type="text" class="form-control" readonly id="faviconFileText" 
+                     value="{% if settings.site_favicon %}已上传{% else %}选择文件{% endif %}">
+              <label class="input-group-text upload-btn">
+                {% trans '浏览' %}
+                {{ form.site_favicon }}
+              </label>
+            </div>
+            <div class="invalid-feedback" id="site_favicon_error"></div>
+            {% if form.site_favicon.errors %}
+            <div class="invalid-feedback d-block">{{ form.site_favicon.errors }}</div>
+            {% endif %}
+            {% if form.site_favicon.help_text %}
+            <div class="help-text">{{ form.site_favicon.help_text }}</div>
+            {% endif %}
+            {% if settings.site_favicon %}
+            <div class="file-preview-container mt-2" id="faviconPreviewContainer">
+              <img src="{{ settings.site_favicon.url }}" class="file-preview favicon" alt="网站图标" id="faviconPreview">
+              <span class="preview-text">当前图标</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- 操作按钮 -->
+      <div class="form-actions">
+        <div class="spinner-border text-primary d-none" role="status" id="formSubmitSpinner">
+          <span class="visually-hidden">正在提交...</span>
+        </div>
+        {% if perms.admin_panel.setting_edit %}
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <i class="fas fa-save me-1"></i>{% trans '保存设置' %}
+        </button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast通知容器 -->
+<div class="toast-container"></div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 添加表单类名，确保应用Bootstrap样式
+    document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea').forEach(function(input) {
+      if (!input.classList.contains('form-control')) {
+        input.classList.add('form-control');
+      }
+    });
+    
+    document.querySelectorAll('input[type="checkbox"]').forEach(function(input) {
+      if (!input.classList.contains('form-check-input')) {
+        input.classList.add('form-check-input');
+      }
+    });
+    
+    // 文件上传字段显示选择的文件名
+    document.getElementById('{{ form.site_logo.id_for_label }}').addEventListener('change', function() {
+      const fileText = document.getElementById('logoFileText');
+      if (this.files.length > 0) {
+        fileText.value = this.files[0].name;
+        
+        // 显示上传前预览
+        previewImage(this, 'logoPreview', 'logoPreviewContainer');
+      } else {
+        fileText.value = '选择文件';
+      }
+    });
+
+    document.getElementById('{{ form.site_favicon.id_for_label }}').addEventListener('change', function() {
+      const fileText = document.getElementById('faviconFileText');
+      if (this.files.length > 0) {
+        fileText.value = this.files[0].name;
+        
+        // 显示上传前预览
+        previewImage(this, 'faviconPreview', 'faviconPreviewContainer');
+      } else {
+        fileText.value = '选择文件';
+      }
+    });
+    
+    // 预览图片函数
+    function previewImage(fileInput, imgId, containerId) {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          let imgPreview = document.getElementById(imgId);
+          let container = document.getElementById(containerId);
+          
+          // 如果预览图不存在，创建一个新的
+          if (!imgPreview) {
+            container = document.createElement('div');
+            container.id = containerId;
+            container.className = 'file-preview-container mt-2';
+            
+            imgPreview = document.createElement('img');
+            imgPreview.id = imgId;
+            imgPreview.className = imgId === 'faviconPreview' ? 'file-preview favicon' : 'file-preview';
+            imgPreview.alt = imgId === 'faviconPreview' ? '网站图标' : '网站Logo';
+            
+            const previewText = document.createElement('span');
+            previewText.className = 'preview-text';
+            previewText.textContent = '预览图像';
+            
+            container.appendChild(imgPreview);
+            container.appendChild(previewText);
+            
+            fileInput.parentElement.parentElement.parentElement.appendChild(container);
+          }
+          
+          imgPreview.src = e.target.result;
+          container.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // 清除缓存按钮事件
+    const clearCacheBtn = document.getElementById('clearCacheBtn');
+    if (clearCacheBtn) {
+      clearCacheBtn.addEventListener('click', function() {
+        if (confirm('确定要清除网站设置缓存吗？')) {
+          // 显示加载状态
+          this.disabled = true;
+          this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>处理中...';
+          
+          fetch('{% url "admin_panel:clear_site_settings_cache" %}', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+          })
+          .then(response => response.json())
+          .then(data => {
+            // 恢复按钮状态
+            clearCacheBtn.disabled = false;
+            clearCacheBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>{% trans "清除缓存" %}';
+            
+            if (data.status === 'success') {
+              // 创建并显示成功提示
+              showToast(data.message, 'success');
+              
+              // 2秒后重新加载页面
+              setTimeout(() => {
+                location.reload();
+              }, 2000);
+            } else {
+              // 显示错误提示
+              showToast('清除缓存失败', 'danger');
+            }
+          })
+          .catch(error => {
+            // 恢复按钮状态
+            clearCacheBtn.disabled = false;
+            clearCacheBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>{% trans "清除缓存" %}';
+            
+            console.error('Error:', error);
+            showToast('操作失败，请重试', 'danger');
+          });
+        }
+      });
+    }
+    
+    // 表单Ajax提交
+    const siteSettingsForm = document.getElementById('siteSettingsForm');
+    if (siteSettingsForm) {
+      siteSettingsForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // 阻止表单默认提交行为，避免302跳转
+        
+        // 清除之前的错误信息
+        clearFormErrors();
+        
+        // 显示加载状态
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('formSubmitSpinner');
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        
+        // 使用FormData获取表单数据（包括文件）
+        const formData = new FormData(this);
+        
+        // 发送Ajax请求
+        fetch('{% url "admin_panel:ajax_update_site_settings" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(data => {
+              throw data;
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          // 恢复按钮状态
+          submitBtn.disabled = false;
+          spinner.classList.add('d-none');
+          
+          if (data.status === 'success') {
+            // 显示成功消息
+            showToast(data.message, 'success');
+            
+            // 使用新设置更新页面，不刷新整个页面
+            updatePageWithNewSettings(data.settings);
+          } else {
+            // 处理其他状态
+            showToast(data.message || '保存失败', 'warning');
+          }
+        })
+        .catch(error => {
+          // 恢复按钮状态
+          submitBtn.disabled = false;
+          spinner.classList.add('d-none');
+          
+          console.error('Error:', error);
+          
+          // 显示表单验证错误
+          if (error.errors) {
+            displayFormErrors(error.errors);
+            showToast('表单验证失败，请检查输入', 'danger');
+          } else {
+            showToast('提交失败，请重试', 'danger');
+          }
+        });
+      });
+    }
+    
+    // 清除表单错误信息
+    function clearFormErrors() {
+      // 移除所有错误提示
+      document.querySelectorAll('.invalid-feedback').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('d-block');
+      });
+      
+      // 移除输入框的错误状态
+      document.querySelectorAll('.form-control').forEach(el => {
+        el.classList.remove('is-invalid');
+      });
+    }
+    
+    // 显示表单错误信息
+    function displayFormErrors(errors) {
+      for (const field in errors) {
+        const errorElement = document.getElementById(`${field}_error`);
+        const inputElement = document.getElementById(`id_${field}`);
+        
+        if (errorElement) {
+          errorElement.textContent = errors[field];
+          errorElement.classList.add('d-block');
+        }
+        
+        if (inputElement) {
+          inputElement.classList.add('is-invalid');
+        }
+      }
+    }
+    
+    // 使用新设置更新页面，不刷新整个页面
+    function updatePageWithNewSettings(settings) {
+      // 更新表单值
+      if (settings.site_name) {
+        document.getElementById('id_site_name').value = settings.site_name;
+      }
+      
+      if (settings.site_description) {
+        document.getElementById('id_site_description').value = settings.site_description;
+      }
+      
+      if (settings.site_keywords) {
+        document.getElementById('id_site_keywords').value = settings.site_keywords;
+      }
+      
+      // 更新图片预览（如果有）
+      if (settings.site_logo_url) {
+        const logoPreview = document.getElementById('logoPreview');
+        if (logoPreview) {
+          // 添加时间戳避免缓存问题
+          logoPreview.src = settings.site_logo_url + '?t=' + new Date().getTime();
+        }
+      }
+      
+      if (settings.site_favicon_url) {
+        const faviconPreview = document.getElementById('faviconPreview');
+        if (faviconPreview) {
+          faviconPreview.src = settings.site_favicon_url + '?t=' + new Date().getTime();
+        }
+      }
+      
+      // 清除文件输入框的值，以便用户可以再次上传相同的文件
+      document.getElementById('{{ form.site_logo.id_for_label }}').value = '';
+      document.getElementById('{{ form.site_favicon.id_for_label }}').value = '';
+      document.getElementById('logoFileText').value = '已上传';
+      document.getElementById('faviconFileText').value = '已上传';
+    }
+    
+    // 显示Toast通知
+    function showToast(message, type = 'success') {
+      const toastContainer = document.querySelector('.toast-container');
+      
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+      
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-exclamation-circle'} me-2"></i>
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+      
+      toastContainer.appendChild(toastEl);
+      
+      // 使用Bootstrap的Toast组件
+      const toast = new bootstrap.Toast(toastEl, { 
+        delay: 3000,
+        autohide: true
+      });
+      
+      toast.show();
+      
+      // 自动清理Toast元素
+      toastEl.addEventListener('hidden.bs.toast', function() {
+        toastEl.remove();
+      });
+    }
+  });
+</script>
+{% endblock %} 

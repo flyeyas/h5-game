@@ -1,0 +1,183 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+{% load payment_tags %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:subscription_list' %}">{% trans '会员订阅管理' %}</a></li>
+    <li class="breadcrumb-item active">{% trans '订阅详情' %}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans '订阅基本信息' %}</h3>
+                <div class="card-tools">
+                    <a href="{% url 'admin_panel:subscription_edit' pk=subscription.id %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> {% trans '编辑' %}
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th style="width: 30%">{% trans '订阅ID' %}</th>
+                        <td>{{ subscription.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '用户' %}</th>
+                        <td>{{ subscription.user.username }} ({{ subscription.user.email }})</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '订阅计划' %}</th>
+                        <td>{{ subscription.plan.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '状态' %}</th>
+                        <td>
+                            {% if subscription.status == 'active' %}
+                            <span class="badge badge-success">{% trans '活跃' %}</span>
+                            {% elif subscription.status == 'trial' %}
+                            <span class="badge badge-info">{% trans '试用期' %}</span>
+                            {% elif subscription.status == 'expired' %}
+                            <span class="badge badge-secondary">{% trans '已过期' %}</span>
+                            {% elif subscription.status == 'cancelled' %}
+                            <span class="badge badge-warning">{% trans '已取消' %}</span>
+                            {% elif subscription.status == 'pending' %}
+                            <span class="badge badge-primary">{% trans '待处理' %}</span>
+                            {% else %}
+                            <span class="badge badge-danger">{% trans '已暂停' %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '开始日期' %}</th>
+                        <td>{{ subscription.start_date|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '结束日期' %}</th>
+                        <td>{{ subscription.end_date|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '自动续费' %}</th>
+                        <td>
+                            {% if subscription.auto_renew %}
+                            <span class="badge badge-success">{% trans '是' %}</span>
+                            {% else %}
+                            <span class="badge badge-light">{% trans '否' %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '是否试用' %}</th>
+                        <td>
+                            {% if subscription.is_trial %}
+                            <span class="badge badge-info">{% trans '是' %}</span>
+                            {% else %}
+                            <span class="badge badge-light">{% trans '否' %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '创建时间' %}</th>
+                        <td>{{ subscription.created_at|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '更新时间' %}</th>
+                        <td>{{ subscription.updated_at|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans '支付信息' %}</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th style="width: 30%">{% trans '支付网关' %}</th>
+                        <td>
+                            {% if subscription.payment_gateway %}
+                            {{ subscription.payment_gateway.name }} ({{ subscription.payment_gateway.get_gateway_type_display }})
+                            {% else %}
+                            <span class="text-muted">{% trans '未指定' %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '网关订阅ID' %}</th>
+                        <td>
+                            {% if subscription.gateway_subscription_id %}
+                            <code>{{ subscription.gateway_subscription_id }}</code>
+                            {% else %}
+                            <span class="text-muted">{% trans '未指定' %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans '价格' %}</th>
+                        <td>{{ subscription.plan.price|currency_format }} / {{ subscription.plan.get_period_display }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans '交易记录' %}</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>{% trans '类型' %}</th>
+                            <th>{% trans '金额' %}</th>
+                            <th>{% trans '状态' %}</th>
+                            <th>{% trans '时间' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.id }}</td>
+                            <td>{{ transaction.get_transaction_type_display }}</td>
+                            <td>{{ transaction.amount|currency_format:transaction.currency }}</td>
+                            <td>
+                                {% if transaction.status == 'success' %}
+                                <span class="badge badge-success">{% trans '成功' %}</span>
+                                {% elif transaction.status == 'pending' %}
+                                <span class="badge badge-primary">{% trans '处理中' %}</span>
+                                {% elif transaction.status == 'failed' %}
+                                <span class="badge badge-danger">{% trans '失败' %}</span>
+                                {% elif transaction.status == 'refunded' %}
+                                <span class="badge badge-warning">{% trans '已退款' %}</span>
+                                {% else %}
+                                <span class="badge badge-secondary">{{ transaction.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">{% trans '暂无交易记录' %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,164 @@
+{% load static %}
+<div class="tab-pane fade show active" id="games" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>收藏的游戏</h3>
+        <div class="search-filter-area">
+            <form id="search-form" action="javascript:void(0);" class="d-flex me-2">
+                <div class="input-group me-2" style="width: 250px;">
+                    <input type="text" class="form-control" placeholder="搜索游戏..." name="search" id="search-input" value="{{ search_query }}">
+                    <button class="btn btn-outline-secondary" type="submit" id="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                <select class="form-select" style="width: 150px;" name="category" id="category-select">
+                    <option value="">全部分类</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"i" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <!-- 隐藏字段，保留当前排序和每页数量设置 -->
+                <input type="hidden" name="sort" id="sort-input" value="{{ current_sort }}">
+                <input type="hidden" name="per_page" id="per-page-input" value="{{ per_page }}">
+                <input type="hidden" name="page" id="page-input" value="1">
+            </form>
+            
+            <!-- 排序下拉框 -->
+            <div class="dropdown me-2">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if current_sort == 'recent' %}
+                        最近收藏
+                    {% elif current_sort == 'name' %}
+                        名称
+                    {% elif current_sort == 'rating' %}
+                        评分
+                    {% else %}
+                        排序
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                    <li><a class="dropdown-item sort-option {% if current_sort == 'recent' %}active{% endif %}" href="#" data-sort="recent">最近收藏</a></li>
+                    <li><a class="dropdown-item sort-option {% if current_sort == 'name' %}active{% endif %}" href="#" data-sort="name">名称</a></li>
+                    <li><a class="dropdown-item sort-option {% if current_sort == 'rating' %}active{% endif %}" href="#" data-sort="rating">评分</a></li>
+                </ul>
+            </div>
+            
+            <!-- 加载按钮 -->
+            <!-- <button id="load-games-btn" class="btn btn-primary">
+                <i class="fas fa-sync-alt me-1"></i> 加载游戏
+            </button> -->
+        </div>
+    </div>
+    
+    <!-- 筛选标签容器 -->
+    <div class="filter-tags mb-3 align-items-center flex-wrap" id="filter-tags" style="display: none;"></div>
+    
+    <!-- 加载中提示 -->
+    <div id="loading-indicator" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+        <p class="mt-2">正在加载收藏游戏...</p>
+    </div>
+    
+    <!-- 错误提示容器 -->
+    <div id="error-container" class="alert alert-danger text-center py-3" style="display: none;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span id="error-message">加载数据失败，请稍后再试</span>
+        <button class="btn btn-sm btn-outline-danger ms-3 retry-button">重试</button>
+    </div>
+    
+    <!-- 游戏列表容器 - 使用标准网格布局 -->
+    <div id="games-container" class="row mb-5">
+        <!-- 游戏列表将通过AJAX异步加载 -->
+    </div>
+    
+    <!-- 加载更多按钮 -->
+    <div id="load-more-container" class="text-center mt-4 mb-5">
+        <button id="load-more-btn" class="btn">
+            <i class="fas fa-sync-alt me-1"></i> 加载更多
+        </button>
+    </div>
+    
+    <!-- 游戏列表为空时的提示 -->
+    <div id="empty-favorites" class="text-center py-5" style="display: none;">
+        <div class="mb-4">
+            <i class="fas fa-heart-broken fa-4x text-muted"></i>
+        </div>
+        <h4>您还没有收藏任何游戏</h4>
+        <p class="text-muted">浏览游戏并添加到您的收藏夹</p>
+        <a href="{% url 'games:game_list' %}" class="btn btn-primary mt-3">浏览游戏</a>
+    </div>
+</div>
+
+<!-- 游戏卡片模板 (用于JS克隆) -->
+<template id="game-card-template">
+    <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-4">
+        <div class="card h-100 game-card">
+            <div class="position-relative">
+                <img src="" class="card-img-top game-thumbnail" alt="">
+                <span class="position-absolute top-0 start-0 m-2 badge bg-warning game-badge" style="display: none;"></span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title game-title text-truncate"></h5>
+                
+                <!-- 游戏评分 -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="rating">
+                        <span class="game-rating-stars"></span>
+                        <small class="text-muted ms-1 game-rating-value"></small>
+                    </span>
+                    <span class="category-badge game-category"></span>
+                </div>
+                
+                <!-- 游戏简介 -->
+                <p class="game-intro">
+                </p>
+                
+                <p class="text-muted mb-3"><i class="fas fa-calendar-alt me-1"></i>收藏于: <span class="game-favorite-date"></span></p>
+                <div class="d-flex mt-2">
+                    <a href="#" class="btn btn-primary flex-grow-1 me-2 game-link">立即游玩</a>
+                    <button class="btn btn-danger favorite-btn" title="取消收藏" data-game-id="">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+    /* 游戏卡片样式 */
+    .game-card {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    /* 确保星星图标显示黄色 */
+    .rating i {
+        color: #ffc107 !important;
+    }
+    
+    /* 分类标签样式 */
+    .category-badge {
+        background-color: #6c757d;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+    
+    /* 底部间距，确保与页脚不冲突 */
+    #games {
+        margin-bottom: 3rem;
+    }
+    
+    /* 确保父容器适当高度，防止内容过少时页面布局异常 */
+    .tab-content {
+        min-height: 400px;
+    }
+</style> 

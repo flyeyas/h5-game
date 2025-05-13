@@ -1,0 +1,461 @@
+{% load static %}
+
+<style>
+/* 成功状态的tooltip样式 */
+.tooltip-success {
+    opacity: 1 !important;
+}
+
+.tooltip-success .tooltip-inner {
+    background-color: #28a745 !important;
+    color: white;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    max-width: 300px;
+}
+
+.tooltip-success .tooltip-arrow::before {
+    border-top-color: #28a745 !important;
+}
+
+/* 错误状态的tooltip样式 */
+.tooltip-danger {
+    opacity: 1 !important;
+}
+
+.tooltip-danger .tooltip-inner {
+    background-color: #dc3545 !important;
+    color: white;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    max-width: 300px;
+}
+
+.tooltip-danger .tooltip-arrow::before {
+    border-top-color: #dc3545 !important;
+}
+
+/* tooltip容器样式 */
+.tooltip-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1060;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // 全局事件监听 - 确保在各种情况下都能清理tooltips
+    $(document).on('click', function(e) {
+        // 当点击非tooltip元素时，如果tooltip已经显示超过1秒，则清除它们
+        if (!$(e.target).closest('.tooltip-custom-container').length && 
+            window.tooltipShownTime && 
+            (new Date().getTime() - window.tooltipShownTime > 1000)) {
+            clearAllTooltips();
+        }
+    });
+    
+    // 监听所有模态框事件
+    $(document).on('show.bs.modal hide.bs.modal', function() {
+        clearAllTooltips();
+    });
+    
+    // 密码强度检测
+    $('#newPassword').on('input', function() {
+        var password = $(this).val();
+        var strength = 0;
+        
+        if (password.length >= 8) strength += 25;
+        if (password.match(/[a-z]+/)) strength += 25;
+        if (password.match(/[A-Z]+/)) strength += 25;
+        if (password.match(/[0-9]+/)) strength += 25;
+        
+        var $meter = $('.password-strength-meter .progress-bar');
+        $meter.css('width', strength + '%');
+        
+        if (strength <= 25) {
+            $meter.removeClass().addClass('progress-bar bg-danger');
+        } else if (strength <= 50) {
+            $meter.removeClass().addClass('progress-bar bg-warning');
+        } else if (strength <= 75) {
+            $meter.removeClass().addClass('progress-bar bg-info');
+        } else {
+            $meter.removeClass().addClass('progress-bar bg-success');
+        }
+    });
+    
+    // 头像上传预览
+    $('#avatar').on('change', function(e) {
+        var file = e.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('.avatar-preview').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // 表单提交处理
+    $('#profileForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        
+        // 显示加载状态
+        var saveBtn = $('#saveProfileBtn');
+        var originalBtnText = saveBtn.html();
+        saveBtn.prop('disabled', true);
+        saveBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...');
+        
+        // 创建tooltip元素
+        var tooltipId = 'profileSaveTooltip';
+        var tooltipElement = $('#' + tooltipId);
+        if (!tooltipElement.length) {
+            $('body').append('<div id="' + tooltipId + '" class="tooltip-container"></div>');
+            tooltipElement = $('#' + tooltipId);
+        }
+        
+        apiRequest({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: formData,
+            useFormData: true,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            showToast: false, // 禁用内置的toast显示
+            success: function(response) {
+                // 如果有返回的头像URL，更新显示
+                if (response.data && response.data.avatar_url) {
+                    $('.avatar-preview').attr('src', response.data.avatar_url);
+                } else if (response.data && response.data.avatar_path) {
+                    $('.avatar-preview').attr('src', response.data.avatar_path);
+                }
+                
+                // 显示成功的tooltip
+                showProfileTooltip(saveBtn, 'success', response.message || '个人资料已更新');
+            },
+            error: function(response) {
+                // 显示错误的tooltip
+                showProfileTooltip(saveBtn, 'danger', response.message || '更新失败');
+            },
+            onComplete: function() {
+                // 恢复按钮状态
+                saveBtn.prop('disabled', false);
+                saveBtn.html(originalBtnText);
+            }
+        });
+    });
+    
+    // 使用Bootstrap tooltip显示状态提醒 - 完全重构版
+    function showProfileTooltip(element, type, message) {
+        // 清理页面上所有已存在的tooltip元素
+        $('.tooltip').remove();
+        
+        // 销毁页面上所有可能初始化的tooltip
+        $('[data-bs-toggle="tooltip"]').tooltip('dispose');
+        if (window.activeTooltipTimer) {
+            clearTimeout(window.activeTooltipTimer);
+            window.activeTooltipTimer = null;
+        }
+        
+        // 创建一个新的临时div元素作为tooltip容器
+        var tooltipId = 'profile-tooltip-' + new Date().getTime();
+        var tooltipContainer = $('<div>', {
+            id: tooltipId,
+            'class': 'tooltip-custom-container position-fixed',
+            css: {
+                'top': '20px',
+                'right': '20px',
+                'z-index': '9999',
+                'pointer-events': 'none'
+            }
+        });
+        
+        // 创建tooltip内容元素
+        var tooltipContent = $('<div>', {
+            'class': 'tooltip-custom ' + (type === 'success' ? 'bg-success' : 'bg-danger'),
+            css: {
+                'color': 'white',
+                'padding': '10px 15px',
+                'border-radius': '4px',
+                'box-shadow': '0 2px 5px rgba(0,0,0,0.2)',
+                'max-width': '300px',
+                'font-weight': '500',
+                'opacity': '0',
+                'transition': 'opacity 0.3s ease-in-out'
+            },
+            text: message
+        });
+        
+        // 添加到页面
+        tooltipContainer.append(tooltipContent);
+        $('body').append(tooltipContainer);
+        
+        // 记录tooltip显示时间
+        window.tooltipShownTime = new Date().getTime();
+        
+        // 显示tooltip（使用短延迟确保DOM已更新）
+        setTimeout(function() {
+            tooltipContent.css('opacity', '1');
+        }, 10);
+        
+        // 3秒后自动隐藏并移除
+        window.activeTooltipTimer = setTimeout(function() {
+            tooltipContent.css('opacity', '0');
+            
+            // 动画完成后移除元素
+            setTimeout(function() {
+                tooltipContainer.remove();
+                window.tooltipShownTime = null;
+            }, 300);
+            
+            window.activeTooltipTimer = null;
+        }, 3000);
+    }
+    
+    // 清除所有tooltip - 更彻底的版本
+    function clearAllTooltips() {
+        // 移除所有tooltip元素
+        $('.tooltip, .tooltip-custom-container').remove();
+        
+        // 销毁所有已初始化的tooltip
+        $('[data-bs-toggle="tooltip"]').tooltip('dispose');
+        
+        // 清除可能存在的定时器
+        if (window.activeTooltipTimer) {
+            clearTimeout(window.activeTooltipTimer);
+            window.activeTooltipTimer = null;
+        }
+    }
+    
+    // 密码表单提交
+    $('#passwordForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        
+        if (formData.get('new_password') !== formData.get('confirm_password')) {
+            showProfileTooltip($('#passwordForm button[type="submit"]'), 'danger', '两次输入的密码不一致');
+            return;
+        }
+        
+        // 显示加载状态
+        var saveBtn = $('#passwordForm button[type="submit"]');
+        var originalBtnText = saveBtn.html();
+        saveBtn.prop('disabled', true);
+        saveBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...');
+        
+        apiRequest({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: formData,
+            useFormData: true,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            showToast: false, // 禁用内置的toast显示
+            success: function(response) {
+                showProfileTooltip(saveBtn, 'success', '密码已更新');
+                $('#passwordForm')[0].reset();
+            },
+            error: function(response) {
+                showProfileTooltip(saveBtn, 'danger', response.message || '更新失败');
+            },
+            onComplete: function() {
+                // in the onComplete callback, restore the button state
+                saveBtn.prop('disabled', false);
+                saveBtn.html(originalBtnText);
+            }
+        });
+    });
+    
+    // 删除账号确认
+    $('#deleteAccountForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        
+        // 显示加载状态
+        var deleteBtn = $('#deleteAccountForm button[type="submit"]');
+        var originalBtnText = deleteBtn.html();
+        deleteBtn.prop('disabled', true);
+        deleteBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理中...');
+        
+        apiRequest({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: formData,
+            useFormData: true,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            showToast: false, // 禁用内置的toast显示
+            success: function(response) {
+                window.location.href = '/';
+            },
+            error: function(response) {
+                showProfileTooltip(deleteBtn, 'danger', response.message || '删除失败');
+                // 恢复按钮状态
+                deleteBtn.prop('disabled', false);
+                deleteBtn.html(originalBtnText);
+            }
+        });
+    });
+    
+    // 数据导出按钮处理 - 由于功能已移除，此处仅防止可能存在的事件绑定报错
+    $(document).on('click', '.data-export-btn', function(e) {
+        e.preventDefault();
+        console.log('数据导出功能已禁用');
+        // 如果按钮仍存在，显示提示
+        showProfileTooltip($(this), 'info', '数据导出功能暂不可用');
+    });
+    
+    // 监听修改邮箱模态框关闭事件，重置表单
+    $('#changeEmailModal').on('hidden.bs.modal', function() {
+        $('#changeEmailForm')[0].reset();
+        $('.verification-code-group').hide();
+    });
+    
+    // 监听修改邮箱模态框显示事件，同步当前邮箱
+    $('#changeEmailModal').on('show.bs.modal', function() {
+        // 从主页面获取当前邮箱，并更新模态框中的当前邮箱值
+        var currentEmailValue = $('#email').val();
+        $('#currentEmail').val(currentEmailValue);
+    });
+    
+    // 监听修改邮箱模态框取消按钮点击事件
+    $('#changeEmailModal .btn-secondary').on('click', function() {
+        // 立即重置表单，不等待模态框完全关闭
+        $('#changeEmailForm')[0].reset();
+        $('.verification-code-group').hide();
+    });
+    
+    // 监听修改邮箱模态框关闭按钮(X)点击事件
+    $('#changeEmailModal .btn-close').on('click', function() {
+        // 立即重置表单，不等待模态框完全关闭
+        $('#changeEmailForm')[0].reset();
+        $('.verification-code-group').hide();
+    });
+    
+    // 发送邮箱验证码按钮点击事件
+    $('#send-verification-btn').on('click', function() {
+        var newEmail = $('#newEmail').val();
+        var btn = $(this);
+        
+        // 验证邮箱格式
+        if (!newEmail || newEmail.indexOf('@') === -1) {
+            showProfileTooltip(btn, 'danger', '请输入有效的邮箱地址');
+            return;
+        }
+        
+        // 验证是否与当前邮箱相同
+        var currentEmail = $('#currentEmail').val();
+        if (newEmail === currentEmail) {
+            showProfileTooltip(btn, 'danger', '新邮箱不能与当前邮箱相同');
+            return;
+        }
+        
+        // 显示加载状态
+        var originalBtnText = btn.html();
+        btn.prop('disabled', true);
+        btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 发送中...');
+        
+        // 发送请求
+        apiRequest({
+            url: '/profile/send-verification/',
+            method: 'POST',
+            data: new FormData(document.getElementById('changeEmailForm')),
+            useFormData: true,
+            showToast: false,
+            success: function(response) {
+                showProfileTooltip(btn, 'success', '验证码已发送，请查收');
+                // 显示验证码输入框
+                $('.verification-code-group').show();
+                
+                // 添加倒计时效果
+                var countdown = 60;
+                btn.html(countdown + '秒后重新发送');
+                
+                var timer = setInterval(function() {
+                    countdown--;
+                    btn.html(countdown + '秒后重新发送');
+                    
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        btn.prop('disabled', false);
+                        btn.html(originalBtnText);
+                    }
+                }, 1000);
+            },
+            error: function(response) {
+                btn.prop('disabled', false);
+                btn.html(originalBtnText);
+                showProfileTooltip(btn, 'danger', response.message || '发送验证码失败');
+            }
+        });
+    });
+    
+    // 确认修改邮箱按钮点击事件
+    $('#confirmEmailChange').on('click', function() {
+        var newEmail = $('#newEmail').val();
+        var verificationCode = $('#verificationCode').val();
+        var btn = $(this);
+        
+        // 验证数据
+        if (!newEmail || newEmail.indexOf('@') === -1) {
+            showProfileTooltip(btn, 'danger', '请输入有效的邮箱地址');
+            return;
+        }
+        
+        if (!verificationCode) {
+            showProfileTooltip(btn, 'danger', '请输入验证码');
+            return;
+        }
+        
+        // 显示加载状态
+        var originalBtnText = btn.html();
+        btn.prop('disabled', true);
+        btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理中...');
+        
+        // 创建表单数据
+        var formData = new FormData();
+        formData.append('email', newEmail);
+        formData.append('verification_code', verificationCode);
+        
+        // 发送修改邮箱请求
+        apiRequest({
+            url: '/profile/update-email/',
+            method: 'POST',
+            data: formData,
+            useFormData: true,
+            showToast: false,
+            success: function(response) {
+                showProfileTooltip(btn, 'success', '邮箱修改成功');
+                
+                // 更新页面上显示的邮箱
+                $('#email').val(newEmail);
+                $('#currentEmail').val(newEmail);
+                
+                // 关闭模态框
+                setTimeout(function() {
+                    $('#changeEmailModal').modal('hide');
+                    // 在模态框完全关闭后再重置表单
+                    setTimeout(function() {
+                        $('#changeEmailForm')[0].reset();
+                        $('.verification-code-group').hide();
+                    }, 300);
+                }, 1500);
+            },
+            error: function(response) {
+                showProfileTooltip(btn, 'danger', response.message || '修改邮箱失败');
+            },
+            onComplete: function() {
+                btn.prop('disabled', false);
+                btn.html(originalBtnText);
+            }
+        });
+    });
+});
+</script> 

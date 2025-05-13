@@ -1,0 +1,309 @@
+/* 全局样式 */
+:root {
+    --primary-color: #6f42c1;
+    --primary-light: #a98eda;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --dark-color: #343a40;
+    --light-color: #f8f9fa;
+    --border-radius: 0.5rem;
+    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease;
+}
+
+/* 横幅区域 */
+.hero-banner {
+    background: linear-gradient(135deg, #6f42c1 0%, #6610f2 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/static/img/dots-pattern.svg');
+    opacity: 0.1;
+}
+
+.wave-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    line-height: 0;
+}
+
+/* 浮动徽章 */
+.floating-badges {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+.badge-item {
+    position: absolute;
+    background-color: white;
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: float 3s ease-in-out infinite;
+}
+
+.badge-item:nth-child(1) {
+    top: 15%;
+    right: 8%;
+    animation-delay: 0s;
+}
+
+.badge-item:nth-child(2) {
+    bottom: 25%;
+    right: 15%;
+    animation-delay: 0.5s;
+}
+
+.badge-item:nth-child(3) {
+    top: 40%;
+    left: 8%;
+    animation-delay: 1s;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+/* 分类图标 */
+.category-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #f0f0ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    transition: var(--transition);
+}
+
+.category-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.category-card:hover .category-icon {
+    background-color: var(--primary-color);
+}
+
+.category-card:hover .category-icon i {
+    color: white;
+}
+
+/* 章节标题样式 */
+.section-header h2 {
+    position: relative;
+    color: var(--dark-color);
+}
+
+.section-divider {
+    height: 4px;
+    width: 60px;
+    background-color: var(--primary-color);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+}
+
+/* 游戏卡片样式 */
+.game-card {
+    transition: var(--transition);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+}
+
+.game-image-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.game-image-wrapper img {
+    height: 160px;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+.game-card:hover .game-image-wrapper img {
+    transform: scale(1.05);
+}
+
+.game-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.game-card:hover .game-overlay {
+    opacity: 1;
+}
+
+.new-game-badge, .hot-game-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
+.new-game-badge {
+    background-color: #28a745;
+    color: white;
+}
+
+.hot-game-badge {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* 会员横幅 */
+.premium-banner {
+    background: linear-gradient(135deg, #614385 0%, #516395 100%);
+    overflow: hidden;
+}
+
+.premium-banner-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.shape-1 {
+    width: 150px;
+    height: 150px;
+    top: -50px;
+    left: -50px;
+}
+
+.shape-2 {
+    width: 100px;
+    height: 100px;
+    bottom: -30px;
+    right: 10%;
+}
+
+.shape-3 {
+    width: 70px;
+    height: 70px;
+    top: 30%;
+    right: -20px;
+}
+
+/* 用户评价 */
+.testimonial-card {
+    background-color: white;
+    transition: var(--transition);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+}
+
+.testimonial-avatar {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+
+.testimonial-text {
+    font-style: italic;
+    color: var(--secondary-color);
+    line-height: 1.6;
+}
+
+/* APP下载区域 */
+.app-mockup {
+    max-height: 400px;
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+    .game-image-wrapper img {
+        height: 130px;
+    }
+}
+
+@media (max-width: 767px) {
+    .hero-banner {
+        text-align: center;
+    }
+    
+    .section-divider.mx-auto {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .game-image-wrapper img {
+        height: 120px;
+    }
+    
+    .app-mockup {
+        max-height: 300px;
+        margin-top: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .game-image-wrapper img {
+        height: 100px;
+    }
+}
+
+/* 动画效果 */
+.animate__animated {
+    animation-duration: 0.8s;
+} 

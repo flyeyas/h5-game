@@ -1,0 +1,292 @@
+{% load static %}
+{% if form.errors %}
+<div class="alert alert-danger mb-3">
+    {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+            <p class="mb-0">{{ error }}</p>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if messages %}
+<div class="messages mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div id="register-response-messages"></div>
+
+<form id="register-form" method="post" action="{% url 'games:register_api' %}">
+    {% csrf_token %}
+    <input type="hidden" name="register_form" value="1">
+    <div class="mb-3">
+        <label for="username" class="form-label">用户名</label>
+        <input type="text" class="form-control" id="username" name="username" placeholder="请设置您的用户名" required>
+        <small class="text-muted">用户名要求3-30个字符，只能包含字母、数字、下划线或中文。</small>
+        <div class="invalid-feedback" id="username-error"></div>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">邮箱地址</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="请输入您的邮箱" required>
+        <small class="text-muted">请使用真实邮箱，注册时需要验证。</small>
+        <div class="invalid-feedback" id="email-error"></div>
+    </div>
+    <div class="mb-3 verification-code-group">
+        <div class="input-group">
+            <input type="text" class="form-control" id="verification_code" name="verification_code" placeholder="请输入验证码" required>
+            <button type="button" class="btn btn-outline-secondary" id="get-code-btn">获取验证码</button>
+        </div>
+        <small class="text-muted">验证码有效期为10分钟。</small>
+        <div class="invalid-feedback" id="verification_code-error"></div>
+    </div>
+    <div class="mb-3">
+        <label for="password1" class="form-label">密码</label>
+        <input type="password" class="form-control" id="password1" name="password1" placeholder="请设置密码" required>
+        <small class="text-muted">密码至少需要8个字符，不能是纯数字，不能与用户名相似。</small>
+        <div class="invalid-feedback" id="password1-error"></div>
+    </div>
+    <div class="mb-3">
+        <label for="password2" class="form-label">确认密码</label>
+        <input type="password" class="form-control" id="password2" name="password2" placeholder="请再次输入密码" required>
+        <small class="text-muted">请确保两次输入的密码完全一致。</small>
+        <div class="invalid-feedback" id="password2-error"></div>
+    </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="agree_terms" name="agree_terms" required>
+        <label class="form-check-label" for="agree_terms">我已阅读并同意<a href="{% url 'games:terms' %}">用户协议</a>和<a href="{% url 'games:privacy' %}">隐私政策</a></label>
+        <div class="invalid-feedback" id="agree_terms-error">请阅读并同意用户协议和隐私政策</div>
+    </div>
+    {% if next %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+    <button type="submit" class="btn btn-primary btn-auth w-100" id="register-submit-btn">
+        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="register-spinner"></span>
+        <span id="register-btn-text">注册</span>
+    </button>
+</form>
+
+<div class="divider">
+    <span>或使用以下方式注册</span>
+</div>
+
+<div class="social-login">
+    <a href="{% url 'socialaccount_login' 'google' %}{% if next %}?next={{ next }}{% endif %}" class="social-btn google w-100">
+        <i class="fab fa-google"></i> 使用Google账号注册
+    </a>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 用户名实时验证
+    const usernameInput = document.getElementById('username');
+    const usernameError = document.getElementById('username-error');
+    
+    usernameInput.addEventListener('input', function() {
+        const username = this.value.trim();
+        
+        // 清除之前的错误状态
+        this.classList.remove('is-invalid');
+        this.classList.remove('is-valid');
+        usernameError.textContent = '';
+        
+        // 验证用户名
+        if (username.length > 0) {
+            if (username.length < 3) {
+                this.classList.add('is-invalid');
+                usernameError.textContent = '用户名太短，至少需要3个字符';
+            } else if (username.length > 30) {
+                this.classList.add('is-invalid');
+                usernameError.textContent = '用户名太长，最多30个字符';
+            } else if (!username.match(/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/)) {
+                this.classList.add('is-invalid');
+                usernameError.textContent = '用户名只能包含字母、数字、下划线或中文';
+            } else {
+                this.classList.add('is-valid');
+            }
+        }
+    });
+    
+    // 获取验证码按钮点击事件
+    const getCodeBtn = document.getElementById('get-code-btn');
+    const emailInput = document.getElementById('email');
+    
+    getCodeBtn.addEventListener('click', function() {
+        // 获取邮箱输入值
+        const email = emailInput.value.trim();
+        
+        // 验证邮箱格式
+        if (!email || !email.includes('@')) {
+            emailInput.classList.add('is-invalid');
+            document.getElementById('email-error').textContent = '请输入有效的邮箱地址';
+            return;
+        }
+        
+        // 禁用按钮，显示loading状态
+        const originalBtnText = getCodeBtn.innerHTML;
+        getCodeBtn.disabled = true;
+        getCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 发送中...';
+        
+        // 使用apiRequest函数发送请求
+        apiRequest({
+            url: '{% url "games:register_send_code" %}',
+            method: 'POST',
+            data: {
+                email: email
+            },
+            showToast: false,
+            success: function(response) {
+                // 显示成功提示
+                showToast(response.message || '验证码已发送，请查收邮件', 'success');
+                
+                // 添加倒计时效果
+                let countdown = 60;
+                getCodeBtn.innerHTML = countdown + '秒后重新发送';
+                
+                const timer = setInterval(function() {
+                    countdown--;
+                    getCodeBtn.innerHTML = countdown + '秒后重新发送';
+                    
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        getCodeBtn.disabled = false;
+                        getCodeBtn.innerHTML = originalBtnText;
+                    }
+                }, 1000);
+            },
+            error: function(response) {
+                // 恢复按钮状态
+                getCodeBtn.disabled = false;
+                getCodeBtn.innerHTML = originalBtnText;
+                
+                // 显示错误提示
+                if (response.code === 'duplicate_entry') {
+                    emailInput.classList.add('is-invalid');
+                    document.getElementById('email-error').textContent = response.message || '该邮箱已被注册';
+                } else {
+                    showToast(response.message || '发送验证码失败，请稍后重试', 'danger');
+                }
+            }
+        });
+    });
+    
+    // 表单提交处理
+    const form = document.getElementById('register-form');
+    const submitBtn = document.getElementById('register-submit-btn');
+    const spinner = document.getElementById('register-spinner');
+    const btnText = document.getElementById('register-btn-text');
+    const responseMessages = document.getElementById('register-response-messages');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 清除之前的错误提示
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+        
+        // 基本客户端验证
+        let isValid = true;
+        
+        // 校验服务条款是否勾选
+        const agreeTerms = document.getElementById('agree_terms');
+        if (!agreeTerms.checked) {
+            agreeTerms.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // 验证密码匹配
+        const password1 = document.getElementById('password1').value;
+        const password2 = document.getElementById('password2').value;
+        
+        if (password1 !== password2) {
+            document.getElementById('password2').classList.add('is-invalid');
+            document.getElementById('password2-error').textContent = '两次输入的密码不一致';
+            isValid = false;
+        }
+        
+        // 如果客户端验证失败，不继续提交
+        if (!isValid) {
+            return;
+        }
+        
+        // 设置提交按钮loading状态
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        btnText.textContent = '处理中...';
+        
+        // 使用apiRequest函数发送异步请求
+        apiRequest({
+            url: form.action,
+            method: 'POST',
+            data: new FormData(form),
+            useFormData: true,
+            showToast: false,
+            success: function(response) {
+                // 显示成功消息
+                showToast(response.message || '注册成功！欢迎加入GameHub！', 'success');
+                
+                // 清空响应消息区域
+                responseMessages.innerHTML = '';
+                
+                // 延迟跳转
+                setTimeout(function() {
+                    window.location.href = response.data.redirect || '/';
+                }, 1500);
+            },
+            error: function(response) {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                spinner.classList.add('d-none');
+                btnText.textContent = '注册';
+                
+                // 处理错误响应
+                if (response.errors) {
+                    // 显示字段错误
+                    for (let field in response.errors) {
+                        const errorField = document.getElementById(field);
+                        const errorDisplay = document.getElementById(field + '-error');
+                        
+                        if (errorField && errorDisplay) {
+                            errorField.classList.add('is-invalid');
+                            errorDisplay.textContent = response.errors[field][0] || '字段错误';
+                        }
+                    }
+                } else {
+                    // 显示一般错误
+                    showToast(response.message || '注册失败，请稍后重试', 'danger');
+                }
+            }
+        });
+    });
+    
+    // 辅助函数：显示Toast提示
+    function showToast(message, type = 'success') {
+        // 使用Bootstrap的Toast或者自定义通知组件
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-dismissible fade show`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // 添加到页面并设置自动消失
+        responseMessages.innerHTML = '';
+        responseMessages.appendChild(toast);
+        
+        // 自动消失
+        setTimeout(function() {
+            toast.classList.remove('show');
+            setTimeout(function() {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 150);
+        }, 5000);
+    }
+});
+</script> 

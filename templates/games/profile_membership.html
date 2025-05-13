@@ -1,0 +1,28 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}会员信息 - HTML5游戏平台{% endblock %}
+
+{% block extra_css %}
+    {% include "games/includes/profile_styles.html" %}
+{% endblock %}
+
+{% block content %}
+    <!-- 个人资料头部 -->
+    {% include "games/includes/profile_header.html" %}
+
+    <div class="container">
+        <!-- 选项卡导航 -->
+        {% include "games/includes/profile_tabs.html" with active_tab="membership" %}
+        
+        <!-- 选项卡内容 -->
+        <div class="tab-content" id="profileTabContent">
+            <!-- 会员信息 -->
+            {% include "games/includes/profile_membership.html" with active_tab="membership" membership_features=membership_features transactions=transactions %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% include "games/includes/profile_scripts.html" %}
+{% endblock %} 

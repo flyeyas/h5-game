@@ -1,0 +1,335 @@
+{% load static %}
+<style>
+    /* 个人资料页面样式 */
+    body {
+        background-color: #f8f9fa;
+        overflow-x: hidden; /* 防止横向滚动 */
+    }
+    
+    /* 个人资料头部 */
+    .profile-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        box-sizing: border-box; /* 确保padding不会导致超出宽度 */
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto 20px;
+        border: 5px solid rgba(255,255,255,0.3);
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-info h1 {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    .profile-info p {
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+    .profile-info .badge {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+        margin-top: 10px;
+    }
+    .profile-stats {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .stat-item {
+        text-align: center;
+        padding: 0 20px;
+        border-right: 1px solid rgba(255,255,255,0.3);
+    }
+    .stat-item:last-child {
+        border-right: none;
+    }
+    .stat-item .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    .stat-item .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .profile-avatar-section {
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-avatar-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+    
+    .profile-member-status {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    /* 游戏卡片样式 */
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        border: none;
+        height: 100%;
+        position: relative;
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(106, 17, 203, 0.15);
+    }
+    .game-card .card-img-top, .game-card .game-thumbnail {
+        height: 160px;
+        object-fit: cover;
+        width: 100%;
+        transition: transform 0.5s ease;
+    }
+    .game-card:hover .game-thumbnail {
+        transform: scale(1.05);
+    }
+    .game-card .card-body {
+        padding: 16px;
+    }
+    .game-card .card-title, .game-card .game-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #333;
+    }
+    .game-card .rating {
+        color: #ffc107;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+    }
+    .game-card .rating i {
+        color: #ffc107 !important;
+        margin-right: 2px;
+    }
+    .game-card .category-badge, .game-card .game-category {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        background-color: #e9ecef;
+        color: #495057;
+        font-weight: 500;
+    }
+    .game-card .game-intro {
+        color: #6c757d;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 15px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        height: 40px;
+    }
+    .game-card .btn {
+        border-radius: 5px;
+        font-weight: 500;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    .game-card .btn-primary, .game-card .game-link {
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .game-card .btn-primary:hover, .game-card .game-link:hover {
+        background: linear-gradient(to right, #5a0db0, #1e62d0);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+    .game-card .btn-outline-danger {
+        color: #dc3545;
+        border-color: #dc3545;
+        background-color: transparent;
+        transition: all 0.3s ease;
+    }
+    .game-card .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: white;
+        transform: translateY(-2px);
+    }
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #212529;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    /* 瀑布流布局容器 */
+    #games-masonry-container {
+        margin-bottom: 30px;
+        min-height: 200px;
+        position: relative;
+    }
+    
+    .game-card-wrapper {
+        padding: 10px;
+        margin-bottom: 20px;
+        float: left;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Masonry布局修复 */
+    .masonry {
+        display: block;
+    }
+    
+    /* 容器清除浮动 */
+    #games-masonry-container:after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+    
+    /* 游戏卡片移动动画 */
+    .game-card-wrapper.is-positioning-post-drag {
+        transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+    
+    /* 加载更多按钮 */
+    #load-more-btn {
+        padding: 12px 30px;
+        font-weight: 500;
+        background-color: #fff;
+        border: 2px solid #6a11cb;
+        color: #6a11cb;
+        border-radius: 30px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    #load-more-btn:hover {
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(106, 17, 203, 0.2);
+    }
+    
+    /* 筛选标签样式 - 与历史页面保持一致 */
+    .filter-tags {
+        padding: 0.8rem 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-tags .filter-label {
+        font-weight: 500;
+        color: #333;
+        white-space: nowrap;
+        margin-right: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .filter-tags .badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.7rem;
+        border-radius: 20px;
+        background-color: #f0f0f0;
+        color: #333;
+        border: 1px solid #ddd;
+        transition: all 0.2s ease-in-out;
+        margin-right: 0.5rem;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .filter-tags .badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .filter-tags .badge .text-muted {
+        color: #6c757d;
+        cursor: pointer;
+        margin-left: 4px;
+    }
+    
+    .filter-tags .badge .fa-times:hover {
+        color: #dc3545;
+    }
+    
+    .filter-tags .btn-outline-secondary {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+        white-space: nowrap;
+    }
+    
+    .filter-tags .btn-outline-secondary:hover {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: #fff;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 767.98px) {
+        .profile-header {
+            padding: 30px 0;
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+        }
+        .stat-item {
+            padding: 0 10px;
+        }
+        .stat-item .stat-value {
+            font-size: 1.2rem;
+        }
+        .game-card-wrapper {
+            width: 50%;
+        }
+        .game-card .card-body {
+            padding: 12px;
+        }
+        .game-card .card-title, .game-card .game-title {
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .game-card-wrapper {
+            width: 100%;
+        }
+        .game-card .btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+    }
+</style> 

@@ -1,0 +1,69 @@
+{% extends "games/base.html" %}
+{% load i18n %}
+{% load games_payment_tags %}
+
+{% block title %}{% trans '支付取消' %} | GameHub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center p-5">
+            <div class="mb-4">
+                <i class="fas fa-times-circle text-danger" style="font-size: 80px;"></i>
+            </div>
+            <h1 class="display-4 mb-4">{% trans '支付已取消' %}</h1>
+            <p class="lead">{% trans '您的支付已取消，没有产生任何费用。' %}</p>
+            <p class="text-muted">{% trans '如果您遇到问题或有任何疑问，请联系我们的客户支持。' %}</p>
+            
+            {% if transaction %}
+            <div class="transaction-info mt-4 mb-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">{% trans '交易信息' %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 text-start">
+                                <p><strong>{% trans '交易单号' %}:</strong> {{ transaction.id }}</p>
+                                <p><strong>{% trans '交易时间' %}:</strong> {{ transaction.created_at|date:"Y-m-d H:i" }}</p>
+                                <p><strong>{% trans '支付方式' %}:</strong> {{ transaction.gateway.name }}</p>
+                            </div>
+                            <div class="col-md-6 text-start">
+                                <p><strong>{% trans '交易类型' %}:</strong> {{ transaction.get_transaction_type_display }}</p>
+                                <p><strong>{% trans '交易金额' %}:</strong> {{ transaction.amount|currency_format:'USD' }}</p>
+                                <p><strong>{% trans '交易状态' %}:</strong> <span class="badge bg-secondary">{% trans '已取消' %}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mt-5">
+                <a href="{% url 'games:subscription_plans' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-redo me-2"></i>{% trans '重新选择会员' %}
+                </a>
+                <a href="{% url 'games:home' %}" class="btn btn-outline-primary btn-lg ms-3">
+                    <i class="fas fa-home me-2"></i>{% trans '返回首页' %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transaction-info {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .transaction-info .card {
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.05);
+    }
+    .transaction-info .card-header {
+        border-radius: 10px 10px 0 0;
+    }
+</style>
+{% endblock %} 

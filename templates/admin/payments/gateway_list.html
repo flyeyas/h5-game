@@ -1,0 +1,376 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item active">{% trans '支付网关管理' %}</li>
+</ol>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* 支付网关列表页面样式 */
+  .gateway-table {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: visible;
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .gateway-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 8px 5px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .gateway-table td {
+    padding: 8px 5px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+  
+  .gateway-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+  }
+  
+  /* 自定义状态标签样式 */
+  .status-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .status-active {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+  }
+  
+  .status-inactive {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+  }
+  
+  .status-default {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+  }
+  
+  .status-test {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+  }
+  
+  .status-production {
+    background-color: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+    border: 1px solid rgba(23, 162, 184, 0.3);
+  }
+  
+  /* 支付网关类型标签样式 */
+  .gateway-type {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .gateway-paypal {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+  }
+  
+  .gateway-stripe {
+    background-color: rgba(111, 66, 193, 0.15);
+    color: #6f42c1;
+    border: 1px solid rgba(111, 66, 193, 0.3);
+  }
+  
+  .gateway-alipay {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+  }
+  
+  .gateway-wechat {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+  }
+  
+  .gateway-other {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+  }
+  
+  /* 操作按钮样式 */
+  .action-buttons .btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    margin-right: 2px !important;
+  }
+  
+  .action-buttons .btn-group {
+    display: inline-block;
+  }
+  
+  /* 空状态样式 */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  /* 统计卡片样式 */
+  .stats-card {
+    padding: 12px !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-align: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .stats-card .stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 auto 5px !important;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+  }
+  
+  .stats-card .stat-value {
+    font-size: 1.6rem !important;
+    margin-bottom: 2px !important;
+    font-weight: 600;
+    color: white;
+  }
+  
+  .stats-card .stat-label {
+    font-size: 0.85rem !important;
+    color: white;
+  }
+  
+  .bg-blue .stat-icon {
+    background-color: #4e73df;
+  }
+  
+  .bg-green .stat-icon {
+    background-color: #1cc88a;
+  }
+  
+  .bg-orange .stat-icon {
+    background-color: #f6c23e;
+  }
+  
+  .bg-purple .stat-icon {
+    background-color: #6f42c1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% include "admin/includes/top_navbar.html" with page_title=_('支付网关管理') %}
+  
+  <div class="module">
+    <!-- 统计卡片 -->
+    <div class="row mb-3">
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-purple">
+          <div class="stat-icon">
+            <i class="fas fa-credit-card"></i>
+          </div>
+          <div class="stat-value">{{ gateways|length }}</div>
+          <div class="stat-label">{% trans '总网关数' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-blue">
+          <div class="stat-icon">
+            <i class="fas fa-toggle-on"></i>
+          </div>
+          <div class="stat-value">{{ active_gateways }}</div>
+          <div class="stat-label">{% trans '已启用网关' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-green">
+          <div class="stat-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="stat-value">{{ default_gateways }}</div>
+          <div class="stat-label">{% trans '默认网关' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-orange">
+          <div class="stat-icon">
+            <i class="fas fa-flask"></i>
+          </div>
+          <div class="stat-value">{{ test_mode_gateways }}</div>
+          <div class="stat-label">{% trans '测试模式' %}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 网关列表卡片 -->
+    <div class="card card-outline card-primary">
+      <div class="card-header">
+        <h3 class="card-title">{% trans '支付网关列表' %}</h3>
+        <div class="card-tools">
+          <a href="{% url 'admin_panel:payment_gateway_create' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> {% trans '添加网关' %}
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover gateway-table">
+            <thead>
+              <tr>
+                <th width="5%">ID</th>
+                <th width="15%">{% trans '名称' %}</th>
+                <th width="15%">{% trans '类型' %}</th>
+                <th width="10%">{% trans '状态' %}</th>
+                <th width="10%">{% trans '默认' %}</th>
+                <th width="10%">{% trans '模式' %}</th>
+                <th width="5%">{% trans '顺序' %}</th>
+                <th width="30%">{% trans '操作' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for gateway in gateways %}
+              <tr>
+                <td>{{ gateway.id }}</td>
+                <td><strong>{{ gateway.name }}</strong></td>
+                <td>
+                  {% if gateway.gateway_type == 'paypal' %}
+                  <span class="gateway-type gateway-paypal"><i class="fab fa-paypal me-1"></i> {{ gateway.get_gateway_type_display }}</span>
+                  {% elif gateway.gateway_type == 'stripe' %}
+                  <span class="gateway-type gateway-stripe"><i class="fab fa-stripe-s me-1"></i> {{ gateway.get_gateway_type_display }}</span>
+                  {% elif gateway.gateway_type == 'alipay' %}
+                  <span class="gateway-type gateway-alipay"><i class="fab fa-alipay me-1"></i> {{ gateway.get_gateway_type_display }}</span>
+                  {% elif gateway.gateway_type == 'wechat' %}
+                  <span class="gateway-type gateway-wechat"><i class="fab fa-weixin me-1"></i> {{ gateway.get_gateway_type_display }}</span>
+                  {% else %}
+                  <span class="gateway-type gateway-other"><i class="fas fa-credit-card me-1"></i> {{ gateway.get_gateway_type_display }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if gateway.is_active %}
+                  <span class="status-tag status-active"><i class="fas fa-check-circle me-1"></i> {% trans '启用' %}</span>
+                  {% else %}
+                  <span class="status-tag status-inactive"><i class="fas fa-times-circle me-1"></i> {% trans '禁用' %}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if gateway.is_default %}
+                  <span class="status-tag status-default"><i class="fas fa-star me-1"></i> {% trans '默认' %}</span>
+                  {% else %}
+                  <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if gateway.test_mode %}
+                  <span class="status-tag status-test"><i class="fas fa-flask me-1"></i> {% trans '测试' %}</span>
+                  {% else %}
+                  <span class="status-tag status-production"><i class="fas fa-globe me-1"></i> {% trans '生产' %}</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">{{ gateway.display_order }}</td>
+                <td class="action-buttons">
+                  <div class="btn-group">
+                    <a href="{% url 'admin_panel:payment_gateway_config' pk=gateway.id %}" class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="{% trans '配置' %}">
+                      <i class="fas fa-cog"></i> {% trans '配置' %}
+                    </a>
+                    <a href="{% url 'admin_panel:payment_gateway_test' pk=gateway.id %}" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" title="{% trans '测试' %}">
+                      <i class="fas fa-vial"></i> {% trans '测试' %}
+                    </a>
+                    <a href="{% url 'admin_panel:payment_gateway_edit' pk=gateway.id %}" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="{% trans '编辑' %}">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'admin_panel:payment_gateway_delete' pk=gateway.id %}" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" title="{% trans '删除' %}">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center py-5">
+                  <div class="empty-state">
+                    <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                    <p class="lead">{% trans '暂无支付网关' %}</p>
+                    <a href="{% url 'admin_panel:payment_gateway_create' %}" class="btn btn-primary">
+                      <i class="fas fa-plus"></i> {% trans '添加第一个网关' %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+  $(function() {
+    $('.table').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "language": {
+        "url": "{% static 'admin/plugins/datatables/Chinese.json' %}"
+      },
+      "order": [[6, 'asc']],
+      "columnDefs": [
+        { "orderable": false, "targets": 7 }
+      ]
+    });
+    
+    // 为操作按钮添加tooltip
+    $('[data-bs-toggle="tooltip"]').tooltip();
+  });
+</script>
+{% endblock %} 

@@ -1,0 +1,68 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}认证错误 - HTML5游戏平台{% endblock %}
+
+{% block hide_main_container %}{% endblock %}
+
+{% block search_query %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">社交账号认证错误</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-exclamation-triangle text-danger fa-4x mb-4"></i>
+                    
+                    <h5 class="mb-3">社交账号登录失败</h5>
+                    
+                    {% if auth_error %}
+                        <p class="mb-2 text-muted small">错误代码: {{ auth_error.code }}</p>
+                        
+                        {% if 'ConnectTimeout' in auth_error.exception|stringformat:"s" %}
+                            <p class="mb-4">连接Google服务器超时，请检查您的网络连接后重试。</p>
+                        {% elif 'HTTPError' in auth_error.exception|stringformat:"s" %}
+                            <p class="mb-4">服务器响应错误，请稍后再试。</p>
+                        {% elif 'RequestException' in auth_error.exception|stringformat:"s" %}
+                            <p class="mb-4">网络请求异常，请检查您的互联网连接。</p>
+                        {% elif auth_error.code == 'unknown' %}
+                            <p class="mb-4">发生未知错误，请联系管理员或使用其他登录方式。</p>
+                        {% elif auth_error.code == 'canceled' %}
+                            <p class="mb-4">您已取消社交账号登录过程。</p>
+                        {% elif auth_error.code == 'not-authenticated' %}
+                            <p class="mb-4">未能成功进行身份验证，请确保您已授权我们的应用访问您的账号。</p>
+                        {% elif auth_error.code == 'invalid_client' %}
+                            <p class="mb-4">Google客户端配置错误，请联系网站管理员。</p>
+                        {% elif auth_error.code == 'redirect_uri_mismatch' %}
+                            <p class="mb-4">登录回调地址配置错误，请联系网站管理员。</p>
+                        {% else %}
+                            <p class="mb-4">在社交账号认证过程中发生了错误，请稍后再试。</p>
+                            <p class="small text-muted">详细信息: {{ auth_error.exception|truncatechars:100 }}</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="mb-4">在社交账号认证过程中发生了错误。请稍后再试，或使用其他方式登录。</p>
+                    {% endif %}
+                    
+                    {% if debug %}
+                    <div class="mt-3 mb-3 p-3 bg-light text-start small" style="border-radius: 4px;">
+                        <p class="mb-1"><strong>调试信息:</strong></p>
+                        <p class="mb-1">提供商: {{ auth_error.provider }}</p>
+                        <p class="mb-1">状态: {{ state.process|default:"未知" }}</p>
+                        <p class="mb-0">异常: {{ auth_error.exception }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'games:login' %}" class="btn btn-primary me-2">返回登录</a>
+                        <a href="{% url 'games:home' %}" class="btn btn-outline-secondary">返回首页</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

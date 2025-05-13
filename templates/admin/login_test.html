@@ -1,0 +1,338 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'zh-hans' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录测试</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: #343a40;
+            color: white;
+            font-weight: 600;
+        }
+        
+        pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow: auto;
+        }
+        
+        .response-container {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            border: 1px solid #dee2e6;
+        }
+        
+        .status-badge {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .btn-test {
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="mb-4">管理员登录 - API测试</h1>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                测试配置
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="apiEndpoint" class="form-label">API端点</label>
+                    <input type="text" class="form-control" id="apiEndpoint" value="{% url 'admin_panel:admin_ajax_login' %}">
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" value="admin">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="password" value="admin123">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe" checked>
+                    <label class="form-check-label" for="rememberMe">记住我</label>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="nextUrl" class="form-label">登录后重定向URL (可选)</label>
+                    <input type="text" class="form-control" id="nextUrl" value="{% url 'admin_panel:dashboard' %}">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                CSRF令牌
+            </div>
+            <div class="card-body">
+                <p>当前CSRF令牌: <code id="csrfTokenDisplay">{{ csrf_token }}</code></p>
+                <p>CSRF头名称: <code id="csrfHeaderName">{{ csrf_header_name|default:"X-AdminCSRFToken" }}</code></p>
+                <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+                <input type="hidden" id="csrfHeaderName" value="{{ csrf_header_name|default:"X-AdminCSRFToken" }}">
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                请求数据
+            </div>
+            <div class="card-body">
+                <pre id="requestData">{
+  "username": "admin",
+  "password": "admin123",
+  "remember_me": true,
+  "next": "/admin/"
+}</pre>
+            </div>
+        </div>
+        
+        <div class="d-grid gap-2 d-md-flex mb-4">
+            <button id="testLoginButton" class="btn btn-primary btn-test me-md-2">
+                <span class="spinner-border spinner-border-sm d-none" id="testSpinner"></span>
+                测试登录
+            </button>
+            <button id="resetButton" class="btn btn-secondary btn-test">重置</button>
+            <a href="{% url 'admin_panel:admin_login' %}" class="btn btn-outline-dark btn-test ms-auto">返回登录页</a>
+        </div>
+        
+        <div id="responseSection" class="d-none">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    响应结果
+                    <span id="statusBadge" class="badge bg-secondary status-badge">等待测试</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">状态码</label>
+                        <div id="statusCode" class="response-container">-</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">响应头</label>
+                        <div id="responseHeaders" class="response-container">-</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">响应内容</label>
+                        <pre id="responseBody" class="response-container">-</pre>
+                    </div>
+                    
+                    <div id="actionSection" class="d-none">
+                        <hr>
+                        <p>登录成功! 您可以选择:</p>
+                        <div class="d-flex gap-2">
+                            <a id="redirectButton" href="#" class="btn btn-success">立即跳转</a>
+                            <button id="stayButton" class="btn btn-outline-secondary">留在此页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 测试脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有DOM元素
+            const apiEndpointInput = document.getElementById('apiEndpoint');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const rememberMeCheckbox = document.getElementById('rememberMe');
+            const nextUrlInput = document.getElementById('nextUrl');
+            const csrfTokenInput = document.getElementById('csrfToken');
+            const csrfHeaderNameInput = document.getElementById('csrfHeaderName');
+            const requestDataPre = document.getElementById('requestData');
+            const testLoginButton = document.getElementById('testLoginButton');
+            const resetButton = document.getElementById('resetButton');
+            const testSpinner = document.getElementById('testSpinner');
+            const responseSection = document.getElementById('responseSection');
+            const statusBadge = document.getElementById('statusBadge');
+            const statusCodeDiv = document.getElementById('statusCode');
+            const responseHeadersDiv = document.getElementById('responseHeaders');
+            const responseBodyPre = document.getElementById('responseBody');
+            const actionSection = document.getElementById('actionSection');
+            const redirectButton = document.getElementById('redirectButton');
+            const stayButton = document.getElementById('stayButton');
+            
+            // 更新请求数据显示
+            function updateRequestData() {
+                const requestData = {
+                    username: usernameInput.value,
+                    password: passwordInput.value,
+                    remember_me: rememberMeCheckbox.checked,
+                    next: nextUrlInput.value
+                };
+                
+                requestDataPre.textContent = JSON.stringify(requestData, null, 2);
+            }
+            
+            // 监听输入变化
+            usernameInput.addEventListener('input', updateRequestData);
+            passwordInput.addEventListener('input', updateRequestData);
+            rememberMeCheckbox.addEventListener('change', updateRequestData);
+            nextUrlInput.addEventListener('input', updateRequestData);
+            
+            // 初始化请求数据
+            updateRequestData();
+            
+            // 测试登录
+            testLoginButton.addEventListener('click', function() {
+                // 显示加载状态
+                testSpinner.classList.remove('d-none');
+                testLoginButton.disabled = true;
+                
+                // 准备请求数据
+                const requestData = {
+                    username: usernameInput.value,
+                    password: passwordInput.value,
+                    remember_me: rememberMeCheckbox.checked,
+                    next: nextUrlInput.value
+                };
+                
+                // 获取CSRF头名称
+                const csrfHeaderName = csrfHeaderNameInput.value;
+                
+                // 准备请求头
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                headers[csrfHeaderName] = csrfTokenInput.value;
+                
+                // 发送请求
+                fetch(apiEndpointInput.value, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(requestData),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    // 保存原始响应对象
+                    const originalResponse = response.clone();
+                    
+                    // 显示响应信息
+                    responseSection.classList.remove('d-none');
+                    
+                    // 更新状态码
+                    statusCodeDiv.textContent = response.status + ' ' + response.statusText;
+                    
+                    // 更新状态标签
+                    if (response.ok) {
+                        statusBadge.className = 'badge bg-success status-badge';
+                        statusBadge.textContent = '成功';
+                    } else {
+                        statusBadge.className = 'badge bg-danger status-badge';
+                        statusBadge.textContent = '失败';
+                    }
+                    
+                    // 更新响应头
+                    const headersArray = Array.from(response.headers.entries());
+                    const headersText = headersArray.map(([name, value]) => `${name}: ${value}`).join('\n');
+                    responseHeadersDiv.textContent = headersText || '无';
+                    
+                    // 返回解析后的响应数据和状态码
+                    return originalResponse.json().then(data => {
+                        return {
+                            data: data,
+                            status: response.status,
+                            ok: response.ok
+                        };
+                    }).catch(error => {
+                        return {
+                            data: { error: '无法解析JSON响应' },
+                            status: response.status,
+                            ok: response.ok
+                        };
+                    });
+                })
+                .then(result => {
+                    // 更新响应内容
+                    responseBodyPre.textContent = JSON.stringify(result.data, null, 2);
+                    
+                    // 如果登录成功，显示操作区域
+                    if (result.ok) {
+                        actionSection.classList.remove('d-none');
+                        
+                        // 设置重定向URL
+                        const redirectUrl = result.data.redirect_url || nextUrlInput.value;
+                        redirectButton.href = redirectUrl;
+                    } else {
+                        actionSection.classList.add('d-none');
+                    }
+                })
+                .catch(error => {
+                    console.error('测试出错:', error);
+                    responseSection.classList.remove('d-none');
+                    statusBadge.className = 'badge bg-danger status-badge';
+                    statusBadge.textContent = '错误';
+                    statusCodeDiv.textContent = '请求出错';
+                    responseHeadersDiv.textContent = '无';
+                    responseBodyPre.textContent = '发送请求时出错: ' + error.message;
+                    actionSection.classList.add('d-none');
+                })
+                .finally(() => {
+                    // 隐藏加载状态
+                    testSpinner.classList.add('d-none');
+                    testLoginButton.disabled = false;
+                });
+            });
+            
+            // 重置按钮
+            resetButton.addEventListener('click', function() {
+                usernameInput.value = 'admin';
+                passwordInput.value = 'admin123';
+                rememberMeCheckbox.checked = true;
+                nextUrlInput.value = '{% url "admin_panel:dashboard" %}';
+                updateRequestData();
+                responseSection.classList.add('d-none');
+                actionSection.classList.add('d-none');
+            });
+            
+            // 留在此页按钮
+            stayButton.addEventListener('click', function() {
+                actionSection.classList.add('d-none');
+            });
+        });
+    </script>
+</body>
+</html> 

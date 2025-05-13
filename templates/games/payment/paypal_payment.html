@@ -1,0 +1,190 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load games_payment_tags %}
+
+{% block title %}{% trans "PayPal 支付" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<section class="paypal-payment-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card payment-card">
+                    <div class="card-header text-center">
+                        <h3>{% trans "PayPal 支付" %}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="transaction-summary">
+                            <h4>{% trans "支付信息" %}</h4>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p class="plan-name">{{ transaction.description }}</p>
+                                    <p class="plan-description">{{ transaction.subscription.plan.description }}</p>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <p class="plan-price">{{ transaction.amount|currency_format }}</p>
+                                    <p class="plan-period">{{ transaction.subscription.plan.get_period_display }}</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>{% trans "交易单号" %}:</strong> {{ transaction.id }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>{% trans "交易日期" %}:</strong> {{ transaction.created_at|date:"Y-m-d H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="paypal-section mt-4">
+                            <div class="text-center mb-4">
+                                <div class="paypal-logo">
+                                    <i class="fab fa-paypal fa-4x text-primary"></i>
+                                </div>
+                                <h4 class="mt-3">{% trans "通过 PayPal 安全支付" %}</h4>
+                                <p class="text-muted">{% trans "您将被重定向到 PayPal 安全页面完成支付" %}</p>
+                            </div>
+                            
+                            <div id="paypal-button-container" class="mt-4 text-center"></div>
+                            
+                            <div class="text-center mt-4">
+                                <p class="small text-muted">
+                                    {% trans "点击上方按钮将跳转到 PayPal 支付页面。支付完成后，系统会自动处理您的订阅。" %}
+                                </p>
+                                <div class="security-badges mt-3">
+                                    <i class="fas fa-lock me-2"></i> {% trans "安全支付保障" %}
+                                    <i class="fas fa-shield-alt mx-2"></i> {% trans "隐私信息保护" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'games:payment_cancel' %}?transaction_id={{ transaction.id }}" class="btn btn-outline-secondary">{% trans "取消支付" %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .paypal-payment-section {
+        padding: 60px 0;
+        background: #f8f9fa;
+    }
+    .payment-card {
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border: none;
+        border-radius: 15px;
+    }
+    .payment-card .card-header {
+        background-color: #0070ba;
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px;
+    }
+    .payment-card .card-body {
+        padding: 30px;
+    }
+    .transaction-summary {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .plan-name {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .plan-description {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .plan-price {
+        font-size: 22px;
+        font-weight: 700;
+        color: #28a745;
+        margin-bottom: 5px;
+    }
+    .plan-period {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .paypal-section {
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.05);
+    }
+    .paypal-logo {
+        color: #0070ba;
+    }
+    .security-badges {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    #paypal-button-container {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- PayPal JavaScript SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}&currency=USD&intent=capture"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化 PayPal 按钮
+        paypal.Buttons({
+            style: {
+                color: 'blue',
+                shape: 'pill',
+                label: 'pay',
+                height: 45
+            },
+            
+            // 创建订单
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        description: '{{ transaction.description }}',
+                        amount: {
+                            value: '{{ transaction.amount }}'
+                        }
+                    }]
+                });
+            },
+            
+            // 付款成功处理
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    // 显示处理中提示
+                    document.getElementById('payment-processing').style.display = 'block';
+                    
+                    // 跳转到支付成功页面
+                    window.location.href = '{{ return_url }}';
+                });
+            },
+            
+            // 取消处理
+            onCancel: function(data) {
+                window.location.href = '{{ cancel_url }}';
+            }
+        }).render('#paypal-button-container');
+    });
+</script>
+
+<!-- 添加处理中提示 -->
+<div id="payment-processing" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white;">
+        <div class="spinner-border text-light" role="status"></div>
+        <h4 class="mt-3">{% trans "支付处理中..." %}</h4>
+        <p>{% trans "请勿关闭或刷新页面" %}</p>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,415 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* SEO设置页面专用样式 */
+  .settings-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+  }
+  
+  .settings-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .settings-form {
+    padding: 20px;
+  }
+  
+  .settings-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .settings-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #444;
+  }
+  
+  /* 表单元素定制 */
+  .form-control {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+  }
+  
+  .form-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  textarea.form-control {
+    min-height: 100px;
+  }
+  
+  .required-field .form-label:after {
+    content: " *";
+    color: #dc3545;
+  }
+  
+  /* 开关样式 */
+  .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    margin-top: 0.25em;
+  }
+  
+  .form-switch .form-check-input {
+    margin-right: 10px;
+  }
+  
+  /* 操作按钮区域 */
+  .form-actions {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    text-align: right;
+  }
+  
+  .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    padding: 0.5rem 1.5rem;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+  }
+  
+  .btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+    padding: 0.5rem 1.25rem;
+  }
+  
+  /* 辅助信息文本 */
+  .help-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* 页面标题 */
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 767.98px) {
+    .settings-container {
+      border-radius: 0;
+      box-shadow: none;
+    }
+    
+    .settings-form {
+      padding: 15px;
+    }
+    
+    .form-actions {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .form-actions .btn {
+      width: 100%;
+    }
+  }
+  
+  /* 确保图标在输入框中垂直居中 */
+  .input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem 0 0 0.25rem;
+  }
+  
+  /* Toast通知样式 */
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+  }
+  
+  .toast {
+    min-width: 250px;
+  }
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- 引入顶部导航 -->
+  {% include "admin/includes/top_navbar.html" with page_title=title %}
+
+  <!-- SEO设置内容区 -->
+  <div class="settings-container">
+    <!-- 引入卡片标题 -->
+    {% include "admin/includes/card_header.html" with title=_('SEO设置') icon='fa-search' %}
+    
+    <!-- 设置表单区域 -->
+    <div class="settings-form">
+      <form id="seoSettingsForm" method="post" action="{% url 'admin_panel:seo_settings' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- 搜索引擎优化设置部分 -->
+        <div class="settings-section">
+          <h5 class="section-title">{{ _('搜索引擎优化') }}</h5>
+          
+          <!-- 页面标题格式 -->
+          <div class="mb-4">
+            <label for="{{ form.title_format.id_for_label }}" class="form-label">{{ form.title_format.label }}</label>
+            {{ form.title_format }}
+            {% if form.title_format.help_text %}
+              <div class="help-text">{{ form.title_format.help_text }}</div>
+            {% endif %}
+            {% if form.title_format.errors %}
+              <div class="invalid-feedback d-block">{{ form.title_format.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- 页面描述格式 -->
+          <div class="mb-4">
+            <label for="{{ form.description_format.id_for_label }}" class="form-label">{{ form.description_format.label }}</label>
+            {{ form.description_format }}
+            {% if form.description_format.help_text %}
+              <div class="help-text">{{ form.description_format.help_text }}</div>
+            {% endif %}
+            {% if form.description_format.errors %}
+              <div class="invalid-feedback d-block">{{ form.description_format.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- URL结构设置部分 -->
+        <div class="settings-section">
+          <h5 class="section-title">{{ _('URL结构设置') }}</h5>
+          
+          <!-- 分类页URL结构 -->
+          <div class="mb-4">
+            <label for="{{ form.category_url_pattern.id_for_label }}" class="form-label">{{ form.category_url_pattern.label }}</label>
+            <div class="input-group">
+              <span class="input-group-text text-muted">{{ request.scheme }}://{{ request.get_host }}/</span>
+              {{ form.category_url_pattern }}
+            </div>
+            {% if form.category_url_pattern.help_text %}
+              <div class="help-text">{{ form.category_url_pattern.help_text }}</div>
+            {% endif %}
+            {% if form.category_url_pattern.errors %}
+              <div class="invalid-feedback d-block">{{ form.category_url_pattern.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- 游戏页URL结构 -->
+          <div class="mb-4">
+            <label for="{{ form.game_url_pattern.id_for_label }}" class="form-label">{{ form.game_url_pattern.label }}</label>
+            <div class="input-group">
+              <span class="input-group-text text-muted">{{ request.scheme }}://{{ request.get_host }}/</span>
+              {{ form.game_url_pattern }}
+            </div>
+            {% if form.game_url_pattern.help_text %}
+              <div class="help-text">{{ form.game_url_pattern.help_text }}</div>
+            {% endif %}
+            {% if form.game_url_pattern.errors %}
+              <div class="invalid-feedback d-block">{{ form.game_url_pattern.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- 标签页URL结构 -->
+          <div class="mb-4">
+            <label for="{{ form.tag_url_pattern.id_for_label }}" class="form-label">{{ form.tag_url_pattern.label }}</label>
+            <div class="input-group">
+              <span class="input-group-text text-muted">{{ request.scheme }}://{{ request.get_host }}/</span>
+              {{ form.tag_url_pattern }}
+            </div>
+            {% if form.tag_url_pattern.help_text %}
+              <div class="help-text">{{ form.tag_url_pattern.help_text }}</div>
+            {% endif %}
+            {% if form.tag_url_pattern.errors %}
+              <div class="invalid-feedback d-block">{{ form.tag_url_pattern.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- 在URL中包含日期 -->
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              {{ form.use_date_in_url }}
+              <label class="form-check-label" for="{{ form.use_date_in_url.id_for_label }}">
+                {{ form.use_date_in_url.label }}
+              </label>
+            </div>
+            {% if form.use_date_in_url.help_text %}
+              <div class="help-text">{{ form.use_date_in_url.help_text }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- 启用自动生成网站地图 -->
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              {{ form.enable_sitemap }}
+              <label class="form-check-label" for="{{ form.enable_sitemap.id_for_label }}">
+                {{ form.enable_sitemap.label }}
+              </label>
+            </div>
+            {% if form.enable_sitemap.help_text %}
+              <div class="help-text">{{ form.enable_sitemap.help_text }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- 启用规范链接标签 -->
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              {{ form.enable_canonical }}
+              <label class="form-check-label" for="{{ form.enable_canonical.id_for_label }}">
+                {{ form.enable_canonical.label }}
+              </label>
+            </div>
+            {% if form.enable_canonical.help_text %}
+              <div class="help-text">{{ form.enable_canonical.help_text }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- URL末尾添加斜杠 -->
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              {{ form.url_trailing_slash }}
+              <label class="form-check-label" for="{{ form.url_trailing_slash.id_for_label }}">
+                {{ form.url_trailing_slash.label }}
+              </label>
+            </div>
+            {% if form.url_trailing_slash.help_text %}
+              <div class="help-text">{{ form.url_trailing_slash.help_text }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- 操作按钮区域 -->
+        <div class="form-actions">
+          <button type="button" id="clearCacheBtn" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-sync-alt me-1"></i> {{ _('清除缓存') }}
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i> {{ _('保存设置') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast通知容器 -->
+<div class="toast-container">
+  <div id="saveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <i class="fas fa-check-circle text-success me-2"></i>
+      <strong class="me-auto">{{ _('操作成功') }}</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      {{ _('设置已成功保存!') }}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrascript %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 表单Ajax提交处理
+    const form = document.getElementById('seoSettingsForm');
+    const saveToast = new bootstrap.Toast(document.getElementById('saveToast'));
+    
+    // 清除缓存按钮事件
+    document.getElementById('clearCacheBtn').addEventListener('click', function() {
+      fetch("{% url 'admin_panel:clear_seo_settings_cache' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          document.querySelector('.toast-body').innerHTML = data.message;
+          saveToast.show();
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    });
+    
+    // 表单事件监听 - 例如实现Ajax提交
+    form.addEventListener('submit', function(e) {
+      // 如果需要启用Ajax提交，取消下面的注释
+      /*
+      e.preventDefault();
+      const formData = new FormData(form);
+      
+      fetch("{% url 'admin_panel:ajax_update_seo_settings' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          document.querySelector('.toast-body').innerHTML = data.message;
+          saveToast.show();
+        } else {
+          console.error('Error:', data.message);
+        }
+      })
+      .catch(error => console.error('Error:', error));
+      */
+    });
+  });
+</script>
+{% endblock %} 

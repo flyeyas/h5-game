@@ -1,0 +1,58 @@
+{% load static %}
+<div class="auth-sidebar">
+    {% if request.resolver_match.url_name == 'forgot_password' or request.resolver_match.url_name == 'reset_password' or request.resolver_match.url_name == 'reset_complete' %}
+    <!-- 找回密码页面显示 -->
+    <h2>找回您的密码</h2>
+    <p>只需几个简单步骤，即可重置您的账户密码，继续畅享游戏乐趣！</p>
+    
+    <div class="mt-4 mb-4">
+        <div class="d-flex align-items-center mb-3">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                <i class="fas fa-envelope fa-fw"></i>
+            </div>
+            <div>输入您的注册邮箱并获取验证码</div>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                <i class="fas fa-check-circle fa-fw"></i>
+            </div>
+            <div>验证您的身份</div>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                <i class="fas fa-key fa-fw"></i>
+            </div>
+            <div>设置新密码并重新登录</div>
+        </div>
+    </div>
+    
+    <img src="{% static 'img/security.jpg' %}" class="img-fluid rounded" alt="安全插图" onerror="this.style.display='none'">
+    {% else %}
+    <!-- 登录/注册页面显示 -->
+    <h2>欢迎来到GameHub</h2>
+    <p>加入我们的游戏社区，享受数千款精选HTML5游戏，随时随地畅玩无限乐趣！</p>
+    
+    <div class="features">
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-gamepad"></i>
+            </div>
+            <div>无需下载，即点即玩</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div>会员专享无广告体验</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <div>游戏进度云端保存</div>
+        </div>
+    </div>
+    
+    <img src="{% static 'img/game-graphic.jpg' %}" class="img-fluid rounded" alt="游戏插图" onerror="this.style.display='none'">
+    {% endif %}
+</div> 

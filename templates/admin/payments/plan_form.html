@@ -1,0 +1,107 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:subscription_plan_list' %}">{% trans '订阅计划管理' %}</a></li>
+    <li class="breadcrumb-item active">{% if is_add %}{% trans '添加计划' %}{% else %}{% trans '编辑计划' %}{% endif %}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">{% if is_add %}{% trans '添加订阅计划' %}{% else %}{% trans '编辑订阅计划' %}{% endif %}</h3>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <p>{% trans '请更正以下错误:' %}</p>
+                        <ul>
+                            {% for field in form %}
+                            {% if field.errors %}
+                            <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}">{% trans '计划名称' %}</label>
+                        {{ form.name }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.price.id_for_label }}">{% trans '价格' %}</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">$</span>
+                                    </div>
+                                    {{ form.price }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.period.id_for_label }}">{% trans '周期' %}</label>
+                                {{ form.period }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.description.id_for_label }}">{% trans '描述' %}</label>
+                        {{ form.description }}
+                        <small class="form-text text-muted">{% trans '简短描述此订阅计划' %}</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.features.id_for_label }}">{% trans '包含功能' %}</label>
+                        {{ form.features }}
+                        <small class="form-text text-muted">{% trans '每行一个功能点，将在前台以列表形式显示' %}</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            {{ form.is_active }}
+                            <label class="custom-control-label" for="{{ form.is_active.id_for_label }}">{% trans '启用此计划' %}</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{% trans '保存' %}</button>
+                    <a href="{% url 'admin_panel:subscription_plan_list' %}" class="btn btn-default">{% trans '取消' %}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $(function() {
+        // 表单样式美化
+        $('#{{ form.name.id_for_label }}').addClass('form-control');
+        $('#{{ form.price.id_for_label }}').addClass('form-control');
+        $('#{{ form.period.id_for_label }}').addClass('form-control select2');
+        $('#{{ form.description.id_for_label }}').addClass('form-control');
+        $('#{{ form.features.id_for_label }}').addClass('form-control').attr('rows', 5);
+        $('#{{ form.is_active.id_for_label }}').addClass('custom-control-input');
+        
+        // Select2初始化
+        $('.select2').select2();
+    });
+</script>
+{% endblock %} 

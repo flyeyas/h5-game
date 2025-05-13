@@ -1,0 +1,301 @@
+{% load i18n %}
+
+<!-- 添加菜单项模态框 -->
+<div class="modal fade" id="addMenuModal" tabindex="-1" aria-labelledby="addMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="addMenuModalLabel">
+                    <i class="fas fa-plus me-2 text-primary"></i>
+                    {% trans '添加前台菜单项' %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="menuForm" method="post" action="{% url 'admin_panel:add_front_menu' %}">
+                    {% csrf_token %}
+                    
+                    <div id="formAlerts"></div>
+                    
+                    <!-- 添加必填字段说明 -->
+                    <div class="mb-3 text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {% trans '带' %} <span class="text-danger required-mark">*</span> {% trans '的字段为必填项' %}
+                    </div>
+                    
+                    <div class="mb-3 required-field">
+                        <label for="id_name" class="form-label">{% trans '菜单名称' %} <span class="text-danger required-mark">*</span></label>
+                        <input type="text" class="form-control" id="id_name" name="name" required 
+                               maxlength="50" placeholder="{% trans '输入菜单显示名称' %}">
+                        <div class="invalid-feedback">{% trans '请输入菜单名称' %}</div>
+                    </div>
+                    
+                    <div class="mb-3 required-field">
+                        <label for="id_url" class="form-label">{% trans '链接URL' %} <span class="text-danger required-mark">*</span></label>
+                        <input type="text" class="form-control" id="id_url" name="url" required
+                               maxlength="200" placeholder="{% trans '输入链接地址' %}">
+                        <div class="invalid-feedback">{% trans '请输入链接URL' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_icon" class="form-label">{% trans '图标' %}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <div class="icon-preview-container">
+                                    <i id="icon-preview" class="fas fa-gear"></i>
+                                </div>
+                            </span>
+                            <input type="text" class="form-control" id="id_icon" name="icon" 
+                                   placeholder="{% trans '选择或输入图标类名' %}">
+                        </div>
+                        <div class="form-text">{% trans '输入FontAwesome图标类名，例如: fas fa-home' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_parent" class="form-label">{% trans '父级菜单' %}</label>
+                        <select class="form-select" id="id_parent" name="parent">
+                            <option value="">{% trans '无 (作为顶级菜单)' %}</option>
+                            {% for menu in main_menus %}
+                                <option value="{{ menu.id }}">{{ menu.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">{% trans '选择子菜单项所属的父级菜单' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_order" class="form-label">{% trans '排序' %}</label>
+                        <input type="number" class="form-control" id="id_order" name="order" value="0" min="0">
+                        <div class="form-text">{% trans '数字越小排序越靠前' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="id_is_active" name="is_active" checked>
+                            <label class="form-check-label" for="id_is_active">
+                                {% trans '是否启用' %}
+                            </label>
+                        </div>
+                        <div class="form-text">{% trans '取消勾选表示暂不启用此菜单项' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="id_is_external" name="is_external">
+                            <label class="form-check-label" for="id_is_external">
+                                {% trans '是否外部链接' %}
+                            </label>
+                        </div>
+                        <div class="form-text">{% trans '勾选表示链接到站外地址' %}</div>
+                    </div>
+                    
+                    <div class="modal-footer bg-light px-0 mt-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>
+                            {% trans '取消' %}
+                        </button>
+                        <button type="submit" id="submitMenuForm" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
+                            <i class="fas fa-plus me-1"></i>
+                            {% trans '添加' %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteMenuModal" tabindex="-1" aria-labelledby="deleteMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="deleteMenuModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    {% trans '确认删除' %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="delete-menu-error" class="alert alert-danger d-none mb-3">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="delete-error-message">{% trans '删除失败，请重试' %}</span>
+                </div>
+                <p>{% trans '您确定要删除菜单项' %} <span id="menuNameToDelete" class="fw-bold"></span> {% trans '吗？' %}</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {% trans '注意：如果删除主菜单项，其下的所有子菜单项也将被删除。此操作无法撤销。' %}
+                </div>
+                <input type="hidden" id="delete_menu_id" value="">
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    {% trans '取消' %}
+                </button>
+                <button type="button" id="confirmDelete" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>
+                    {% trans '确认删除' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑菜单项模态框 -->
+<div class="modal fade" id="editMenuModal" tabindex="-1" aria-labelledby="editMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="editMenuModalLabel">
+                    <i class="fas fa-edit me-2 text-primary"></i>
+                    {% trans '编辑前台菜单项' %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 加载指示器 -->
+                <div id="editFormLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">{% trans '加载中...' %}</span>
+                    </div>
+                    <p class="mt-2">{% trans '正在加载菜单数据...' %}</p>
+                </div>
+                
+                <!-- 表单内容 -->
+                <div id="editFormContent" style="display: none;">
+                    <form id="editMenuForm" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" id="edit_menu_id" name="menu_id">
+                        
+                        <div id="editFormAlerts"></div>
+                        
+                        <!-- 添加必填字段说明 -->
+                        <div class="mb-3 text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% trans '带' %} <span class="text-danger required-mark">*</span> {% trans '的字段为必填项' %}
+                        </div>
+                        
+                        <div class="mb-3 required-field">
+                            <label for="edit_name" class="form-label">{% trans '菜单名称' %} <span class="text-danger required-mark">*</span></label>
+                            <input type="text" class="form-control" id="edit_name" name="name" required 
+                                maxlength="50" placeholder="{% trans '输入菜单显示名称' %}">
+                            <div class="invalid-feedback">{% trans '请输入菜单名称' %}</div>
+                        </div>
+                        
+                        <div class="mb-3 required-field">
+                            <label for="edit_url" class="form-label">{% trans '链接URL' %} <span class="text-danger required-mark">*</span></label>
+                            <input type="text" class="form-control" id="edit_url" name="url" required
+                                maxlength="200" placeholder="{% trans '输入链接地址' %}">
+                            <div class="invalid-feedback">{% trans '请输入链接URL' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_icon" class="form-label">{% trans '图标' %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <div class="icon-preview-container">
+                                        <i id="edit_icon_preview" class="fas fa-gear"></i>
+                                    </div>
+                                </span>
+                                <input type="text" class="form-control" id="edit_icon" name="icon" 
+                                    placeholder="{% trans '选择或输入图标类名' %}">
+                            </div>
+                            <div class="form-text">{% trans '输入FontAwesome图标类名，例如: fas fa-home' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_parent" class="form-label">{% trans '父级菜单' %}</label>
+                            <select class="form-select" id="edit_parent" name="parent">
+                                <option value="">{% trans '无 (作为顶级菜单)' %}</option>
+                                {% for menu in main_menus %}
+                                    <option value="{{ menu.id }}">{{ menu.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">{% trans '选择子菜单项所属的父级菜单' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_order" class="form-label">{% trans '排序' %}</label>
+                            <input type="number" class="form-control" id="edit_order" name="order" value="0" min="0">
+                            <div class="form-text">{% trans '数字越小排序越靠前' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_is_active" name="is_active">
+                                <label class="form-check-label" for="edit_is_active">
+                                    {% trans '是否启用' %}
+                                </label>
+                            </div>
+                            <div class="form-text">{% trans '取消勾选表示暂不启用此菜单项' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_is_external" name="is_external">
+                                <label class="form-check-label" for="edit_is_external">
+                                    {% trans '是否外部链接' %}
+                                </label>
+                            </div>
+                            <div class="form-text">{% trans '勾选表示链接到站外地址' %}</div>
+                        </div>
+                        
+                        <div class="modal-footer bg-light px-0 mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>
+                                {% trans '取消' %}
+                            </button>
+                            <button type="submit" id="submitEditForm" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% trans '保存修改' %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加成功提示模态框 -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="successModalLabel">
+          <i class="fas fa-check-circle me-2"></i>
+          {% trans '操作成功' %}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="mb-3">
+          <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+        </div>
+        <p id="successMessage" class="mb-0"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+          {% trans '确定' %}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 添加CSS样式，使必填字段更加明显 -->
+<style>
+  /* 必填字段标签样式 */
+  .required-field label {
+    font-weight: 500;
+  }
+  
+  /* 红色星号样式 */
+  .text-danger.required-mark {
+    font-size: 1.2em;
+    position: relative;
+    top: 2px;
+    margin-left: 3px;
+  }
+</style> 

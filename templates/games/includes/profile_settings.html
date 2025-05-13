@@ -1,0 +1,139 @@
+{% load static %}
+<div class="tab-pane fade {% if active_tab == 'settings' %}show active{% endif %}" id="settings" role="tabpanel">
+    <!-- 个人资料设置 -->
+    <div class="settings-section">
+        <h4>个人资料</h4>
+        <form method="post" action="{% url 'games:update_profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="username" class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="email" class="form-label">电子邮箱</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="avatar" class="form-label">头像</label>
+                <div class="d-flex align-items-center">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="当前头像" class="rounded-circle me-3" style="width: 64px; height: 64px; object-fit: cover;">
+                    {% else %}
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="默认头像" class="rounded-circle me-3" style="width: 64px; height: 64px; object-fit: cover;">
+                    {% endif %}
+                    <input type="file" class="form-control" id="avatar" name="avatar">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">保存更改</button>
+        </form>
+    </div>
+    
+    <!-- 密码设置 -->
+    <div class="settings-section">
+        <h4>修改密码</h4>
+        <form method="post" action="{% url 'games:change_password' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">当前密码</label>
+                <input type="password" class="form-control" id="currentPassword" name="current_password">
+            </div>
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">新密码</label>
+                <input type="password" class="form-control" id="newPassword" name="new_password1">
+            </div>
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">确认新密码</label>
+                <input type="password" class="form-control" id="confirmPassword" name="new_password2">
+            </div>
+            <button type="submit" class="btn btn-primary">更新密码</button>
+        </form>
+    </div>
+    
+    <!-- 通知设置 -->
+    <div class="settings-section">
+        <h4>通知设置</h4>
+        <form method="post" action="{% url 'games:update_notification_settings' %}">
+            {% csrf_token %}
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="emailNotifications" name="email_notifications" {% if user.email_notifications %}checked{% endif %}>
+                <label class="form-check-label" for="emailNotifications">电子邮件通知</label>
+                <div class="text-muted small">接收关于新游戏、优惠和账户更新的电子邮件</div>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="gameUpdates" name="game_updates" {% if user.game_updates %}checked{% endif %}>
+                <label class="form-check-label" for="gameUpdates">游戏更新</label>
+                <div class="text-muted small">接收您收藏游戏的更新通知</div>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="subscriptionAlerts" name="subscription_alerts" {% if user.subscription_alerts %}checked{% endif %}>
+                <label class="form-check-label" for="subscriptionAlerts">订阅提醒</label>
+                <div class="text-muted small">接收关于您的会员订阅状态的提醒</div>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="marketingEmails" name="marketing_emails" {% if user.marketing_emails %}checked{% endif %}>
+                <label class="form-check-label" for="marketingEmails">营销邮件</label>
+                <div class="text-muted small">接收促销和营销相关的电子邮件</div>
+            </div>
+            <button type="submit" class="btn btn-primary">保存设置</button>
+        </form>
+    </div>
+    
+    <!-- 隐私设置 -->
+    <div class="settings-section">
+        <h4>隐私设置</h4>
+        <form method="post" action="{% url 'games:update_privacy_settings' %}">
+            {% csrf_token %}
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="profileVisibility" name="profile_visibility" {% if user.profile_visibility %}checked{% endif %}>
+                <label class="form-check-label" for="profileVisibility">个人资料可见性</label>
+                <div class="text-muted small">允许其他用户查看您的个人资料</div>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="gameHistoryVisibility" name="game_history_visibility" {% if user.game_history_visibility %}checked{% endif %}>
+                <label class="form-check-label" for="gameHistoryVisibility">游戏历史可见性</label>
+                <div class="text-muted small">允许其他用户查看您的游戏历史</div>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="dataCollection" name="data_collection" {% if user.data_collection %}checked{% endif %}>
+                <label class="form-check-label" for="dataCollection">数据收集</label>
+                <div class="text-muted small">允许我们收集游戏数据以改进您的体验</div>
+            </div>
+            <button type="submit" class="btn btn-primary">保存设置</button>
+        </form>
+    </div>
+    
+    <!-- 账号删除 -->
+    <div class="settings-section">
+        <h4>删除账号</h4>
+        <p class="text-danger">警告：删除账号是永久性的，所有数据将被清除且无法恢复。</p>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">删除我的账号</button>
+    </div>
+</div>
+
+<!-- 删除账号确认模态框 -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAccountModalLabel">确认删除账号</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除您的账号吗？此操作无法撤销，所有数据将被永久删除。</p>
+                <form id="deleteAccountForm" method="post" action="{% url 'games:delete_account' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="deleteConfirmation" class="form-label">请输入"DELETE"以确认</label>
+                        <input type="text" class="form-control" id="deleteConfirmation" name="confirmation">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteAccount">永久删除账号</button>
+            </div>
+        </div>
+    </div>
+</div> 

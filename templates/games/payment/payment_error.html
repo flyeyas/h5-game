@@ -1,0 +1,105 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load games_payment_tags %}
+
+{% block title %}{% trans "支付错误" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<section class="payment-result-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mx-auto">
+                <div class="card error-card">
+                    <div class="card-body text-center">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h2>{% trans "支付失败" %}</h2>
+                        <p class="lead">{{ error_message }}</p>
+                        
+                        {% if transaction %}
+                        <div class="transaction-details mt-4">
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "会员计划" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p>{{ transaction.subscription.plan.name }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "支付金额" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p>{{ transaction.amount|currency_format:transaction.currency }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "交易编号" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p class="transaction-id">{{ transaction.id }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="alert alert-info mt-4">
+                            <i class="fas fa-info-circle"></i> {% trans "如果您的账户已被扣款，但显示支付失败，请联系客服处理。" %}
+                        </div>
+                        
+                        <div class="action-buttons mt-4">
+                            <a href="{% url 'games:subscription_plans' %}" class="btn btn-primary btn-lg">{% trans "重新选择会员" %}</a>
+                            <a href="{% url 'games:index' %}" class="btn btn-outline-secondary btn-lg">{% trans "返回首页" %}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-result-section {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+    .error-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 40px 20px;
+    }
+    .error-icon {
+        font-size: 80px;
+        color: #dc3545;
+        margin-bottom: 20px;
+    }
+    .transaction-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    .transaction-id {
+        font-family: monospace;
+        color: #6c757d;
+    }
+    .action-buttons .btn {
+        margin: 0 5px;
+    }
+    @media (max-width: 767.98px) {
+        .transaction-details .col-md-6 {
+            text-align: center !important;
+        }
+        .transaction-details .row {
+            margin-bottom: 10px;
+        }
+    }
+</style>
+{% endblock %} 

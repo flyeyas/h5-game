@@ -1,0 +1,140 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:subscription_list' %}">{% trans '会员订阅管理' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:subscription_detail' pk=object.pk %}">{% trans '订阅详情' %}</a></li>
+    <li class="breadcrumb-item active">{% trans '编辑订阅' %}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">{% trans '编辑订阅信息' %}</h3>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <p>{% trans '请更正以下错误:' %}</p>
+                        <ul>
+                            {% for field in form %}
+                            {% if field.errors %}
+                            <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> {% trans '订阅用户' %}: <strong>{{ object.user.username }}</strong> ({{ object.user.email }})
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.plan.id_for_label }}">{% trans '订阅计划' %}</label>
+                        {{ form.plan }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.status.id_for_label }}">{% trans '状态' %}</label>
+                        {{ form.status }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.start_date.id_for_label }}">{% trans '开始日期' %}</label>
+                                <div class="input-group date" id="startDatePicker" data-target-input="nearest">
+                                    {{ form.start_date }}
+                                    <div class="input-group-append" data-target="#startDatePicker" data-toggle="datetimepicker">
+                                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.end_date.id_for_label }}">{% trans '结束日期' %}</label>
+                                <div class="input-group date" id="endDatePicker" data-target-input="nearest">
+                                    {{ form.end_date }}
+                                    <div class="input-group-append" data-target="#endDatePicker" data-toggle="datetimepicker">
+                                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            {{ form.auto_renew }}
+                            <label class="custom-control-label" for="{{ form.auto_renew.id_for_label }}">{% trans '自动续费' %}</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{% trans '保存' %}</button>
+                    <a href="{% url 'admin_panel:subscription_detail' pk=object.pk %}" class="btn btn-default">{% trans '取消' %}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $(function() {
+        // 表单样式美化
+        $('#{{ form.plan.id_for_label }}').addClass('form-control select2');
+        $('#{{ form.status.id_for_label }}').addClass('form-control select2');
+        $('#{{ form.start_date.id_for_label }}').addClass('form-control datetimepicker-input').attr('data-target', '#startDatePicker');
+        $('#{{ form.end_date.id_for_label }}').addClass('form-control datetimepicker-input').attr('data-target', '#endDatePicker');
+        $('#{{ form.auto_renew.id_for_label }}').addClass('custom-control-input');
+        
+        // Select2初始化
+        $('.select2').select2();
+        
+        // 日期时间选择器初始化
+        $('#startDatePicker').datetimepicker({
+            format: 'YYYY-MM-DD HH:mm:ss',
+            icons: {
+                time: 'fas fa-clock',
+                date: 'fas fa-calendar',
+                up: 'fas fa-arrow-up',
+                down: 'fas fa-arrow-down',
+                previous: 'fas fa-chevron-left',
+                next: 'fas fa-chevron-right',
+                today: 'fas fa-calendar-check',
+                clear: 'fas fa-trash',
+                close: 'fas fa-times'
+            }
+        });
+        
+        $('#endDatePicker').datetimepicker({
+            format: 'YYYY-MM-DD HH:mm:ss',
+            icons: {
+                time: 'fas fa-clock',
+                date: 'fas fa-calendar',
+                up: 'fas fa-arrow-up',
+                down: 'fas fa-arrow-down',
+                previous: 'fas fa-chevron-left',
+                next: 'fas fa-chevron-right',
+                today: 'fas fa-calendar-check',
+                clear: 'fas fa-trash',
+                close: 'fas fa-times'
+            }
+        });
+    });
+</script>
+{% endblock %} 

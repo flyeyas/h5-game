@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - HTML5游戏平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar-brand img {
+            height: 40px;
+        }
+        .profile-header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 40px 0;
+            margin-bottom: 30px;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 20px;
+            border: 5px solid rgba(255,255,255,0.3);
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-info h1 {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .profile-info p {
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .profile-info .badge {
+            font-size: 0.9rem;
+            padding: 8px 15px;
+            margin-top: 10px;
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 0 20px;
+            border-right: 1px solid rgba(255,255,255,0.3);
+        }
+        .stat-item:last-child {
+            border-right: none;
+        }
+        .stat-item .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-item .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .nav-pills .nav-link {
+            color: #495057;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #6a11cb;
+            color: white;
+        }
+        .tab-content {
+            padding: 20px 0;
+        }
+        .game-card {
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+        }
+        .game-card img {
+            height: 150px;
+            object-fit: cover;
+            width: 100%;
+        }
+        .game-card .card-body {
+            padding: 15px;
+        }
+        .game-card .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .game-card .rating {
+            color: #ffc107;
+            font-size: 0.9rem;
+        }
+        .game-card .category-badge {
+            background-color: #e9ecef;
+            color: #495057;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .history-item {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+        }
+        .history-game-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+        .history-game-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .history-game-info {
+            flex: 1;
+        }
+        .history-game-info h5 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .history-game-info p {
+            color: #6c757d;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .history-game-actions {
+            display: flex;
+            align-items: center;
+        }
+        .settings-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .settings-section h4 {
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .subscription-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .subscription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .subscription-title h4 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .subscription-title p {
+            color: #6c757d;
+            margin-bottom: 0;
+        }
+        .subscription-badge {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .subscription-details {
+            margin-bottom: 20px;
+        }
+        .subscription-details p {
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .subscription-details .text-muted {
+            color: #6c757d;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 50px;
+        }
+        .footer h5 {
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .footer ul {
+            padding-left: 0;
+            list-style: none;
+        }
+        .footer ul li {
+            margin-bottom: 10px;
+        }
+        .footer ul li a {
+            color: #adb5bd;
+            text-decoration: none;
+        }
+        .footer ul li a:hover {
+            color: white;
+        }
+        .social-icons a {
+            color: white;
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+        @media (max-width: 767.98px) {
+            .profile-header {
+                padding: 30px 0;
+            }
+            .profile-avatar {
+                width: 100px;
+                height: 100px;
+            }
+            .stat-item {
+                padding: 0 10px;
+            }
+            .stat-item .stat-value {
+                font-size: 1.2rem;
+            }
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .history-game-img {
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+            .history-game-actions {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="home.html">
+                <img src="https://via.placeholder.com/150x50/6a11cb/ffffff?text=GameHub" alt="GameHub Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.html">首页</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            游戏分类
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="categories.html">动作游戏</a></li>
+                            <li><a class="dropdown-item" href="categories.html">益智游戏</a></li>
+                            <li><a class="dropdown-item" href="categories.html">策略游戏</a></li>
+                            <li><a class="dropdown-item" href="categories.html">角色扮演</a></li>
+                            <li><a class="dropdown-item" href="categories.html">休闲游戏</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="categories.html">所有分类</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">热门游戏</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="subscription.html">会员订阅</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <a class="btn btn-link text-light text-decoration-none dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="用户头像" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            张伟
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item active" href="profile.html"><i class="fas fa-user me-2"></i>个人中心</a></li>
+                            <li><a class="dropdown-item" href="profile.html"><i class="fas fa-gamepad me-2"></i>我的游戏</a></li>
+                            <li><a class="dropdown-item" href="profile-settings.html"><i class="fas fa-cog me-2"></i>账号设置</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="login.html"><i class="fas fa-sign-out-alt me-2"></i>退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 个人资料头部 -->
+    <section class="profile-header">
+        <div class="container text-center">
+            <div class="profile-avatar">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="用户头像">
+            </div>
+            <div class="profile-info">
+                <h1>张伟</h1>
+                <p><i class="fas fa-envelope me-2"></i>zhangwei@example.com</p>
+                <p><i class="fas fa-calendar-alt me-2"></i>加入于 2023年3月15日</p>
+                <span class="badge bg-warning">高级会员</span>
+            </div>
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">收藏游戏</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">128</div>
+                    <div class="stat-label">游戏时长</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">评论数</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- 选项卡导航 -->
+        <ul class="nav nav-pills mb-4" id="profileTab">
+            <li class="nav-item">
+                <a class="nav-link active" href="profile.html">我的游戏</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="profile-history.html">游戏历史</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="profile-membership.html">会员信息</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="profile-settings.html">账号设置</a>
+            </li>
+        </ul>
+        
+        <!-- 选项卡内容 -->
+        <div class="tab-content" id="profileTabContent">
+            <!-- 我的游戏 -->
+            <div class="tab-pane fade show active" id="games" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>收藏的游戏</h3>
+                    <div class="d-flex">
+                        <div class="input-group me-2" style="width: 250px;">
+                            <input type="text" class="form-control" placeholder="搜索游戏...">
+                            <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
+                        </div>
+                        <select class="form-select" style="width: 150px;">
+                            <option>全部分类</option>
+                            <option>动作</option>
+                            <option>益智</option>
+                            <option>策略</option>
+                            <option>角色扮演</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- 游戏卡片1 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">太空冒险</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star-half-alt"></i>
+                                        <small class="text-muted ms-1">4.5</small>
+                                    </span>
+                                    <span class="category-badge">动作</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 游戏卡片2 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1553481187-be93c21490a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">方块消除</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="far fa-star"></i>
+                                        <small class="text-muted ms-1">4.0</small>
+                                    </span>
+                                    <span class="category-badge">益智</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 游戏卡片3 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">王国守卫</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <small class="text-muted ms-1">5.0</small>
+                                    </span>
+                                    <span class="category-badge">策略</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 游戏卡片4 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1551103782-8ab07afd45c1?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">赛车狂飙</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star-half-alt"></i>
+                                        <i class="far fa-star"></i>
+                                        <small class="text-muted ms-1">3.5</small>
+                                    </span>
+                                    <span class="category-badge">竞速</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 游戏卡片5 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">丛林探险</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="far fa-star"></i>
+                                        <small class="text-muted ms-1">4.0</small>
+                                    </span>
+                                    <span class="category-badge">冒险</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 游戏卡片6 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1511882150382-421056c89033?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">魔法世界</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star-half-alt"></i>
+                                        <small class="text-muted ms-1">4.5</small>
+                                    </span>
+                                    <span class="category-badge">角色</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 游戏卡片7 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">城市建设</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="far fa-star"></i>
+                                        <i class="far fa-star"></i>
+                                        <small class="text-muted ms-1">3.0</small>
+                                    </span>
+                                    <span class="category-badge">模拟</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 游戏卡片8 -->
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="game-card">
+                            <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="游戏图片">
+                            <div class="card-body">
+                                <h5 class="card-title">僵尸生存</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <small class="text-muted ms-1">5.0</small>
+                                    </span>
+                                    <span class="category-badge">生存</span>
+                                </div>
+                                <div class="d-flex">
+                                    <a href="game-detail.html" class="btn btn-sm btn-primary flex-grow-1 me-2">开始游戏</a>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-heart"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 分页 -->
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一页</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">下一页</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <!-- 游戏历史 -->
+            <div class="tab-pane fade" id="history" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>最近玩过的游戏</h3>
+                    <button class="btn btn-outline-secondary"><i class="fas fa-trash-alt me-2"></i>清空历史记录</button>
+                </div>
+                
+                <!-- 历史记录1 -->
+                <div class="history-item">
+                    <div class="history-game-img">
+                        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="游戏图片">
+                    </div>
+                    <div class="history-game-info">
+                        <h5>太空冒险</h5>
+                        <p><i class="fas fa-clock me-1"></i>最近游玩: 今天 14:30</p>
+                        <p><i class="fas fa-hourglass-half me-1"></i>游戏时长: 45分钟</p>
+                    </div>
+                    <div class="history-game-actions">
+                        <a href="game-detail.html" class="btn btn-primary me-2">继续游戏</a>
+                        <button class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 历史记录2 -->
+                <div class="history-item">
+                    <div class="history-game-img">
+                        <img src="https://images.unsplash.com/photo-1553481187-be93c21490a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="游戏图片">
+                    </div>
+                    <div class="history-game-info">
+                        <h5>方块消除</h5>
+                        <p><i class="fas fa-clock me-1"></i>最近游玩: 昨天 20:15</p>
+                        <p><i class="fas fa-hourglass-half me-1"></i>游戏时长: 1小时20分钟</p>
+                    </div>
+                    <div class="history-game-actions">
+                        <a href="game-detail.html" class="btn btn-primary me-2">继续游戏</a>
+                        <button class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 历史记录3 -->
+                <div class="history-item">
+                    <div class="history-game-img">
+                        <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="游戏图片">
+                    </div>
+                    <div class="history-game-info">
+                        <h5>王国守卫</h5>
+                        <p><i class="fas fa-clock me-1"></i>最近游玩: 2023-06-18 16:45</p>
+                        <p><i class="fas fa-hourglass-half me-1"></i>游戏时长: 2小时5分钟</p>
+                    </div>
+                    <div class="history-game-actions">
+                        <a href="game-detail.html" class="btn btn-primary me-2">继续游戏</a>
+                        <button class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 历史记录4 -->
+                <div class="history-item">
+                    <div class="history-game-img">
+                        <img src="https://images.unsplash.com/photo-1551103782-8ab07afd45c1?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="游戏图片">
+                    </div>
+                    <div class="history-game-info">
+                        <h5>赛车狂飙</h5>
+                        <p><i class="fas fa-clock me-1"></i>最近游玩: 2023-06-15 19:30</p>
+                        <p><i class="fas fa-hourglass-half me-1"></i>游戏时长: 30分钟</p>
+                    </div>
+                    <div class="history-game-actions">
+                        <a href="game-detail.html" class="btn btn-primary me-2">继续游戏</a>
+                        <button class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 历史记录5 -->
+                <div class="history-item">
+                    <div class="history-game-img">
+                        <img src="https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="游戏图片">
+                    </div>
+                    <div class="history-game-info">
+                        <h5>丛林探险</h5>
+                        <p><i class="fas fa-clock me-1"></i>最近游玩: 2023-06-10 10:15</p>
+                        <p><i class="fas fa-hourglass-half me-1"></i>游戏时长: 1小时45分钟</p>
+                    </div>
+                    <div class="history-game-actions">
+                        <a href="game-detail.html" class="btn btn-primary me-2">继续游戏</a>
+                        <button class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 查看更多按钮 -->
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary">加载更多历史记录</button>
+                </div>
+            </div>
+            
+            <!-- 会员信息 -->
+            <div class="tab-pane fade" id="subscription" role="tabpanel">
+                <!-- 当前会员信息 -->
+                <div class="subscription-card">
+                    <div class="subscription-header">
+                        <div class="subscription-title">
+                            <h4>当前会员</h4>
+                            <p>您当前的会员计划和详细信息</p>
+                        </div>
+                        <div class="subscription-badge">高级会员</div>
+                    </div>
+                    <div class="subscription-details">
+                        <p>
+                            <span>会员状态</span>
+                            <span class="text-success">有效</span>
+                        </p>
+                        <p>
+                            <span>开始日期</span>
+                            <span class="text-muted">2023年5月15日</span>
+                        </p>
+                        <p>
+                            <span>下次续费日期</span>
+                            <span class="text-muted">2023年7月15日</span>
+                        </p>
+                        <p>
+                            <span>当前计费周期</span>
+                            <span class="text-muted">月付 - ¥39/月</span>
+                        </p>
+                        <p>
+                            <span>支付方式</span>
+                            <span class="text-muted">微信支付 (尾号: 8976)</span>
+                        </p>
+                    </div>
+                    <div class="d-flex">
+                        <button class="btn btn-outline-primary me-2 flex-grow-1">更改计划</button>
+                        <button class="btn btn-outline-danger flex-grow-1">取消订阅</button>
+                    </div>
+                </div>
+                
+                <!-- 会员特权 -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">高级会员特权</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">无广告体验</h5>
+                                    <p class="mb-0 text-muted">畅享无广告打扰的游戏体验</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">游戏进度云端保存</h5>
+                                    <p class="mb-0 text-muted">在任何设备上继续您的游戏进度</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">专属游戏内容</h5>
+                                    <p class="mb-0 text-muted">解锁会员专属游戏和内容</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">优先体验新游戏</h5>
+                                    <p class="mb-0 text-muted">抢先体验最新上线的游戏</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-times-circle text-muted me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">专属客服支持</h5>
+                                    <p class="mb-0 text-muted">仅限终极会员</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="subscription.html" class="btn btn-primary">升级到终极会员</a>
+                    </div>
+                </div>
+                
+                <!-- 交易历史 -->
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">交易历史</h4>
+                        <button class="btn btn-sm btn-outline-secondary">导出记录</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>描述</th>
+                                        <th>金额</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2023-06-15</td>
+                                        <td>高级会员月费</td>
+                                        <td>¥39.00</td>
+                                        <td><span class="badge bg-success">成功</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2023-05-15</td>
+                                        <td>高级会员月费</td>
+                                        <td>¥39.00</td>
+                                        <td><span class="badge bg-success">成功</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2023-04-15</td>
+                                        <td>高级会员月费</td>
+                                        <td>¥39.00</td>
+                                        <td><span class="badge bg-success">成功</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2023-03-15</td>
+                                        <td>基础会员升级至高级会员</td>
+                                        <td>¥20.00</td>
+                                        <td><span class="badge bg-success">成功</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2023-03-15</td>
+                                        <td>基础会员月费</td>
+                                        <td>¥19.00</td>
+                                        <td><span class="badge bg-success">成功</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 账号设置 -->
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <!-- 个人资料设置 -->
+                <div class="settings-section">
+                    <h4>个人资料</h4>
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">用户名</label>
+                                <input type="text" class="form-control" id="username" value="张伟">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">电子邮箱</label>
+                                <input type="email" class="form-control" id="email" value="zhangwei@example.com">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="avatar" class="form-label">头像</label>
+                            <div class="d-flex align-items-center">
+                                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="当前头像" class="rounded-circle me-3" style="width: 64px; height: 64px; object-fit: cover;">
+                                <input type="file" class="form-control" id="avatar">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">个人简介</label>
+                            <textarea class="form-control" id="bio" rows="3">热爱游戏的普通玩家，特别喜欢策略和冒险类游戏。</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存更改</button>
+                    </form>
+                </div>
+                
+                <!-- 密码设置 -->
+                <div class="settings-section">
+                    <h4>修改密码</h4>
+                    <form>
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">当前密码</label>
+                            <input type="password" class="form-control" id="currentPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">新密码</label>
+                            <input type="password" class="form-control" id="newPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">确认新密码</label>
+                            <input type="password" class="form-control" id="confirmPassword">
+                        </div>
+                        <button type="submit" class="btn btn-primary">更新密码</button>
+                    </form>
+                </div>
+                
+                <!-- 通知设置 -->
+                <div class="settings-section">
+                    <h4>通知设置</h4>
+                    <form>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                            <label class="form-check-label" for="emailNotifications">电子邮件通知</label>
+                            <div class="text-muted small">接收关于新游戏、优惠和账户更新的电子邮件</div>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="gameUpdates" checked>
+                            <label class="form-check-label" for="gameUpdates">游戏更新</label>
+                            <div class="text-muted small">接收您收藏游戏的更新通知</div>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="subscriptionAlerts" checked>
+                            <label class="form-check-label" for="subscriptionAlerts">订阅提醒</label>
+                            <div class="text-muted small">接收关于您的会员订阅状态的提醒</div>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="marketingEmails">
+                            <label class="form-check-label" for="marketingEmails">营销邮件</label>
+                            <div class="text-muted small">接收促销和营销相关的电子邮件</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存设置</button>
+                    </form>
+                </div>
+                
+                <!-- 隐私设置 -->
+                <div class="settings-section">
+                    <h4>隐私设置</h4>
+                    <form>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="profileVisibility" checked>
+                            <label class="form-check-label" for="profileVisibility">个人资料可见性</label>
+                            <div class="text-muted small">允许其他用户查看您的个人资料</div>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="gameHistoryVisibility">
+                            <label class="form-check-label" for="gameHistoryVisibility">游戏历史可见性</label>
+                            <div class="text-muted small">允许其他用户查看您的游戏历史</div>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="dataCollection" checked>
+                            <label class="form-check-label" for="dataCollection">数据收集</label>
+                            <div class="text-muted small">允许我们收集游戏数据以改进您的体验</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存设置</button>
+                    </form>
+                </div>
+                
+                <!-- 账号删除 -->
+                <div class="settings-section">
+                    <h4>删除账号</h4>
+                    <p class="text-danger">警告：删除账号是永久性的，所有数据将被清除且无法恢复。</p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">删除我的账号</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除账号确认模态框 -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAccountModalLabel">确认删除账号</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>您确定要删除您的账号吗？此操作无法撤销，所有数据将被永久删除。</p>
+                    <div class="mb-3">
+                        <label for="deleteConfirmation" class="form-label">请输入"DELETE"以确认</label>
+                        <input type="text" class="form-control" id="deleteConfirmation">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger">永久删除账号</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-5 mb-4">
+                    <h5>关于我们</h5>
+                    <p>GameHub是一个提供高质量HTML5游戏的平台，致力于为玩家提供最好的游戏体验。</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h5>快速链接</h5>
+                    <ul>
+                        <li><a href="#">首页</a></li>
+                        <li><a href="categories.html">游戏分类</a></li>
+                        <li><a href="#">热门游戏</a></li>
+                        <li><a href="#">最新上线</a></li>
+                        <li><a href="subscription.html">会员订阅</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>帮助中心</h5>
+                    <ul>
+                        <li><a href="#">常见问题</a></li>
+                        <li><a href="#">联系我们</a></li>
+                        <li><a href="#">用户协议</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 text-center">
+                    <p class="mb-0">© 2023 GameHub. 保留所有权利。</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

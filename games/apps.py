@@ -1,0 +1,13 @@
+from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
+
+
+class GamesConfig(AppConfig):
+    """Games应用配置类"""
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'games'
+    verbose_name = _('游戏管理')
+    
+    def ready(self):
+        """连接信号处理器"""
+        import games.signals

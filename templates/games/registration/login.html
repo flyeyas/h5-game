@@ -1,0 +1,50 @@
+{% extends 'games/base.html' %}
+{% load static %}
+
+{% block title %}登录/注册 - HTML5游戏平台{% endblock %}
+
+{% block meta_description %}登录或注册GameHub，享受数千款精选HTML5游戏，随时随地畅玩无限乐趣！{% endblock %}
+
+{% block meta_keywords %}游戏登录,游戏注册,HTML5游戏,在线游戏,免费游戏,手机游戏,小游戏{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% include 'games/registration/auth_styles.html' %}
+{% endblock %}
+
+{% block main_container_class %}container-fluid p-0{% endblock %}
+
+{% block content %}
+    {% include 'games/registration/auth_content.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // 从URL参数确定默认激活的选项卡
+    document.addEventListener('DOMContentLoaded', function() {
+        // 检查用户是否已登录
+        if (document.cookie.includes('sessionid=') || 
+            document.cookie.includes('front_user_sessionid=')) {
+            // 获取URL中的next参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const next = urlParams.get('next');
+            
+            // 如果用户已登录，优先跳转到next参数指定的页面，
+            // 如果没有next参数，则跳转到用户主页
+            window.location.href = next || '/profile/';
+            return;
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        
+        if (tab === 'register') {
+            const registerTab = document.getElementById('register-tab');
+            if (registerTab) {
+                registerTab.click();
+            }
+        }
+    });
+</script>
+{% endblock %}

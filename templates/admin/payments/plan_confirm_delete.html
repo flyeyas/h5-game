@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+{% load payment_tags %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:subscription_plan_list' %}">{% trans '订阅计划管理' %}</a></li>
+    <li class="breadcrumb-item active">{% trans '删除订阅计划' %}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card card-danger">
+            <div class="card-header">
+                <h3 class="card-title">{% trans '确认删除订阅计划' %}</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5><i class="icon fas fa-exclamation-triangle"></i> {% trans '警告!' %}</h5>
+                    <p>{% trans '您确定要删除以下订阅计划吗？此操作不可逆!' %}</p>
+                    <p>{% trans '如果有用户正在使用此计划，将无法删除。' %}</p>
+                </div>
+                
+                <div class="plan-info">
+                    <p><strong>{% trans '计划名称:' %}</strong> {{ object.name }}</p>
+                    <p><strong>{% trans '价格:' %}</strong> {{ object.price|currency_format }}</p>
+                    <p><strong>{% trans '周期:' %}</strong> {{ object.get_period_display }}</p>
+                    <p><strong>{% trans '状态:' %}</strong> 
+                        {% if object.is_active %}
+                        <span class="badge badge-success">{% trans '启用' %}</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{% trans '禁用' %}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="text-center mt-4">
+                        <a href="{% url 'admin_panel:subscription_plan_list' %}" class="btn btn-default">
+                            {% trans '取消' %}
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> {% trans '确认删除' %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

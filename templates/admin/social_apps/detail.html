@@ -1,0 +1,140 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{% trans "社交应用详情" %}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans "首页" %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:social_app_list' %}">{% trans "社交应用管理" %}</a></li>
+        <li class="breadcrumb-item active">{% trans "社交应用详情" %}</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-info-circle me-1"></i>
+            {% trans "社交应用详细信息" %}
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="bg-light w-25">{% trans "ID" %}</th>
+                            <td>{{ social_app.id }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">{% trans "名称" %}</th>
+                            <td>{{ social_app.name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">{% trans "提供商" %}</th>
+                            <td>{{ social_app.provider }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">{% trans "客户端ID" %}</th>
+                            <td>{{ social_app.client_id }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">{% trans "密钥" %}</th>
+                            <td>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" value="{{ social_app.secret }}" readonly id="secretField">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleSecret">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% if social_app.key %}
+                        <tr>
+                            <th class="bg-light">{% trans "Key" %}</th>
+                            <td>{{ social_app.key }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            {% trans "关联站点" %}
+                        </div>
+                        <div class="card-body">
+                            {% if social_app.sites.all %}
+                            <ul class="list-group">
+                                {% for site in social_app.sites.all %}
+                                <li class="list-group-item">
+                                    <strong>{{ site.name }}</strong> 
+                                    <small class="text-muted">({{ site.domain }})</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">{% trans "没有关联的站点" %}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                {% if perms.socialaccount.change_socialapp %}
+                <a href="{% url 'admin_panel:social_app_edit' app_id=social_app.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i> {% trans "编辑" %}
+                </a>
+                {% endif %}
+                <a href="{% url 'admin_panel:social_app_list' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-arrow-left me-1"></i> {% trans "返回" %}
+                </a>
+                {% if perms.socialaccount.delete_socialapp %}
+                <a href="#" class="btn btn-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                    <i class="fas fa-trash me-1"></i> {% trans "删除" %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if perms.socialaccount.delete_socialapp %}
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">{% trans "确认删除" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "确定要删除社交应用" %} <strong>{{ social_app.name }}</strong> {% trans "吗？" %}</p>
+                <p class="text-danger">{% trans "此操作不可撤销！" %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "取消" %}</button>
+                <a href="{% url 'admin_panel:social_app_delete' app_id=social_app.id %}" class="btn btn-danger">{% trans "确认删除" %}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        // 切换密钥显示/隐藏
+        $('#toggleSecret').click(function() {
+            const secretField = $('#secretField');
+            const icon = $(this).find('i');
+            
+            if (secretField.attr('type') === 'password') {
+                secretField.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                secretField.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,690 @@
+{% load i18n %}
+
+<!-- 添加菜单项模态框 -->
+<div class="modal fade" id="addMenuModal" tabindex="-1" aria-labelledby="addMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="addMenuModalLabel">
+                    <i class="fas fa-plus me-2 text-primary"></i>
+                    {% trans '添加菜单项' %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="menuForm" method="post" action="{% url 'admin_panel:add_menu' %}">
+                    {% csrf_token %}
+                    
+                    <div id="formAlerts"></div>
+                    
+                    <!-- 添加必填字段说明 -->
+                    <div class="mb-3 text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {% trans '带' %} <span class="text-danger required-mark">*</span> {% trans '的字段为必填项' %}
+                    </div>
+                    
+                    <div class="mb-3 required-field">
+                        <label for="id_name" class="form-label">{% trans '菜单名称' %} <span class="text-danger required-mark">*</span></label>
+                        <input type="text" class="form-control" id="id_name" name="name" required 
+                               maxlength="50" placeholder="{% trans '输入菜单显示名称' %}">
+                        <div class="invalid-feedback">{% trans '请输入菜单名称' %}</div>
+                    </div>
+                    
+                    <div class="mb-3 required-field">
+                        <label for="id_url" class="form-label">{% trans '链接URL' %} <span class="text-danger required-mark">*</span></label>
+                        <input type="text" class="form-control" id="id_url" name="url" required
+                               maxlength="200" placeholder="{% trans '输入链接地址' %}">
+                        <div class="invalid-feedback">{% trans '请输入链接URL' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_icon" class="form-label">{% trans '图标' %}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <div class="icon-preview-container">
+                                    <i id="icon-preview" class="fas fa-gear"></i>
+                                </div>
+                            </span>
+                            <input type="text" class="form-control" id="id_icon" name="icon" 
+                                   placeholder="{% trans '选择或输入图标类名' %}">
+                        </div>
+                        <div class="form-text">{% trans '输入FontAwesome图标类名，例如: fas fa-home' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_parent" class="form-label">{% trans '父级菜单' %}</label>
+                        <select class="form-select" id="id_parent" name="parent">
+                            <option value="">{% trans '无 (作为顶级菜单)' %}</option>
+                            {% for menu in main_menus %}
+                                <option value="{{ menu.id }}">{{ menu.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">{% trans '选择子菜单项所属的父级菜单' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_order" class="form-label">{% trans '排序' %}</label>
+                        <input type="number" class="form-control" id="id_order" name="order" value="0" min="0">
+                        <div class="form-text">{% trans '数字越小排序越靠前' %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="id_is_active" name="is_active" checked>
+                            <label class="form-check-label" for="id_is_active">
+                                {% trans '是否启用' %}
+                            </label>
+                        </div>
+                        <div class="form-text">{% trans '取消勾选表示暂不启用此菜单项' %}</div>
+                    </div>
+                    
+                    <div class="modal-footer bg-light px-0 mt-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>
+                            {% trans '取消' %}
+                        </button>
+                        <button type="submit" id="submitMenuForm" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
+                            <i class="fas fa-plus me-1"></i>
+                            {% trans '添加' %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteMenuModal" tabindex="-1" aria-labelledby="deleteMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="deleteMenuModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    {% trans '确认删除' %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="delete-menu-error" class="alert alert-danger d-none mb-3">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="delete-error-message">{% trans '删除失败，请重试' %}</span>
+                </div>
+                <p>{% trans '您确定要删除菜单项' %} <span id="menuNameToDelete" class="fw-bold"></span> {% trans '吗？' %}</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {% trans '注意：如果删除主菜单项，其下的所有子菜单项也将被删除。此操作无法撤销。' %}
+                </div>
+                <input type="hidden" id="delete_menu_id" value="">
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    {% trans '取消' %}
+                </button>
+                <button type="button" id="confirmDelete" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>
+                    {% trans '确认删除' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑菜单项模态框 -->
+<div class="modal fade" id="editMenuModal" tabindex="-1" aria-labelledby="editMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="editMenuModalLabel">
+                    <i class="fas fa-edit me-2 text-primary"></i>
+                    {% trans '编辑菜单项' %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 加载指示器 -->
+                <div id="editFormLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">{% trans '加载中...' %}</span>
+                    </div>
+                    <p class="mt-2">{% trans '正在加载菜单数据...' %}</p>
+                </div>
+                
+                <!-- 表单内容 -->
+                <div id="editFormContent" style="display: none;">
+                    <form id="editMenuForm" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" id="edit_menu_id" name="menu_id">
+                        
+                        <div id="editFormAlerts"></div>
+                        
+                        <!-- 添加必填字段说明 -->
+                        <div class="mb-3 text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% trans '带' %} <span class="text-danger required-mark">*</span> {% trans '的字段为必填项' %}
+                        </div>
+                        
+                        <div class="mb-3 required-field">
+                            <label for="edit_name" class="form-label">{% trans '菜单名称' %} <span class="text-danger required-mark">*</span></label>
+                            <input type="text" class="form-control" id="edit_name" name="name" required 
+                                maxlength="50" placeholder="{% trans '输入菜单显示名称' %}">
+                            <div class="invalid-feedback">{% trans '请输入菜单名称' %}</div>
+                        </div>
+                        
+                        <div class="mb-3 required-field">
+                            <label for="edit_url" class="form-label">{% trans '链接URL' %} <span class="text-danger required-mark">*</span></label>
+                            <input type="text" class="form-control" id="edit_url" name="url" required
+                                maxlength="200" placeholder="{% trans '输入链接地址' %}">
+                            <div class="invalid-feedback">{% trans '请输入链接URL' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_icon" class="form-label">{% trans '图标' %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <div class="icon-preview-container">
+                                        <i id="edit_icon_preview" class="fas fa-gear"></i>
+                                    </div>
+                                </span>
+                                <input type="text" class="form-control" id="edit_icon" name="icon" 
+                                    placeholder="{% trans '选择或输入图标类名' %}">
+                            </div>
+                            <div class="form-text">{% trans '输入FontAwesome图标类名，例如: fas fa-home' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_parent" class="form-label">{% trans '父级菜单' %}</label>
+                            <select class="form-select" id="edit_parent" name="parent">
+                                <option value="">{% trans '无 (作为顶级菜单)' %}</option>
+                                {% for menu in main_menus %}
+                                    <option value="{{ menu.id }}">{{ menu.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">{% trans '选择子菜单项所属的父级菜单' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_order" class="form-label">{% trans '排序' %}</label>
+                            <input type="number" class="form-control" id="edit_order" name="order" value="0" min="0">
+                            <div class="form-text">{% trans '数字越小排序越靠前' %}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_is_active" name="is_active">
+                                <label class="form-check-label" for="edit_is_active">
+                                    {% trans '是否启用' %}
+                                </label>
+                            </div>
+                            <div class="form-text">{% trans '取消勾选表示暂不启用此菜单项' %}</div>
+                        </div>
+                        
+                        <div class="modal-footer bg-light px-0 mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>
+                                {% trans '取消' %}
+                            </button>
+                            <button type="submit" id="submitEditForm" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% trans '保存修改' %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加成功提示模态框 -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="successModalLabel">
+          <i class="fas fa-check-circle me-2"></i>
+          {% trans '操作成功' %}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="mb-3">
+          <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+        </div>
+        <p id="successMessage" class="mb-0"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+          {% trans '确定' %}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 添加CSS样式，使必填字段更加明显 -->
+<style>
+  /* 必填字段标签样式 */
+  .required-field label {
+    font-weight: 500;
+  }
+  
+  /* 红色星号样式 */
+  .text-danger.required-mark {
+    font-size: 1.2em;
+    position: relative;
+    top: 2px;
+    margin-left: 3px;
+  }
+</style>
+
+<!-- JavaScript 处理 -->
+<script>
+  console.log('菜单脚本开始初始化'); // 初始化脚本时的调试信息
+  
+  // 确保全局函数在页面加载或重新加载时都可用
+  window.initMenuModals = function() {
+    console.log('初始化菜单模态框函数被调用');
+    
+    // 获取CSRF令牌
+    function getCsrfToken() {
+      const token = document.querySelector('[name=csrfmiddlewaretoken]');
+      console.log('CSRF token元素:', token);
+      return token ? token.value : '';
+    }
+    
+    // 设置删除菜单数据
+    const deleteMenuModal = document.getElementById('deleteMenuModal');
+    console.log('找到删除模态框元素:', deleteMenuModal);
+    
+    if (deleteMenuModal) {
+      // 移除已存在的监听器，避免重复绑定
+      if (deleteMenuModal._showBsModal) {
+        deleteMenuModal.removeEventListener('show.bs.modal', deleteMenuModal._showBsModal);
+      }
+      
+      // 监听模态框显示事件
+      const deleteModalShowEvent = function(event) {
+        console.log('删除模态框显示事件触发');
+        const button = event.relatedTarget;
+        if (!button) {
+          console.error('无法获取触发删除模态框的按钮元素');
+            return;
+        }
+        
+        const menuId = button.getAttribute('data-menu-id');
+        const menuName = button.getAttribute('data-menu-name');
+        
+        console.log('准备删除的菜单:', menuId, menuName);
+        
+        document.getElementById('delete_menu_id').value = menuId;
+        document.getElementById('menuNameToDelete').textContent = menuName;
+        
+        // 隐藏可能显示的错误消息
+        const errorContainer = document.getElementById('delete-menu-error');
+        if (errorContainer) {
+          errorContainer.classList.add('d-none');
+        }
+      };
+      
+      deleteMenuModal.addEventListener('show.bs.modal', deleteModalShowEvent);
+      deleteMenuModal._showBsModal = deleteModalShowEvent; // 保存引用以便未来可以移除
+      
+      // 绑定确认删除按钮的点击事件
+      const confirmDeleteBtn = document.getElementById('confirmDelete');
+      if (confirmDeleteBtn) {
+        // 如果已存在监听器，先移除
+        if (confirmDeleteBtn._clickEvent) {
+          confirmDeleteBtn.removeEventListener('click', confirmDeleteBtn._clickEvent);
+        }
+        
+        // 绑定新的事件处理函数
+        const confirmDeleteEvent = function() {
+          const menuId = document.getElementById('delete_menu_id').value;
+          if (!menuId) {
+            console.error('无法获取要删除的菜单ID');
+            return;
+          }
+          
+          // 关闭删除确认模态框
+          const deleteModalInstance = bootstrap.Modal.getInstance(deleteMenuModal);
+          if (deleteModalInstance) {
+            deleteModalInstance.hide();
+          }
+          
+          // 调用删除函数
+          if (typeof window.deleteMenu === 'function') {
+            window.deleteMenu(menuId);
+          } else {
+            console.error('deleteMenu函数未定义');
+          }
+        };
+        
+        confirmDeleteBtn.addEventListener('click', confirmDeleteEvent);
+        confirmDeleteBtn._clickEvent = confirmDeleteEvent; // 保存引用以便未来可以移除
+      }
+    }
+    
+    // 初始化编辑模态框
+    initializeEditModal();
+    
+    console.log('菜单模态框初始化完成');
+  };
+  
+  // 通用显示通知提示函数 - 全局函数，可随时调用
+  window.showToast = function(message, type = 'info') {
+        // 检查是否已有toast容器
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // 创建toast元素
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-atomic', 'true');
+        
+        // 设置toast内容
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        // 添加到容器并显示
+        toastContainer.appendChild(toastEl);
+        const toast = new bootstrap.Toast(toastEl, {autohide: true, delay: 3000});
+        toast.show();
+        
+        // 自动移除
+        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+  };
+  
+  // 显示成功模态框函数
+  window.showSuccessModal = function(message, callback) {
+    const successModal = document.getElementById('successModal');
+    if (!successModal) {
+      console.error('找不到成功提示模态框');
+      alert(message); // 如果找不到模态框，回退到alert
+      if (callback) callback();
+      return;
+    }
+    
+    // 设置消息内容
+    const messageElement = document.getElementById('successMessage');
+    if (messageElement) {
+      messageElement.textContent = message;
+    }
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(successModal);
+    modal.show();
+    
+    // 添加隐藏事件回调
+    successModal.addEventListener('hidden.bs.modal', function onHidden() {
+      if (callback) callback();
+      successModal.removeEventListener('hidden.bs.modal', onHidden);
+    });
+  };
+  
+  // 菜单编辑函数 - 全局函数，可从其他地方调用
+  window.editMenu = function(menuId) {
+    // 这个函数已不再使用，重定向到新的编辑界面
+    window.location.href = `/admin/menu/${menuId}/edit/`;
+  };
+  
+  // 初始化编辑模态框功能
+  function initializeEditModal() {
+    console.log('初始化菜单编辑模态框');
+    
+    const editMenuModal = document.getElementById('editMenuModal');
+    const editIconInput = document.getElementById('edit_icon');
+    const editMenuFormElement = document.getElementById('editMenuForm');
+    
+    if (!editMenuModal || !editIconInput || !editMenuFormElement) {
+      console.error('无法找到编辑模态框所需的DOM元素');
+      return;
+    }
+    
+    // 先移除可能存在的旧事件监听器，防止重复绑定
+    if (editMenuModal._showBsModal) {
+      console.log('移除旧的模态框显示事件');
+      editMenuModal.removeEventListener('show.bs.modal', editMenuModal._showBsModal);
+    }
+    
+    if (editIconInput._inputEvent) {
+      console.log('移除旧的图标输入事件');
+      editIconInput.removeEventListener('input', editIconInput._inputEvent);
+    }
+    
+    if (editMenuFormElement._submitEvent) {
+      console.log('移除旧的表单提交事件');
+      editMenuFormElement.removeEventListener('submit', editMenuFormElement._submitEvent);
+    }
+    
+    // 绑定模态框显示事件
+    const showModalEvent = function(event) {
+      console.log('编辑模态框显示事件触发', event);
+      
+      if (!event.relatedTarget) {
+        console.error('无法获取触发模态框的按钮元素');
+        return;
+      }
+      
+      const button = event.relatedTarget;
+      const menuId = button.getAttribute('data-menu-id');
+      
+      console.log('准备编辑的菜单:', menuId, '触发元素:', button);
+      
+      // 显示加载状态，隐藏表单内容
+      document.getElementById('editFormLoading').style.display = 'block';
+      document.getElementById('editFormContent').style.display = 'none';
+      
+      // 清空警告信息
+      document.getElementById('editFormAlerts').innerHTML = '';
+      
+      // 设置菜单ID
+      document.getElementById('edit_menu_id').value = menuId;
+      
+      // 重置表单
+      editMenuFormElement.reset();
+      
+      // 加载菜单数据
+      loadMenuData(menuId);
+    };
+    
+    editMenuModal.addEventListener('show.bs.modal', showModalEvent);
+    editMenuModal._showBsModal = showModalEvent; // 保存引用以便未来可以移除
+    
+    // 绑定图标输入事件
+    const iconInputEvent = function() {
+      document.getElementById('edit_icon_preview').className = this.value || 'fas fa-gear';
+    };
+    
+    editIconInput.addEventListener('input', iconInputEvent);
+    editIconInput._inputEvent = iconInputEvent; // 保存引用以便未来可以移除
+    
+    // 绑定表单提交事件
+    const formSubmitEvent = function(e) {
+      e.preventDefault();
+      
+      const menuId = document.getElementById('edit_menu_id').value;
+      if (!menuId) {
+        showEditFormAlert('无法获取菜单ID');
+        return false;
+      }
+      
+      // 禁用提交按钮并显示加载状态
+      const submitBtn = document.getElementById('submitEditForm');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> 处理中...';
+      
+      // 收集表单数据
+      const formData = new FormData(this);
+      
+      // 使用唯一请求标识，防止重复请求
+      const requestId = new Date().getTime();
+      console.log(`发起编辑请求 ID:${requestId}, 菜单ID:${menuId}`);
+      
+      // 发送请求
+      fetch(`/admin/menus/edit/${menuId}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(response => {
+        console.log(`请求 ID:${requestId} 响应成功:`, response);
+        
+        if (response.status === 'success') {
+          // 修改这里：不使用alert，而是使用模态框提示
+          // 关闭编辑模态框
+          const editModalInstance = bootstrap.Modal.getInstance(editMenuModal);
+          if (editModalInstance) {
+            editModalInstance.hide();
+          }
+          
+          // 显示成功模态框
+          window.showSuccessModal('菜单修改成功！', function() {
+            // 成功模态框关闭后刷新页面
+            window.location.reload();
+          });
+        } else {
+          showEditFormAlert('修改失败: ' + (response.message || '未知错误'));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> 保存修改';
+        }
+      })
+      .catch(error => {
+        console.error(`请求 ID:${requestId} 失败:`, error);
+        showEditFormAlert('提交失败: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> 保存修改';
+      });
+      
+      return false;
+    };
+    
+    editMenuFormElement.addEventListener('submit', formSubmitEvent);
+    editMenuFormElement._submitEvent = formSubmitEvent; // 保存引用以便未来可以移除
+    
+    console.log('编辑模态框初始化完成');
+  }
+  
+  // 加载菜单数据
+  let isLoadingMenuData = false;
+  let lastLoadedMenuId = null;
+  
+  function loadMenuData(menuId) {
+    // 如果已经在加载相同ID的数据，则直接返回
+    if (isLoadingMenuData && lastLoadedMenuId === menuId) {
+      console.log(`正在加载菜单数据 ID:${menuId}, 跳过重复请求`);
+      return;
+    }
+    
+    console.log(`开始加载菜单数据, ID:${menuId}`);
+    
+    // 标记正在加载数据
+    isLoadingMenuData = true;
+    lastLoadedMenuId = menuId;
+    
+    // 显示加载状态
+    document.getElementById('editFormLoading').style.display = 'block';
+    document.getElementById('editFormContent').style.display = 'none';
+    
+    fetch(`/admin/menu/${menuId}/get/`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(response => {
+        console.log('获取菜单数据成功:', response);
+        
+                if (response.status === 'success' && response.menu) {
+          // 填充表单字段
+          document.getElementById('edit_name').value = response.menu.name || '';
+          document.getElementById('edit_url').value = response.menu.url || '';
+          document.getElementById('edit_icon').value = response.menu.icon || '';
+          document.getElementById('edit_order').value = response.menu.order || 0;
+          document.getElementById('edit_is_active').checked = response.menu.is_active;
+          
+          // 设置父级菜单
+          document.getElementById('edit_parent').value = response.menu.parent || '';
+                    
+                    // 更新图标预览
+          document.getElementById('edit_icon_preview').className = response.menu.icon || 'fas fa-gear';
+          
+          // 显示表单内容，隐藏加载状态
+          document.getElementById('editFormLoading').style.display = 'none';
+          document.getElementById('editFormContent').style.display = 'block';
+                } else {
+          showEditFormAlert('加载菜单数据失败: ' + (response.message || '未知错误'));
+          setTimeout(function() {
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('editMenuModal'));
+            if (modalInstance) {
+              modalInstance.hide();
+            }
+          }, 1500);
+        }
+        
+        // 标记数据加载完成
+        isLoadingMenuData = false;
+      })
+      .catch(error => {
+        console.error('加载菜单数据失败:', error);
+        showEditFormAlert('加载菜单数据失败: ' + error.message);
+        setTimeout(function() {
+          const modalInstance = bootstrap.Modal.getInstance(document.getElementById('editMenuModal'));
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        }, 1500);
+        
+        // 标记数据加载完成
+        isLoadingMenuData = false;
+      });
+  }
+  
+  // 显示编辑表单警告
+  function showEditFormAlert(message) {
+    document.getElementById('editFormAlerts').innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        ${message}
+      </div>
+    `;
+  }
+  
+  // 在DOMContentLoaded事件中初始化，同时也暴露全局初始化函数以便页面切换时调用
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM已加载完毕，开始初始化菜单功能');
+    window.initMenuModals();
+  });
+  
+  // 为单页应用添加支持：监听页面内导航事件
+  document.addEventListener('page:loaded', function() {
+    console.log('检测到页面内导航事件，重新初始化菜单功能');
+    window.initMenuModals();
+  });
+  
+  // 在直接加载脚本时也尝试初始化，确保脚本在各种情况下都能正常工作
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    console.log('页面已经加载完成，立即初始化菜单功能');
+    setTimeout(window.initMenuModals, 0);
+  }
+</script>

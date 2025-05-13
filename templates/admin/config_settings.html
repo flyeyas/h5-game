@@ -1,0 +1,282 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .settings-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+  }
+  
+  .settings-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .settings-form {
+    padding: 20px;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #444;
+  }
+  
+  .table-action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .form-control {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+  }
+  
+  .form-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  textarea.form-control {
+    min-height: 100px;
+  }
+  
+  .required-field .form-label:after {
+    content: " *";
+    color: #dc3545;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <h1 class="h3 mb-2 text-gray-800">{{ title }}</h1>
+    <p class="mb-4">管理系统配置项，影响网站的各项功能和行为</p>
+
+    <div class="row">
+        <!-- 现有配置列表 -->
+        <div class="col-lg-8 mb-4">
+            <div class="settings-container">
+                <h5 class="settings-header">
+                    <i class="fas fa-cogs me-2"></i>配置项列表
+                </h5>
+                
+                <div class="p-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>配置键</th>
+                                    <th>配置值</th>
+                                    <th>描述</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for config in config_settings %}
+                                <tr>
+                                    <td>{{ config.key }}</td>
+                                    <td>
+                                        {% if config.value|length > 30 %}
+                                            {{ config.value|slice:":30" }}...
+                                        {% else %}
+                                            {{ config.value }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ config.description }}</td>
+                                    <td>
+                                        {% if config.is_active %}
+                                            <span class="badge bg-success">启用</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">禁用</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="table-action-buttons">
+                                        {% if perms.admin_panel.setting_edit %}
+                                        <a href="{% url 'admin_panel:edit_config_setting' config.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteConfigModal" 
+                                                data-config-id="{{ config.id }}" 
+                                                data-config-key="{{ config.key }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">暂无配置项</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if perms.admin_panel.setting_edit %}
+                    <div class="mt-3">
+                        <button class="btn btn-outline-primary" id="clearCacheBtn">
+                            <i class="fas fa-sync-alt me-1"></i> 清除配置缓存
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 添加/编辑配置表单 -->
+        {% if perms.admin_panel.setting_edit %}
+        <div class="col-lg-4">
+            <div class="settings-container">
+                <h5 class="settings-header">
+                    <i class="fas fa-plus-circle me-2"></i>添加新配置
+                </h5>
+                
+                <div class="settings-form">
+                    <form method="post" action="{% url 'admin_panel:config_settings' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3 required-field">
+                            <label for="key" class="form-label">配置键</label>
+                            <input type="text" class="form-control" id="key" name="key" 
+                                   value="{{ form_data.key }}" required>
+                            <small class="form-text text-muted">配置项的唯一标识，例如: show_member_content</small>
+                        </div>
+                        
+                        <div class="mb-3 required-field">
+                            <label for="value" class="form-label">配置值</label>
+                            <textarea class="form-control" id="value" name="value" 
+                                      rows="3" required>{{ form_data.value }}</textarea>
+                            <small class="form-text text-muted">可以是布尔值(true/false)、文本或JSON格式</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">描述</label>
+                            <input type="text" class="form-control" id="description" name="description" 
+                                   value="{{ form_data.description }}">
+                            <small class="form-text text-muted">配置项的用途描述</small>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
+                                   {% if form_data.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">启用此配置</label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> 保存配置
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 删除配置确认模态框 -->
+{% if perms.admin_panel.setting_edit %}
+<div class="modal fade" id="deleteConfigModal" tabindex="-1" aria-labelledby="deleteConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfigModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                确定要删除配置项 <strong id="configKeyToDelete"></strong> 吗？此操作不可恢复。
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteConfigForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 删除配置模态框处理
+        const deleteConfigModal = document.getElementById('deleteConfigModal');
+        if (deleteConfigModal) {
+            deleteConfigModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const configId = button.getAttribute('data-config-id');
+                const configKey = button.getAttribute('data-config-key');
+                
+                document.getElementById('configKeyToDelete').textContent = configKey;
+                document.getElementById('deleteConfigForm').action = "{% url 'admin_panel:delete_config_setting' 0 %}".replace('0', configId);
+            });
+        }
+        
+        // 清除缓存按钮处理
+        const clearCacheBtn = document.getElementById('clearCacheBtn');
+        if (clearCacheBtn) {
+            clearCacheBtn.addEventListener('click', function() {
+                // 显示加载状态
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> 正在清除...';
+                
+                // 发送AJAX请求清除缓存
+                fetch("{% url 'admin_panel:clear_config_cache' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 恢复按钮状态
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> 清除配置缓存';
+                    
+                    // 显示成功消息
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // 恢复按钮状态
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> 清除配置缓存';
+                    
+                    // 显示错误消息
+                    alert('清除缓存失败，请重试');
+                });
+            });
+        }
+    });
+</script>
+{% endblock %} 

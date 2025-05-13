@@ -1,0 +1,103 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}游戏历史 - HTML5游戏平台{% endblock %}
+
+{% block extra_css %}
+    {% include "games/includes/profile_styles.html" %}
+{% endblock %}
+
+{% block content %}
+    <!-- 个人资料头部 -->
+    {% include "games/includes/profile_header.html" %}
+
+    <div class="container">
+        <!-- 选项卡导航 -->
+        {% include "games/includes/profile_tabs.html" with active_tab="history" %}
+        
+        <!-- 选项卡内容 -->
+        <div class="tab-content" id="profileTabContent">
+            <!-- 游戏历史 -->
+            {% include "games/includes/profile_history.html" with game_history=game_history active_tab="history" %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% include "games/includes/history_scripts.html" %}
+    
+    <script>
+    // 删除单条游戏历史
+    function deleteGameHistory(historyId, gameTitle) {
+        // 直接调用API删除记录，不需要confirm，因为已经有模态框确认
+        apiRequest({
+            url: '/ajax/history/delete/',
+            method: 'POST',
+            data: {
+                'history_id': historyId
+            },
+            success: function(response) {
+                // 移除对应的历史记录项
+                $(`#history-item-${historyId}`).fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // 检查是否还有历史记录
+                    if ($('.history-item').length === 0) {
+                        $('#history-list').html('<div class="alert alert-info">暂无游戏历史记录</div>');
+                    }
+                });
+            }
+        });
+    }
+
+    // 清空全部历史记录
+    function clearAllHistory() {
+        // 直接调用API清空历史，不需要confirm，因为已经有模态框确认
+        apiRequest({
+            url: '/ajax/history/clear-all/',
+            method: 'POST',
+            success: function(response) {
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('clearHistoryModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // 重新初始化页面显示
+                $('#history-container').empty();
+                $('#history-empty').show(); 
+                $('#load-more-container').hide();
+                $('.history-filter-tags').hide();
+                
+                // 重置筛选条件
+                $('#history-search-input').val('');
+                $('#history-category-select').val('');
+                $('#history-sort-input').val('recent');
+                $('#historySortDropdown').text('最近游玩');
+                
+                // 更新排序选项状态
+                $('.history-sort-option').removeClass('active');
+                $('.history-sort-option[data-sort="recent"]').addClass('active');
+                
+                // 显示成功提示
+                if (typeof showToast === 'function') {
+                    showToast('已成功清空全部游戏历史记录');
+                }
+            },
+            error: function(xhr, status, error) {
+                // 显示错误提示
+                if (typeof showToast === 'function') {
+                    showToast('清空历史记录失败，请稍后再试', 'error');
+                }
+            },
+            complete: function() {
+                // 确保模态框关闭，即使在成功回调之外
+                const modal = bootstrap.Modal.getInstance(document.getElementById('clearHistoryModal'));
+                if (modal) {
+                    modal.hide();
+                }
+            }
+        });
+    }
+    </script>
+{% endblock %} 

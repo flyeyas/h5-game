@@ -1,0 +1,218 @@
+{% load static %}
+{% load custom_tags %}
+<div class="tab-pane fade {% if active_tab == 'history' %}show active{% endif %}" id="history" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>最近玩过的游戏</h3>
+        <div class="d-flex">
+            <form id="history-filter-form" action="javascript:void(0);" class="d-flex me-2">
+                <div class="input-group me-2" style="width: 250px;">
+                    <input type="text" class="form-control" placeholder="搜索游戏..." name="search" id="history-search-input">
+                    <button class="btn btn-outline-secondary" type="submit" id="history-search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                <select class="form-select" style="width: 150px;" name="category" id="history-category-select">
+                    <option value="">全部分类</option>
+                    <!-- 分类列表将通过JavaScript动态加载 -->
+                </select>
+                <!-- 隐藏字段，保留当前排序和每页数量设置 -->
+                <input type="hidden" name="sort" id="history-sort-input" value="recent">
+                <input type="hidden" name="page" id="history-page-input" value="1">
+            </form>
+            
+            <!-- 排序下拉框 -->
+            <div class="dropdown me-2">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="historySortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    最近游玩
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="historySortDropdown">
+                    <li><a class="dropdown-item history-sort-option active" href="#" data-sort="recent">最近游玩</a></li>
+                    <li><a class="dropdown-item history-sort-option" href="#" data-sort="name">名称</a></li>
+                    <li><a class="dropdown-item history-sort-option" href="#" data-sort="rating">评分</a></li>
+                    <li><a class="dropdown-item history-sort-option" href="#" data-sort="duration">时长</a></li>
+                </ul>
+            </div>
+            
+            <button class="btn btn-outline-secondary clear-history-btn" data-bs-toggle="modal" data-bs-target="#clearHistoryModal">
+                <i class="fas fa-trash-alt me-2"></i>清空历史
+            </button>
+        </div>
+    </div>
+    
+    <!-- 筛选标签容器 -->
+    <div class="history-filter-tags mb-3" style="display: none;"></div>
+    
+    <!-- 加载中提示 -->
+    <div id="history-loading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+        <p class="mt-2">正在加载游戏历史...</p>
+    </div>
+    
+    <!-- 错误提示容器 -->
+    <div id="history-error-container" class="alert alert-danger text-center py-3" style="display: none;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span id="history-error-message">加载数据失败，请稍后再试</span>
+        <button class="btn btn-sm btn-outline-danger ms-3 history-retry-button">重试</button>
+    </div>
+    
+    <!-- 游戏历史卡片容器 - 使用普通网格替代瀑布流 -->
+    <div class="row mb-5" id="history-container">
+        <!-- 游戏历史卡片将通过Ajax加载 -->
+    </div>
+    
+    <!-- 加载更多按钮 -->
+    <div id="load-more-container" class="text-center mt-4 mb-5" style="display: none;">
+        <button id="load-more-history" class="btn btn-outline-primary">
+            <i class="fas fa-sync-alt me-1"></i> 加载更多
+        </button>
+    </div>
+    
+    <!-- 无记录提示（初始显示，后续通过JS控制） -->
+    <div id="history-empty" class="text-center py-5" style="display: none;">
+        <div class="mb-4">
+            <i class="fas fa-history fa-4x text-muted"></i>
+        </div>
+        <h4>您还没有游戏历史记录</h4>
+        <p class="text-muted">开始玩游戏，您的游戏记录将显示在这里</p>
+        <a href="{% url 'games:game_list' %}" class="btn btn-primary mt-3">浏览游戏</a>
+    </div>
+</div>
+
+<!-- 游戏历史卡片模板 (用于JS克隆) -->
+<template id="history-card-template">
+    <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-4">
+        <div class="card h-100 game-card">
+            <div class="position-relative">
+            <img src="" class="card-img-top game-thumbnail" alt="">
+                <span class="position-absolute top-0 end-0 m-2 badge bg-primary game-duration">
+                    <i class="fas fa-clock me-1"></i><span class="duration-text"></span>
+                </span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title game-title text-truncate"></h5>
+                
+                <!-- 游戏评分 -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="rating">
+                        <span class="game-rating-stars"></span>
+                        <small class="text-muted ms-1 game-rating-value"></small>
+                    </span>
+                    <span class="category-badge game-category"></span>
+                </div>
+                
+                <!-- 游戏简介 -->
+                <p class="game-intro" style="font-size: 0.875rem; color: #6c757d; margin-bottom: 0.75rem; height: 40px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; box-orient: vertical;">
+                </p>
+                
+                <p class="text-muted mb-3"><i class="fas fa-calendar-alt me-1"></i>最近游玩: <span class="game-last-played"></span></p>
+                <div class="d-flex mt-2">
+                    <a href="#" class="btn btn-primary flex-grow-1 me-2 game-link">继续游戏</a>
+                    <button class="btn btn-outline-danger delete-history-btn" data-history-id="" title="删除记录">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 清空历史记录确认模态框 -->
+<div class="modal fade" id="clearHistoryModal" tabindex="-1" aria-labelledby="clearHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clearHistoryModalLabel">确认清空历史记录</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要清空所有游戏历史记录吗？此操作无法撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmClearHistory">确认清空</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 游戏卡片样式 */
+    .game-card {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    /* 确保星星图标显示黄色 */
+    .rating i {
+        color: #ffc107 !important;
+    }
+    
+    /* 分类标签样式 */
+    .category-badge {
+        background-color: #6c757d;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+    
+    /* 底部间距，确保与页脚不冲突 */
+    #history {
+        margin-bottom: 3rem;
+    }
+    
+    /* 确保父容器适当高度，防止内容过少时页面布局异常 */
+    .tab-content {
+        min-height: 400px;
+    }
+    
+    /* 筛选标签样式 */
+    .history-filter-tags {
+        padding: 0.8rem 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .history-filter-tags .badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.7rem;
+        border-radius: 20px;
+        background-color: #f0f0f0;
+        color: #333;
+        border: 1px solid #ddd;
+        transition: all 0.2s ease-in-out;
+        margin-right: 0.5rem;
+    }
+    
+    .history-filter-tags .badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .history-filter-tags .badge .text-muted {
+        color: #6c757d;
+        cursor: pointer;
+    }
+    
+    .history-filter-tags .badge .fa-times:hover {
+        color: #dc3545;
+    }
+    
+    .history-filter-tags .btn-outline-secondary {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .history-filter-tags .btn-outline-secondary:hover {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: #fff;
+    }
+</style> 

@@ -1,0 +1,182 @@
+{% load i18n %}
+
+<!-- 添加标签模态框 -->
+<div class="modal fade" id="addTagModal" tabindex="-1" aria-labelledby="addTagModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTagModalLabel">{% trans '添加标签' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="add-tag-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="add-tag-name" class="form-label">{% trans '标签名称' %} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="add-tag-name" name="name" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="add-tag-is-active" name="is_active" checked>
+                        <label class="form-check-label" for="add-tag-is-active">{% trans '标签启用' %}</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans '保存' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑标签模态框 -->
+<div class="modal fade" id="editTagModal" tabindex="-1" aria-labelledby="editTagModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTagModalLabel">{% trans '编辑标签' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-tag-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="edit-tag-id" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="edit-tag-name" class="form-label">{% trans '标签名称' %} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit-tag-name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="edit-tag-is-active" name="is_active">
+                        <label class="form-check-label" for="edit-tag-is-active">{% trans '标签启用' %}</label>
+                    </div>
+                    
+                    <!-- 统计信息 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">{% trans '标签统计' %}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="mb-1">{% trans '游戏数量:' %}</p>
+                                    <h5 id="edit-tag-game-count">0</h5>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1">{% trans '当前状态:' %}</p>
+                                    <h5 id="edit-tag-status"></h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans '保存' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 查看标签模态框 -->
+<div class="modal fade" id="viewTagModal" tabindex="-1" aria-labelledby="viewTagModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewTagModalLabel">{% trans '标签详情' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{% trans '基本信息' %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">{% trans '标签名称:' %}</dt>
+                            <dd class="col-sm-8"><span id="view-tag-name"></span></dd>
+                            
+                            <dt class="col-sm-4">{% trans '游戏数量:' %}</dt>
+                            <dd class="col-sm-8"><span id="view-tag-game-count">0</span></dd>
+                            
+                            <dt class="col-sm-4">{% trans '标签状态:' %}</dt>
+                            <dd class="col-sm-8"><span id="view-tag-status" class="badge"></span></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '关闭' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 状态切换确认模态框 -->
+<div class="modal fade" id="toggleStatusModal" tabindex="-1" aria-labelledby="toggleStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toggleStatusModalLabel">{% trans '切换标签状态' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="toggle-tag-id">
+                <p id="toggle-status-message"></p>
+                
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{% trans '标签信息' %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">{% trans '标签名称:' %}</dt>
+                            <dd class="col-sm-8"><span id="toggle-tag-name"></span></dd>
+                            
+                            <dt class="col-sm-4">{% trans '当前状态:' %}</dt>
+                            <dd class="col-sm-8"><span id="toggle-tag-current-status"></span></dd>
+                            
+                            <dt class="col-sm-4">{% trans '变更为:' %}</dt>
+                            <dd class="col-sm-8"><span id="toggle-tag-new-status"></span></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                <button type="button" class="btn btn-primary" id="confirm-toggle-status">{% trans '确认' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除标签确认模态框 -->
+<div class="modal fade" id="deleteTagModal" tabindex="-1" aria-labelledby="deleteTagModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTagModalLabel">{% trans '删除标签' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="delete-tag-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="delete-tag-id" name="id">
+                    <p class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% trans '您确定要删除标签 ' %}<strong id="delete-tag-name"></strong>{% trans ' 吗？此操作将会从所有相关游戏中移除该标签。' %}
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-danger">{% trans '删除' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast 容器 -->
+<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>

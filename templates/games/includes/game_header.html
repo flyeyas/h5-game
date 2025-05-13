@@ -1,0 +1,45 @@
+<section class="game-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <div class="game-cover">
+                    <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}游戏封面">
+                </div>
+            </div>
+            <div class="col-md-8 game-info">
+                <h1>{{ game.title }}</h1>
+                <div class="rating">
+                    {% with rating_int=game.rating|floatformat:0|add:"0" %}
+                    {% with rating_decimal=game.rating|floatformat:1|slice:"-1:" %}
+                        {% for i in '12345'|make_list %}
+                            {% if forloop.counter <= rating_int|add:"0" %}
+                                <i class="fas fa-star"></i>
+                            {% elif forloop.counter == rating_int|add:"1" and rating_decimal > "0" %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                    {% endwith %}
+                    <span class="ms-2">{{ game.rating|floatformat:1 }} ({{ comment_count|default:"0" }} 评分)</span>
+                </div>
+                <div class="mb-3">
+                    {% for tag in game.tags.all %}
+                        <span class="category-badge">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                <p class="lead">{{ game.summary }}</p>
+                <div class="game-actions">
+                    <button id="start-game-btn" class="btn btn-primary"><i class="fas fa-play me-2"></i>开始游戏</button>
+                    {% if is_frontend_authenticated %}
+                    <button class="btn {% if is_favorite %}btn-light{% else %}btn-outline-light{% endif %}" id="favorite-btn" data-game-id="{{ game.id }}" data-game-title="{{ game.title }}" title="{% if is_favorite %}取消收藏{% else %}收藏此游戏{% endif %}">
+                        <i class="{% if is_favorite %}fas{% else %}far{% endif %} fa-heart me-2"></i>收藏
+                    </button>
+                    {% endif %}
+                    <button class="btn btn-outline-light" id="share-btn"><i class="fas fa-share-alt me-2"></i>分享</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section> 

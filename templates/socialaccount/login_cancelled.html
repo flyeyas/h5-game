@@ -1,0 +1,29 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}登录已取消 - HTML5游戏平台{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">登录已取消</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-user-times text-warning fa-4x mb-4"></i>
+                    
+                    <h5 class="mb-3">您已取消社交账号登录</h5>
+                    <p class="mb-4">您可以返回登录页面，重新尝试登录或使用其他账号登录。</p>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'games:login' %}" class="btn btn-primary me-2">返回登录</a>
+                        <a href="{% url 'games:home' %}" class="btn btn-outline-secondary">返回首页</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

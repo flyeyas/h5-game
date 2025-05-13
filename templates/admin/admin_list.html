@@ -1,0 +1,821 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style id="admin-list-styles">
+  /* 管理员列表页面样式 */
+  .admin-table {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: visible;
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .admin-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 8px 5px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .admin-table td {
+    padding: 8px 5px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+  
+  .admin-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+  }
+  
+  .admin-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .badge-status {
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+  }
+  
+  .badge-active {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+    color: #28a745 !important;
+  }
+  
+  .badge-inactive {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+    color: #6c757d !important;
+  }
+  
+  .badge-super {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    color: #ffc107 !important;
+  }
+  
+  .badge-admin {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+    color: #007bff !important;
+  }
+  
+  .badge-editor {
+    background-color: rgba(23, 162, 184, 0.1) !important;
+    color: #17a2b8 !important;
+  }
+  
+  .badge-service {
+    background-color: rgba(111, 66, 193, 0.1) !important;
+    color: #6f42c1 !important;
+  }
+  
+  .action-buttons .btn {
+    padding: 2px 5px;
+    font-size: 0.75rem;
+    margin-right: 1px !important;
+  }
+  
+  .action-buttons .btn-group {
+    display: inline-block;
+    position: relative;
+  }
+  
+  .action-buttons .d-flex {
+    gap: 2px;
+  }
+  
+  /* 解决下拉菜单被遮挡的问题 */
+  .action-buttons .dropdown-menu {
+    z-index: 1050;
+    min-width: 150px;
+  }
+  
+  .table-responsive {
+    overflow: visible !important;
+  }
+  
+  .card-body {
+    overflow: visible;
+  }
+  
+  .card {
+    overflow: visible;
+  }
+  
+  /* 删除确认模态框样式 */
+  #deleteAdminModal .modal-header {
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+  }
+  
+  #deleteAdminModal .modal-title {
+    font-weight: 600;
+    color: #212529;
+  }
+  
+  #deleteAdminModal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+  }
+  
+  #deleteAdminModal .alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+  }
+  
+  #deleteAdminModal .alert {
+    border-radius: 4px;
+    padding: 12px 15px;
+  }
+  
+  #delete_admin_name {
+    font-weight: 600;
+  }
+  
+  .search-box {
+    position: relative;
+    display: flex;
+  }
+  
+  .search-box .form-control {
+    padding-left: 35px;
+    border-radius: 20px 0 0 20px;
+    border-right: none;
+  }
+  
+  .search-box i {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    color: #6c757d;
+  }
+  
+  .search-box .search-btn {
+    border-radius: 0 20px 20px 0;
+    min-width: 80px;
+    white-space: nowrap;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .filter-dropdown {
+    min-width: 200px;
+  }
+  
+  .pagination {
+    margin-bottom: 0;
+  }
+  
+  .pagination .page-item.active .page-link {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(78, 115, 223, 0.3);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  
+  .pagination .page-link {
+    color: #343a40;
+    padding: 8px 15px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    margin: 0 3px;
+  }
+  
+  .pagination .page-link:hover {
+    background-color: #eaecf4;
+    border-color: #eaecf4;
+    color: #4e73df;
+    z-index: 2;
+  }
+  
+  /* 调整统计卡片间距 */
+  .stats-card {
+    padding: 12px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .stats-card .stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 auto 5px !important;
+  }
+  
+  .stats-card .stat-value {
+    font-size: 1.6rem !important;
+    margin-bottom: 2px !important;
+  }
+  
+  .stats-card .stat-label {
+    font-size: 0.85rem !important;
+  }
+  
+  .row.mb-4 {
+    margin-bottom: 15px !important;
+  }
+  
+  /* 当前筛选条件样式 */
+  .current-filters {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px 15px;
+    border: 1px solid #dee2e6;
+  }
+  
+  .current-filters .badge {
+    font-weight: 500;
+    font-size: 0.85rem;
+    border: 1px solid #dee2e6;
+  }
+  
+  .current-filters a.text-secondary {
+    text-decoration: none;
+  }
+  
+  .current-filters a.text-secondary:hover {
+    color: #dc3545 !important;
+  }
+  
+  /* 自定义角色标签样式 */
+  .role-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .role-super {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+  }
+  
+  .role-admin {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+  }
+  
+  .role-editor {
+    background-color: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+    border: 1px solid rgba(23, 162, 184, 0.3);
+  }
+  
+  .role-service {
+    background-color: rgba(111, 66, 193, 0.15);
+    color: #6f42c1;
+    border: 1px solid rgba(111, 66, 193, 0.3);
+  }
+  
+  /* 自定义状态标签样式 */
+  .status-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .status-active {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+  }
+  
+  .status-inactive {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% include "admin/includes/top_navbar.html" with page_title=_('管理员账号管理') %}
+  
+  <div class="module">
+    <!-- 统计卡片 -->
+    <div class="row mb-3">
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-purple">
+          <div class="stat-icon">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="stat-value">{{ total_admins }}</div>
+          <div class="stat-label">{% trans '总管理员数' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-blue">
+          <div class="stat-icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <div class="stat-value">{{ active_admins }}</div>
+          <div class="stat-label">{% trans '活跃管理员' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-green">
+          <div class="stat-icon">
+            <i class="fas fa-user-clock"></i>
+          </div>
+          <div class="stat-value">12</div>
+          <div class="stat-label">{% trans '本周登录次数' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-orange">
+          <div class="stat-icon">
+            <i class="fas fa-user-lock"></i>
+          </div>
+          <div class="stat-value">{{ inactive_admins }}</div>
+          <div class="stat-label">{% trans '锁定账号' %}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 管理员列表卡片 -->
+    <div class="card">
+      {% include "admin/includes/card_header.html" with card_title=_('管理员账号列表') show_add_button=True modal_target="#addAdminModal" add_text=_('添加管理员') %}
+      <div class="card-body">
+        <!-- 搜索和过滤 -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" name="q" class="form-control" placeholder="{% trans '搜索管理员...' %}" value="{{ query }}">
+              <button type="button" class="btn btn-primary search-btn">
+                <i class="fas fa-search me-1"></i>{% trans '搜索' %}
+              </button>
+            </div>
+          </div>
+          <div class="col-md-8 d-flex justify-content-md-end mt-3 mt-md-0">
+            <div class="btn-group me-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-filter me-1"></i> {% trans '状态筛选' %}
+              </button>
+              <ul class="dropdown-menu filter-dropdown">
+                <li><a class="dropdown-item" href="?{% if query %}q={{ query }}&{% endif %}{% if role_filter %}role={{ role_filter }}{% endif %}">{% trans '全部' %}</a></li>
+                <li><a class="dropdown-item" href="?is_active=true{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">{% trans '活跃' %}</a></li>
+                <li><a class="dropdown-item" href="?is_active=false{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">{% trans '禁用' %}</a></li>
+              </ul>
+            </div>
+            <div class="btn-group me-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user-tag me-1"></i> {% trans '角色筛选' %}
+              </button>
+              <ul class="dropdown-menu filter-dropdown">
+                <li><a class="dropdown-item" href="?{% if query %}q={{ query }}&{% endif %}{% if is_active_filter %}is_active={{ is_active_filter }}{% endif %}">{% trans '全部' %}</a></li>
+                <li><a class="dropdown-item" href="?role=10{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}">{% trans '超级管理员' %}</a></li>
+                <li><a class="dropdown-item" href="?role=20{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}">{% trans '管理员' %}</a></li>
+                <li><a class="dropdown-item" href="?role=30{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}">{% trans '内容编辑' %}</a></li>
+                <li><a class="dropdown-item" href="?role=40{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}">{% trans '客服' %}</a></li>
+              </ul>
+            </div>
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-download me-1"></i> {% trans '导出' %}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 当前筛选条件显示区域 -->
+        {% if query or is_active_filter or role_filter %}
+        <div class="row mb-3">
+          <div class="col-12">
+            <div class="d-flex align-items-center current-filters">
+              <span class="text-muted me-2"><i class="fas fa-filter"></i> {% trans '当前筛选:' %}</span>
+              {% if query %}
+              <span class="badge bg-light text-dark me-2 p-2">
+                <i class="fas fa-search me-1"></i> {% trans '关键词:' %} {{ query }}
+                <a href="?{% if is_active_filter %}is_active={{ is_active_filter }}{% endif %}{% if is_active_filter and role_filter %}&{% endif %}{% if role_filter %}role={{ role_filter }}{% endif %}" class="text-secondary ms-1">
+                  <i class="fas fa-times"></i>
+                </a>
+              </span>
+              {% endif %}
+              
+              {% if is_active_filter %}
+              <span class="badge bg-light text-dark me-2 p-2">
+                <i class="fas fa-toggle-on me-1"></i> {% trans '状态:' %} 
+                {% if is_active_filter == 'true' %}{% trans '活跃' %}{% else %}{% trans '禁用' %}{% endif %}
+                <a href="?{% if query %}q={{ query }}{% endif %}{% if query and role_filter %}&{% endif %}{% if role_filter %}role={{ role_filter }}{% endif %}" class="text-secondary ms-1">
+                  <i class="fas fa-times"></i>
+                </a>
+              </span>
+              {% endif %}
+              
+              {% if role_filter %}
+              <span class="badge bg-light text-dark me-2 p-2">
+                <i class="fas fa-user-tag me-1"></i> {% trans '角色:' %} 
+                {% if role_filter == '10' %}{% trans '超级管理员' %}
+                {% elif role_filter == '20' %}{% trans '管理员' %}
+                {% elif role_filter == '30' %}{% trans '内容编辑' %}
+                {% elif role_filter == '40' %}{% trans '客服' %}
+                {% endif %}
+                <a href="?{% if query %}q={{ query }}{% endif %}{% if query and is_active_filter %}&{% endif %}{% if is_active_filter %}is_active={{ is_active_filter }}{% endif %}" class="text-secondary ms-1">
+                  <i class="fas fa-times"></i>
+                </a>
+              </span>
+              {% endif %}
+              
+              <a href="?" class="btn btn-sm btn-outline-secondary ms-auto">
+                <i class="fas fa-times me-1"></i> {% trans '清除全部筛选' %}
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+    
+    <!-- 管理员列表 -->
+    <div class="table-responsive">
+      <table class="table table-hover admin-table">
+        <thead>
+          <tr>
+            <th width="30">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="selectAll">
+              </div>
+            </th>
+            <th width="40">ID</th>
+            <th width="50">{% trans '头像' %}</th>
+            <th width="100">{% trans '用户名' %}</th>
+            <th width="100">{% trans '姓名' %}</th>
+            <th width="120">{% trans '角色' %}</th>
+            <th width="80">{% trans '状态' %}</th>
+            <th width="120">{% trans '最后登录' %}</th>
+            <th width="150">{% trans '创建时间' %}</th>
+            <th width="130">{% trans '操作' %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for admin in admin_list %}
+            <tr>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox">
+                </div>
+              </td>
+              <td>{{ admin.user.id }}</td>
+              <td>
+                <img src="{% if admin.avatar %}{{ admin.avatar.url }}{% elif admin.avatar_url %}{{ admin.avatar_url }}{% else %}https://ui-avatars.com/api/?name={{ admin.user.username|urlencode }}&background=random&color=fff{% endif %}" alt="{% trans '管理员头像' %}" class="admin-avatar">
+              </td>
+              <td>{{ admin.user.username }}</td>
+              <td>{{ admin.real_name|default:'-' }}</td>
+              <td>
+                <span class="role-tag {% if admin.role == 10 %}role-super{% elif admin.role == 20 %}role-admin{% elif admin.role == 30 %}role-editor{% elif admin.role == 40 %}role-service{% endif %}">
+                  {% if admin.role == 10 %}
+                    {% trans '超级管理员' %}
+                  {% elif admin.role == 20 %}
+                    {% trans '管理员' %}
+                  {% elif admin.role == 30 %}
+                    {% trans '内容编辑' %}
+                  {% elif admin.role == 40 %}
+                    {% trans '客服' %}
+                  {% else %}
+                    {% trans '普通管理员' %}
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                <span class="status-tag {% if admin.user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                  {% if admin.user.is_active %}
+                    {% trans '活跃' %}
+                  {% else %}
+                    {% trans '禁用' %}
+                  {% endif %}
+                </span>
+              </td>
+              <td>{{ admin.user.last_login|date:'Y-m-d H:i:s'|default:'-' }}</td>
+              <td>{{ admin.user.date_joined|date:'Y-m-d H:i:s'|default:'-' }}</td>
+              <td class="action-buttons">
+                <div class="d-flex align-items-center justify-content-center">
+                  <button class="btn btn-sm btn-outline-primary edit-admin-btn" 
+                          data-id="{{ admin.user.id }}" 
+                          data-username="{{ admin.user.username }}" 
+                          data-real-name="{{ admin.real_name|default:'' }}" 
+                          data-email="{{ admin.user.email|default:'' }}" 
+                          data-mobile="{{ admin.mobile|default:'' }}" 
+                          data-role="{{ admin.role }}" 
+                          data-role-numeric="{{ admin.role|stringformat:'d' }}"
+                          role-value="{{ admin.role }}"
+                          data-status="{% if admin.user.is_active %}active{% else %}inactive{% endif %}" 
+                          data-notes="{{ admin.notes|default:'' }}" 
+                          data-avatar="{% if admin.avatar %}{{ admin.avatar.url }}{% elif admin.avatar_url %}{{ admin.avatar_url }}{% endif %}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  {% if admin.user.id != request.user.id %}
+                    <button class="btn btn-sm btn-outline-danger delete-admin" data-id="{{ admin.user.id }}">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'admin_panel:user_roles_management' admin.user.id %}"><i class="fas fa-key me-2"></i>{% trans '权限设置' %}</a></li>
+                        <li><a class="dropdown-item toggle-status" href="javascript:void(0);" data-id="{{ admin.user.id }}" data-active="{% if admin.user.is_active %}true{% else %}false{% endif %}"><i class="fas fa-{% if admin.user.is_active %}lock{% else %}unlock{% endif %} me-2"></i>{% if admin.user.is_active %}{% trans '锁定账号' %}{% else %}{% trans '解锁账号' %}{% endif %}</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-history me-2"></i>{% trans '操作日志' %}</a></li>
+                      </ul>
+                    </div>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="10" class="text-center">{% trans '暂无管理员数据' %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 分页 -->
+    {% if pagination.items_count > 0 %}
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+          {% if pagination.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                &laquo; {% trans '首页' %}
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ pagination.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                {% trans '上一页' %}
+              </a>
+            </li>
+          {% endif %}
+          
+          {% for num in pagination.page_range %}
+            {% if pagination.current_page == num %}
+              <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                  {{ num }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+          
+          {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ pagination.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                {% trans '下一页' %}
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ pagination.total_pages }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                {% trans '末页' %} &raquo;
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+      
+      <div class="text-center text-muted mt-2">
+        <small>{% trans '显示' %} {{ pagination.start_index }}-{{ pagination.end_index }} {% trans '共' %} {{ pagination.items_count }} {% trans '条记录' %}</small>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- 包含模态框 -->
+{% include "admin/admin_list_modals.html" %}
+
+<!-- JavaScript 处理 -->
+<script id="admin-list-scripts">
+  // 首先确保jQuery已加载
+  (function() {
+    function executeInitAdminList() {
+      // 初始化管理员列表页面
+      function initAdminList() {
+        console.log("Admin list page initialized");
+        
+        // 添加调试信息
+        console.log("Checking if Bootstrap 5 Modal is available:", typeof bootstrap !== 'undefined' ? "Yes" : "No");
+        console.log("Checking jQuery version:", $.fn.jquery);
+        
+        // 监听编辑按钮点击
+        $('.edit-admin-btn').off('click').on('click', function() {
+          console.log("Edit button clicked for admin ID:", $(this).data('id'));
+          // 获取管理员数据
+          var adminId = $(this).data('id');
+          var username = $(this).data('username');
+          var realName = $(this).data('real-name');
+          var email = $(this).data('email');
+          var mobile = $(this).data('mobile');
+          
+          // 直接从DOM元素获取角色值
+          var role = this.getAttribute('role-value');
+          console.log("从HTML属性获取的角色值:", role, "类型:", typeof role);
+          
+          // 作为备用方案，尝试从data属性获取
+          if (!role) {
+            role = $(this).data('roleNumeric') || $(this).data('role');
+            console.log("从data属性获取的角色值:", role, "类型:", typeof role);
+          }
+          
+          var status = $(this).data('status');
+          var notes = $(this).data('notes');
+          var avatarUrl = $(this).data('avatar');
+          
+          // 添加头像URL调试信息
+          console.log("从按钮获取的头像URL:", avatarUrl, "类型:", typeof avatarUrl, "长度:", avatarUrl ? avatarUrl.length : 0);
+          console.log("头像URL是否为空:", !avatarUrl || avatarUrl.trim() === '');
+          
+          // 使用全局函数显示编辑模态框
+          if (typeof window.displayEditAdminModal === 'function') {
+            window.displayEditAdminModal(adminId, username, realName, email, mobile, role, status, notes, avatarUrl);
+          } else {
+            console.error("displayEditAdminModal 函数未定义");
+            
+            // 直接填充表单（备用方案）
+            $('#edit_admin_id').val(adminId);
+            // 设置显示用户名和隐藏的用户名字段
+            $('#edit_username').val(username);
+            $('#edit_username_hidden').val(username);
+            $('#edit_real_name').val(realName);
+            $('#edit_email').val(email);
+            $('#edit_mobile').val(mobile);
+            
+            // 确保角色是数值
+            var roleValue = parseInt(role);
+            console.log("解析后的角色数值:", roleValue);
+            $('#edit_role').val(roleValue);
+            
+            $('#edit_status').val(status === 'active' ? 'true' : 'false');
+            $('#edit_notes').val(notes);
+            
+            // 设置头像
+            if (avatarUrl && avatarUrl.trim() !== '') {
+              console.log("备用方案 - 设置头像URL:", avatarUrl);
+              $('#current_avatar').attr('src', avatarUrl);
+              $('#current_avatar_container').show();
+            } else {
+              console.log("备用方案 - 没有头像URL,使用默认头像");
+              // 如果没有头像,可以设置一个默认头像
+              var defaultAvatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(username) + '&background=random&color=fff';
+              $('#current_avatar').attr('src', defaultAvatar);
+              $('#current_avatar_container').show();
+            }
+            
+            // 设置表单提交地址
+            $('#editAdminForm').attr('action', '{% url "admin_panel:edit_admin" 0 %}'.replace('0', adminId));
+            
+            // 打开模态框
+            var editModal = new bootstrap.Modal(document.getElementById('editAdminModal'));
+            editModal.show();
+          }
+        });
+        
+        // 监听删除按钮点击
+        $('.delete-admin').off('click').on('click', function() {
+          console.log("Delete button clicked for admin ID:", $(this).data('id'));
+          var adminId = $(this).data('id');
+          $('#delete_admin_id').val(adminId);
+          $('#delete_admin_name').text($(this).closest('tr').find('td:eq(3)').text());
+          
+          // 打开模态框
+          var deleteModal = new bootstrap.Modal(document.getElementById('deleteAdminModal'));
+          deleteModal.show();
+        });
+        
+        // 监听状态切换按钮点击
+        $('.toggle-status').off('click').on('click', function() {
+          console.log("Toggle status button clicked for admin ID:", $(this).data('id'));
+          // 实现状态切换逻辑
+        });
+        
+        // 监听全选框
+        $('#selectAll').off('change').on('change', function() {
+          var isChecked = $(this).prop('checked');
+          $('.admin-table tbody .form-check-input').prop('checked', isChecked);
+        });
+        
+        // 搜索框回车处理
+        $('.search-box input').off('keyup').on('keyup', function(e) {
+          if (e.key === 'Enter') {
+            performSearch();
+          }
+        });
+        
+        // 搜索按钮点击处理
+        $('.search-btn').off('click').on('click', function() {
+          performSearch();
+        });
+        
+        // 执行搜索的函数
+        function performSearch() {
+          var query = $('.search-box input').val();
+          var currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('q', query);
+          
+          // 保持当前的筛选参数
+          const roleFilter = currentUrl.searchParams.get('role');
+          const isActiveFilter = currentUrl.searchParams.get('is_active');
+          
+          // 如果清空搜索条件，删除q参数而不是设置为空字符串
+          if (!query.trim()) {
+            currentUrl.searchParams.delete('q');
+          }
+          
+          // 确保分页重置到第一页
+          if (currentUrl.searchParams.has('page')) {
+            currentUrl.searchParams.delete('page');
+          }
+          
+          window.location.href = currentUrl.toString();
+        }
+      }
+      
+      // 检查文档是否已准备好
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        // 页面已加载完成，直接初始化
+        initAdminList();
+      } else {
+        // 等待页面加载
+        document.addEventListener('DOMContentLoaded', initAdminList);
+      }
+      
+      // 监听内容加载事件，支持AJAX内容加载
+      $(document).on('content:loaded', initAdminList);
+      
+      // 确保在导航完成后重新初始化
+      $(window).on('load', function() {
+        console.log("Window fully loaded, reinitializing admin list");
+        initAdminList();
+      });
+      
+      // 捕获导航事件完成
+      $(window).on('popstate', function() {
+        console.log("Navigation event detected, reinitializing admin list");
+        setTimeout(initAdminList, 100); // 延迟执行，确保DOM已更新
+      });
+    }
+
+    // 检查jQuery是否已加载
+    if (typeof jQuery !== 'undefined') {
+      // jQuery已加载，直接初始化
+      executeInitAdminList();
+    } else {
+      // jQuery未加载，监听DOMContentLoaded事件，等待jQuery加载完成
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof jQuery !== 'undefined') {
+          executeInitAdminList();
+        } else {
+          console.error('jQuery is not loaded. Admin list functionality may not work properly.');
+          // 尝试加载jQuery
+          var script = document.createElement('script');
+          script.src = "https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js";
+          script.onload = function() {
+            console.log('jQuery dynamically loaded');
+            executeInitAdminList();
+          };
+          document.head.appendChild(script);
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

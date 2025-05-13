@@ -1,0 +1,390 @@
+{% load static %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- 个人资料设置 -->
+        <div class="settings-section">
+            <h4>个人资料</h4>
+            <form class="needs-validation" id="profileForm" action="/profile/update/" method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" readonly>
+                        <small class="form-text text-muted">用户名不可修改</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">电子邮箱</label>
+                        <div class="input-group flex-wrap">
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" readonly>
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changeEmailModal">修改邮箱</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="avatar" class="form-label">头像</label>
+                    <div class="d-flex align-items-center flex-wrap">
+                        <div class="avatar-preview-container me-3 mb-2">
+                            {% if profile.avatar_url %}
+                                <img src="{{ profile.avatar_url }}" alt="当前头像" class="avatar-preview me-3">
+                            {% elif profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" alt="当前头像" class="avatar-preview me-3">
+                            {% else %}
+                                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="默认头像" class="avatar-preview me-3">
+                            {% endif %}
+                        </div>
+                        
+                        <div class="random-avatars ms-2 mb-2">
+                            <button type="button" class="btn btn-outline-primary mb-2" id="get-random-avatars">选择随机头像</button>
+                            <div class="avatar-grid d-none mt-2" id="random-avatar-grid">
+                                <div class="row g-2">
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                    <div class="col-3"><img src="" alt="随机头像" class="random-avatar-option img-thumbnail" data-url=""></div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="random_avatar_url" id="selected-random-avatar">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="saveProfileBtn">保存更改</button>
+            </form>
+            
+        </div>
+        
+        <!-- 密码设置 -->
+        <div class="settings-section">
+            <h4>修改密码</h4>
+            <form id="passwordForm" method="post" action="{% url 'games:change_password' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="currentPassword" class="form-label">当前密码</label>
+                    <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">新密码</label>
+                    <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                    <div class="password-strength-meter mt-2">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">确认新密码</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">更新密码</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- 关联账号 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">关联账号</h5>
+            </div>
+            <div class="card-body">
+                <div class="social-connect-item">
+                    <div class="d-flex align-items-center">
+                        <i class="fab fa-weixin text-success social-icon"></i>
+                        <div class="social-info">
+                            <h6 class="mb-0">微信</h6>
+                            <small>未关联</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" disabled>暂未开放</button>
+                </div>
+                
+                <div class="social-connect-item">
+                    <div class="d-flex align-items-center">
+                        <i class="fab fa-google text-danger social-icon"></i>
+                        <div class="social-info">
+                            <h6 class="mb-0">Google</h6>
+                            
+                            {% if has_google_account %}
+                                <small>已关联 ({{ google_account.uid|truncatechars:15 }})</small>
+                            {% else %}
+                                <small>未关联</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if has_google_account %}
+                        <a href="{% url 'socialaccount_connections' %}" class="btn btn-sm btn-outline-danger">解除</a>
+                    {% else %}
+                        <a href="{% url 'socialaccount_connections' %}" class="btn btn-sm btn-outline-primary">关联</a>
+                    {% endif %}
+                </div>
+                
+                <div class="social-connect-item">
+                    <div class="d-flex align-items-center">
+                        <i class="fab fa-facebook text-primary social-icon"></i>
+                        <div class="social-info">
+                            <h6 class="mb-0">Facebook</h6>
+                            <small>未关联</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" disabled>暂未开放</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 修改邮箱模态框 -->
+<div class="modal fade" id="changeEmailModal" tabindex="-1" aria-labelledby="changeEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeEmailModalLabel">修改邮箱</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changeEmailForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="currentEmail" class="form-label">当前邮箱</label>
+                        <input type="email" class="form-control" id="currentEmail" value="{{ user.email }}" readonly>
+                        <div class="form-text text-muted">这是您当前使用的邮箱地址</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newEmail" class="form-label">新邮箱</label>
+                        <div class="input-group flex-wrap">
+                            <input type="email" class="form-control" id="newEmail" name="newEmail" required>
+                            <button type="button" class="btn btn-outline-primary" id="send-verification-btn">发送验证码</button>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> 请输入您要更换的新邮箱地址
+                            <ul class="mt-1 mb-0">
+                                <li>新邮箱不能与当前邮箱相同</li>
+                                <li>请确保您能正常访问该邮箱</li>
+                                <li>验证码将发送到新邮箱</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mb-3 verification-code-group" style="display: none;">
+                        <label for="verificationCode" class="form-label">验证码</label>
+                        <div class="input-group flex-wrap">
+                            <input type="text" class="form-control" id="verificationCode" name="verificationCode" maxlength="6" required placeholder="请输入6位验证码">
+                            <span class="input-group-text">
+                                <i class="fas fa-shield-alt"></i>
+                            </span>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> 验证码已发送到新邮箱
+                            <ul class="mt-1 mb-0">
+                                <li>验证码有效期为5分钟</li>
+                                <li>请检查您的收件箱和垃圾邮件文件夹</li>
+                                <li>如未收到，请点击"发送验证码"重新获取</li>
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmEmailChange">确认修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast容器 - 用于显示提示消息 -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <!-- Toast内容会动态添加到这里 -->
+</div>
+
+<style>
+    /* 随机头像网格样式 */
+    .random-avatar-option {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+    
+    .random-avatar-option:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 8px rgba(0,123,255,0.5);
+    }
+    
+    .random-avatar-option.selected {
+        border: 3px solid #007bff;
+        transform: scale(1.1);
+    }
+    
+    .avatar-preview {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #f8f9fa;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    
+    /* 设置部分样式 */
+    .settings-section {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .settings-section h4 {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+        color: #3a3a3a;
+    }
+    
+    /* 密码强度计 */
+    .password-strength-meter {
+        height: 6px;
+        background-color: #eee;
+        border-radius: 3px;
+        margin-top: 8px;
+    }
+    
+    .password-strength-meter .progress-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+    
+    /* 安全项样式 */
+    .security-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .security-icon {
+        font-size: 24px;
+        color: #007bff;
+        width: 50px;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .security-info {
+        flex: 1;
+    }
+    
+    .security-info h5 {
+        margin: 0;
+        font-size: 16px;
+    }
+    
+    .security-info p {
+        margin: 4px 0 0;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    
+    /* 社交媒体连接样式 */
+    .social-connect-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .social-connect-item:last-child {
+        border-bottom: none;
+    }
+    
+    .social-icon {
+        font-size: 24px;
+        margin-right: 15px;
+    }
+    
+    .social-info h6 {
+        font-size: 16px;
+    }
+    
+    .social-info small {
+        color: #6c757d;
+    }
+    
+    /* 验证码组 */
+    .verification-code-group .form-text {
+        font-size: 13px;
+    }
+    
+    .verification-code-group .form-text ul {
+        padding-left: 20px;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .settings-section {
+            padding: 15px;
+        }
+        
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .random-avatar-option {
+            width: 60px;
+            height: 60px;
+        }
+    }
+</style>
+
+<script>
+    // 这里放置设置页面需要的JavaScript代码
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取随机头像
+        document.getElementById('get-random-avatars').addEventListener('click', function() {
+            // 显示随机头像网格
+            document.getElementById('random-avatar-grid').classList.remove('d-none');
+            
+            // 获取随机头像
+            const avatarElements = document.querySelectorAll('.random-avatar-option');
+            
+            // 清除之前的选择
+            avatarElements.forEach(element => {
+                element.classList.remove('selected');
+            });
+            
+            // 生成随机头像URL
+            const genders = ['men', 'women'];
+            avatarElements.forEach(element => {
+                const gender = genders[Math.floor(Math.random() * genders.length)];
+                const randomId = Math.floor(Math.random() * 99) + 1;
+                const url = `https://randomuser.me/api/portraits/${gender}/${randomId}.jpg`;
+                element.src = url;
+                element.dataset.url = url;
+            });
+            
+            // 添加点击事件
+            avatarElements.forEach(element => {
+                element.onclick = function() {
+                    // 移除其他选中状态
+                    avatarElements.forEach(el => el.classList.remove('selected'));
+                    
+                    // 添加选中状态
+                    this.classList.add('selected');
+                    
+                    // 更新预览
+                    document.querySelector('.avatar-preview').src = this.dataset.url;
+                    
+                    // 保存选中的URL
+                    document.getElementById('selected-random-avatar').value = this.dataset.url;
+                };
+            });
+        });
+    });
+</script> 

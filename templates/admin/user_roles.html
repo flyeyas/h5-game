@@ -1,0 +1,514 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ user.username }} {% trans '角色与权限管理' %} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .user-header {
+    margin-bottom: 30px;
+  }
+  
+  .user-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 20px;
+  }
+  
+  .user-info h4 {
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .user-meta {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  
+  .user-meta i {
+    width: 18px;
+    text-align: center;
+    margin-right: 5px;
+  }
+  
+  .badge-status {
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-left: 10px;
+  }
+  
+  .badge-active {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+  }
+  
+  .badge-inactive {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+  }
+  
+  .card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+  }
+  
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+  }
+  
+  .permission-group {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .permission-group:last-child {
+    border-bottom: none;
+  }
+  
+  .permission-group-header {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  .role-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  
+  .role-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+  }
+  
+  .role-card.selected {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+  }
+  
+  .role-card .card-body {
+    padding: 15px;
+  }
+  
+  .role-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .role-description {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 10px;
+  }
+  
+  .badge-role {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  
+  .badge-system {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+  }
+  
+  .badge-custom {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+  }
+  
+  .override-permission {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .back-button {
+    margin-right: 15px;
+  }
+  
+  .action-bar {
+    position: sticky;
+    bottom: 0;
+    background-color: #fff;
+    padding: 15px 0;
+    margin-top: 30px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 100;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <!-- 顶部导航 -->
+  <nav class="navbar">
+    <div class="d-flex align-items-center">
+      <a href="{% url 'admin_panel:admin_users_list' %}" class="btn btn-sm btn-outline-secondary back-button">
+        <i class="fas fa-arrow-left me-1"></i> {% trans '返回用户列表' %}
+      </a>
+      <span class="navbar-brand mb-0 h1">{% trans '管理用户角色与权限' %}</span>
+    </div>
+    <div class="d-flex align-items-center">
+      <div class="dropdown">
+        <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="{% if request.user.avatar %}{{ request.user.avatar.url }}{% elif request.user.avatar_url %}{{ request.user.avatar_url }}{% else %}https://randomuser.me/api/portraits/men/1.jpg{% endif %}" alt="{% trans '管理员头像' %}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+          <span>{{ request.user.username }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>{% trans '个人资料' %}</a></li>
+          <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>{% trans '账号设置' %}</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{% url 'admin_panel:admin_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans '退出登录' %}</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- 用户信息 -->
+  <div class="user-header d-flex align-items-center">
+    <img src="{% if user.avatar %}{{ user.avatar.url }}{% elif user.avatar_url %}{{ user.avatar_url }}{% else %}https://randomuser.me/api/portraits/men/1.jpg{% endif %}" alt="{{ user.username }}" class="user-avatar">
+    <div class="user-info">
+      <h4>
+        {{ user.username }}
+        <span class="badge badge-status {% if user.status == 'active' %}badge-active{% else %}badge-inactive{% endif %}">
+          {% if user.status == 'active' %}{% trans '活跃' %}{% else %}{% trans '禁用' %}{% endif %}
+        </span>
+      </h4>
+      <div class="user-meta mb-1">
+        <i class="fas fa-id-card"></i> {{ user.real_name|default:'-' }}
+      </div>
+      <div class="user-meta mb-1">
+        <i class="fas fa-envelope"></i> {{ user.email|default:'-' }}
+      </div>
+      <div class="user-meta">
+        <i class="fas fa-clock"></i> {% trans '创建于' %}: {{ user.date_joined|date:'Y-m-d H:i'|default:user.created_time|date:'Y-m-d H:i'|default:'-' }}
+      </div>
+    </div>
+  </div>
+  
+  <div>
+    <form id="userRolesForm" method="post" action="/admin/admin-user/{{ user.id }}/save-roles/">
+      {% csrf_token %}
+      
+      <div class="alert alert-info d-flex align-items-start mb-4">
+        <div>
+          <i class="fas fa-info-circle me-2"></i>
+        </div>
+        <div>
+          {% trans '您可以为该用户分配多个角色，用户将拥有所有已分配角色的权限。另外，您还可以为用户设置特定的权限覆盖，这些设置将覆盖角色默认权限。' %}
+        </div>
+      </div>
+      
+      <div class="row">
+        <!-- 左侧：角色分配 -->
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-user-tag me-2"></i>{% trans '角色分配' %}
+            </div>
+            <div class="card-body">
+              <p class="text-muted small mb-3">{% trans '选择要分配给该用户的角色。用户可以同时拥有多个角色。' %}</p>
+              
+              <div class="roles-container">
+                {% for role in roles %}
+                  <div class="role-card {% if role.id in user_roles %}selected{% endif %}">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <div class="role-title">{{ role.name }}</div>
+                          <div class="role-description">{{ role.description|default:_('无描述') }}</div>
+                        </div>
+                        <div>
+                          <span class="badge badge-role {% if role.is_system %}badge-system{% else %}badge-custom{% endif %}">
+                            {% if role.is_system %}{% trans '系统角色' %}{% else %}{% trans '自定义角色' %}{% endif %}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="roles" value="{{ role.id }}" id="role_{{ role.id }}" {% if role.id in user_roles %}checked{% endif %}>
+                        <label class="form-check-label" for="role_{{ role.id }}">
+                          {% trans '分配此角色' %}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                {% empty %}
+                  <div class="alert alert-warning">
+                    {% trans '暂无可分配的角色。' %}
+                    <a href="{% url 'admin_panel:roles_list' %}">{% trans '点击创建角色' %}</a>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 右侧：权限覆盖 -->
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-shield-alt me-2"></i>{% trans '权限覆盖' %}
+            </div>
+            <div class="card-body">
+              <p class="text-muted small mb-3">{% trans '设置特定的权限覆盖。这些设置将覆盖用户从角色获取的默认权限。' %}</p>
+              
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="enableCustomPermissions" name="enable_custom_permissions" {% if user.enable_custom_permissions %}checked{% endif %}>
+                <label class="form-check-label" for="enableCustomPermissions">
+                  {% trans '启用自定义权限' %}
+                </label>
+                <small class="form-text text-muted d-block">{% trans '打开此选项以启用权限覆盖' %}</small>
+              </div>
+              
+              <div id="customPermissionsContainer" {% if not user.enable_custom_permissions %}style="display: none;"{% endif %}>
+                <!-- 权限覆盖部分 -->
+                <div class="permission-group">
+                  <div class="permission-group-header">{% trans '内容管理' %}</div>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_article_edit" name="overrides" value="article_edit" {% if 'article_edit' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_article_edit">
+                          {% trans '编辑文章' %}
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_article_publish" name="overrides" value="article_publish" {% if 'article_publish' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_article_publish">
+                          {% trans '发布文章' %}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="permission-group">
+                  <div class="permission-group-header">{% trans '游戏管理' %}</div>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_game_publish" name="overrides" value="game_publish" {% if 'game_publish' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_game_publish">
+                          {% trans '发布游戏' %}
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_game_unpublish" name="overrides" value="game_unpublish" {% if 'game_unpublish' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_game_unpublish">
+                          {% trans '下线游戏' %}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="permission-group">
+                  <div class="permission-group-header">{% trans '用户管理' %}</div>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_user_block" name="overrides" value="user_block" {% if 'user_block' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_user_block">
+                          {% trans '封禁用户' %}
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_user_delete" name="overrides" value="user_delete" {% if 'user_delete' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_user_delete">
+                          {% trans '删除用户' %}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="permission-group">
+                  <div class="permission-group-header">{% trans '系统设置' %}</div>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_setting_edit" name="overrides" value="setting_edit" {% if 'setting_edit' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_setting_edit">
+                          {% trans '修改设置' %}
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="override_admin_manage" name="overrides" value="admin_manage" {% if 'admin_manage' in user_overrides %}checked{% endif %}>
+                        <label class="form-check-label" for="override_admin_manage">
+                          {% trans '管理员管理' %}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  {% trans '警告：自定义权限可能会覆盖角色默认权限，请谨慎设置。' %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 底部操作栏 -->
+      <div class="action-bar text-center">
+        <button type="button" id="saveUserRoles" class="btn btn-primary">
+          <i class="fas fa-save me-1"></i> {% trans '保存设置' %}
+        </button>
+        <a href="{% url 'admin_panel:admin_users_list' %}" class="btn btn-outline-secondary ms-2">
+          <i class="fas fa-times me-1"></i> {% trans '取消' %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 成功模态框 -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>{% trans '操作成功' %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="successMessage" class="mb-0"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">{% trans '确定' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 错误模态框 -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fas fa-exclamation-circle me-2"></i>{% trans '操作失败' %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="errorMessage" class="mb-0"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '关闭' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript 处理 -->
+<script>
+  // 检查jQuery是否已加载
+  if (typeof jQuery === 'undefined') {
+    // 如果jQuery未加载，动态添加jQuery
+    document.write('<script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>');
+    // 等待jQuery加载完成后执行
+    window.onload = function() {
+      initUserRoles();
+    };
+  } else {
+    // jQuery已加载，直接执行
+    $(document).ready(function() {
+      initUserRoles();
+    });
+  }
+  
+  function initUserRoles() {
+    // 角色卡片点击事件
+    $('.role-card').on('click', function(e) {
+      // 避免点击复选框时触发
+      if (!$(e.target).is('input[type="checkbox"]') && !$(e.target).is('label')) {
+        const checkbox = $(this).find('input[type="checkbox"]');
+        checkbox.prop('checked', !checkbox.prop('checked'));
+        $(this).toggleClass('selected');
+      }
+    });
+    
+    // 复选框点击事件
+    $('.role-card input[type="checkbox"]').on('change', function() {
+      $(this).closest('.role-card').toggleClass('selected', $(this).prop('checked'));
+    });
+    
+    // 启用/禁用自定义权限
+    $('#enableCustomPermissions').on('change', function() {
+      if ($(this).prop('checked')) {
+        $('#customPermissionsContainer').slideDown();
+      } else {
+        $('#customPermissionsContainer').slideUp();
+      }
+    });
+    
+    // 保存角色设置的Ajax提交
+    $('#saveUserRoles').on('click', function() {
+      // 显示加载指示器或禁用按钮
+      $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans "保存中..." %}');
+      
+      // 获取表单数据
+      const formData = $('#userRolesForm').serialize();
+      
+      // 发送Ajax请求
+      $.ajax({
+        url: $('#userRolesForm').attr('action'),
+        type: 'POST',
+        data: formData,
+        dataType: 'json',
+        success: function(response) {
+          if (response.status === 'success') {
+            // 显示成功模态框
+            $('#successMessage').text(response.message);
+            var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+            
+            // 绑定成功模态框关闭事件，可以选择跳转或留在当前页
+            $('#successModal').on('hidden.bs.modal', function () {
+              // 可以跳转回列表页
+              // window.location.href = '/admin/admin-user/list/';
+            });
+          } else {
+            // 显示错误模态框
+            $('#errorMessage').text(response.message || '操作失败，请重试');
+            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            errorModal.show();
+          }
+        },
+        error: function(xhr, status, error) {
+          // 显示错误模态框
+          $('#errorMessage').text('服务器错误，请重试');
+          var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+          errorModal.show();
+          console.error('Ajax 请求出错:', error);
+        },
+        complete: function() {
+          // 恢复按钮状态
+          $('#saveUserRoles').prop('disabled', false).html('<i class="fas fa-save me-1"></i> {% trans "保存设置" %}');
+        }
+      });
+    });
+  }
+</script>
+{% endblock %} 

@@ -1,0 +1,29 @@
+{% load static %}
+<ul class="nav nav-tabs" id="authTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">登录</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">注册</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="authTabContent">
+    <!-- 登录表单 -->
+    <div class="tab-pane fade show active" id="login" role="tabpanel">
+        {% if allauth_enabled and login_form %}
+            {% include 'games/registration/allauth_login_form.html' %}
+        {% else %}
+            {% include 'games/registration/login_form.html' %}
+        {% endif %}
+    </div>
+    
+    <!-- 注册表单 -->
+    <div class="tab-pane fade" id="register" role="tabpanel">
+        {% if allauth_enabled and form %}
+            {% include 'games/registration/allauth_register_form.html' %}
+        {% else %}
+            {% include 'games/registration/register_form.html' %}
+        {% endif %}
+    </div>
+</div> 

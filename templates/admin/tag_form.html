@@ -1,0 +1,437 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% if tag %}{% trans '编辑标签' %}{% else %}{% trans '添加标签' %}{% endif %} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-check-input {
+    cursor: pointer;
+  }
+  
+  .form-check-label {
+    cursor: pointer;
+  }
+  
+  .form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+  
+  .required-field {
+    color: #dc3545;
+    margin-left: 2px;
+  }
+  
+  .badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+  }
+  
+  .info-box {
+    display: flex;
+    min-height: 80px;
+    background: #fff;
+    width: 100%;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    border-radius: 0.25rem;
+    margin-bottom: 15px;
+  }
+  
+  .info-box-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    background: rgba(0,0,0,0.2);
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+  }
+  
+  .info-box-icon i {
+    color: white;
+    font-size: 1.5rem;
+  }
+  
+  .bg-info {
+    background-color: #17a2b8 !important;
+  }
+  
+  .bg-warning {
+    background-color: #ffc107 !important;
+  }
+  
+  .info-box-content {
+    padding: 5px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: calc(100% - 70px);
+  }
+  
+  .info-box-text {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #6c757d;
+  }
+  
+  .info-box-number {
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">{% if tag %}{% trans '编辑标签' %}{% else %}{% trans '添加标签' %}{% endif %}</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'admin_panel:tag_list' %}">{% trans '标签管理' %}</a></li>
+          <li class="breadcrumb-item active">{% if tag %}{% trans '编辑标签' %}{% else %}{% trans '添加标签' %}{% endif %}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% if tag %}{% trans '编辑标签' %}{% else %}{% trans '添加标签' %}{% endif %}</h3>
+      </div>
+      
+      <form method="post" id="tagForm" action="{% if tag %}{% url 'admin_panel:tag_update' tag.id %}{% else %}{% url 'admin_panel:tag_create' %}{% endif %}">
+        {% csrf_token %}
+        <div class="card-body">
+          <div class="row">
+            <!-- 左侧栏 - 主要表单 -->
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="tag-name" class="form-label">{% trans '标签名称' %} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="tag-name" name="name" value="{{ tag.name|default:'' }}" required>
+                <div class="form-text">{% trans '标签名称应简洁明了，在系统中必须唯一' %}</div>
+              </div>
+              
+              <div class="form-group">
+                <div class="form-check form-switch">
+                  <input type="checkbox" class="form-check-input" id="tag-active" name="is_active" {% if not tag or tag.is_active %}checked{% endif %}>
+                  <label class="form-check-label" for="tag-active">{% trans '启用此标签' %}</label>
+                </div>
+                <div class="form-text">{% trans '禁用的标签不会在游戏前台显示' %}</div>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">{% trans '使用说明' %}</label>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <span>{% trans '标签用于分类和筛选游戏。一个游戏可以同时拥有多个标签，标签可以帮助用户更快地找到他们感兴趣的游戏类型。' %}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 右侧栏 - 额外信息 -->
+            <div class="col-md-4">
+              {% if tag %}
+              <div class="form-group">
+                <label class="form-label">{% trans '标签统计' %}</label>
+                <div class="info-box">
+                  <span class="info-box-icon bg-info"><i class="fas fa-gamepad"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans '关联游戏数' %}</span>
+                    <span class="info-box-number">{{ tag.games.count }}</span>
+                  </div>
+                </div>
+                
+                <div class="info-box">
+                  <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans '创建时间' %}</span>
+                    <span class="info-box-number">{{ tag.created_at|date:"Y-m-d H:i" }}</span>
+                  </div>
+                </div>
+                
+                <div class="info-box">
+                  <span class="info-box-icon {% if tag.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                    <i class="fas {% if tag.is_active %}fa-check{% else %}fa-ban{% endif %}"></i>
+                  </span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans '当前状态' %}</span>
+                    <span class="info-box-number">
+                      {% if tag.is_active %}{% trans '已启用' %}{% else %}{% trans '已禁用' %}{% endif %}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">{% trans '相关游戏' %}</label>
+                {% if tag.games.exists %}
+                <div class="list-group">
+                  {% for game in tag.games.all|slice:":5" %}
+                  <a href="{% url 'admin_panel:game_update' game.id %}" class="list-group-item list-group-item-action">
+                    {{ game.name }}
+                  </a>
+                  {% endfor %}
+                  {% if tag.games.count > 5 %}
+                  <a href="{% url 'admin_panel:game_list' %}?tag={{ tag.id }}" class="list-group-item list-group-item-action text-center">
+                    <i class="fas fa-ellipsis-h"></i> {% trans '查看更多' %} ({{ tag.games.count|add:"-5" }})
+                  </a>
+                  {% endif %}
+                </div>
+                {% else %}
+                <div class="alert alert-light text-center">
+                  <i class="fas fa-info-circle me-2"></i> {% trans '暂无关联游戏' %}
+                </div>
+                {% endif %}
+              </div>
+              {% else %}
+              <div class="alert alert-light">
+                <div class="text-center mb-3">
+                  <i class="fas fa-tag fa-3x text-muted"></i>
+                </div>
+                <p>{% trans '创建新标签后，您可以将其关联到游戏中。' %}</p>
+                <p>{% trans '标签可用于：' %}</p>
+                <ul>
+                  <li>{% trans '游戏分类' %}</li>
+                  <li>{% trans '前端筛选' %}</li>
+                  <li>{% trans '推荐系统' %}</li>
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>{% trans '保存' %}
+          </button>
+          <a href="{% url 'admin_panel:tag_list' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-times me-1"></i>{% trans '取消' %}
+          </a>
+          
+          {% if tag %}
+          <div class="float-end">
+            <a href="#" class="btn btn-outline-danger" id="delete-tag-btn">
+              <i class="fas fa-trash-alt me-1"></i>{% trans '删除' %}
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% if tag %}
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">{% trans '确认删除' %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          {% trans '您确定要删除标签' %} <strong>"{{ tag.name }}"</strong> {% trans '吗？此操作不可撤销。' %}
+        </div>
+        {% if tag.games.exists %}
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          {% trans '此标签已关联 ' %}<strong>{{ tag.games.count }}</strong>{% trans ' 个游戏，删除可能会影响这些游戏的分类。' %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+        <form action="{% url 'admin_panel:tag_delete' tag.id %}" method="post" id="delete-form">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">{% trans '确认删除' %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script>
+  $(document).ready(function() {
+    // 表单提交前进行验证
+    $('#tagForm').on('submit', function(e) {
+      e.preventDefault();
+      
+      // 验证表单字段
+      if (!validateForm()) {
+        return false;
+      }
+      
+      // 显示保存指示器
+      const submitBtn = $(this).find('button[type="submit"]');
+      const originalText = submitBtn.html();
+      submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> 保存中...');
+      
+      // 提交表单
+      $.ajax({
+        url: $(this).attr('action'),
+        type: 'POST',
+        data: $(this).serialize(),
+        headers: {
+          'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(response) {
+          if (response.status === 'success') {
+            // 显示成功消息
+            showToast('success', response.message || '标签保存成功！');
+            
+            // 重定向到标签列表页面
+            setTimeout(function() {
+              window.location.href = "{% url 'admin_panel:tag_list' %}";
+            }, 1500);
+          } else {
+            // 显示错误消息
+            showToast('error', response.message || '保存失败！');
+            submitBtn.prop('disabled', false).html(originalText);
+          }
+        },
+        error: function(xhr) {
+          let errorMsg = '服务器错误，请稍后重试';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          showToast('error', errorMsg);
+          submitBtn.prop('disabled', false).html(originalText);
+        }
+      });
+    });
+    
+    // 删除标签按钮点击事件
+    $('#delete-tag-btn').on('click', function(e) {
+      e.preventDefault();
+      $('#deleteConfirmModal').modal('show');
+    });
+    
+    // 确认删除按钮点击事件
+    $('#confirm-delete-btn').on('click', function() {
+      const tagId = "{{ tag.id }}";
+      
+      // 禁用按钮
+      $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> 删除中...');
+      
+      $.ajax({
+        url: `/admin/tags/delete/${tagId}/`,
+        type: 'POST',
+        headers: {
+          'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(response) {
+          if (response.status === 'success') {
+            // 显示成功消息
+            showToast('success', response.message || '标签删除成功！');
+            
+            // 关闭模态框
+            $('#deleteConfirmModal').modal('hide');
+            
+            // 重定向到标签列表页面
+            setTimeout(function() {
+              window.location.href = "{% url 'admin_panel:tag_list' %}";
+            }, 1500);
+          } else {
+            // 显示错误消息
+            showToast('error', response.message || '删除失败！');
+            $('#confirm-delete-btn').prop('disabled', false).html('确认删除');
+          }
+        },
+        error: function() {
+          showToast('error', '服务器错误，请稍后重试');
+          $('#confirm-delete-btn').prop('disabled', false).html('确认删除');
+        }
+      });
+    });
+  });
+  
+  // 验证表单
+  function validateForm() {
+    let isValid = true;
+    
+    // 验证标签名称
+    const tagName = $('#tag-name').val().trim();
+    if (!tagName) {
+      showToast('error', '请输入标签名称');
+      $('#tag-name').focus();
+      isValid = false;
+    }
+    
+    return isValid;
+  }
+  
+  // Toast提示函数
+  function showToast(type, message) {
+    // 使用Bootstrap提供的toast组件显示消息
+    const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+    const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+    
+    const toast = `
+      <div class="toast align-items-center text-white ${bgClass}" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="${iconClass} me-2"></i> ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    `;
+    
+    // 确保toast容器存在
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toast-container';
+      toastContainer.className = 'position-fixed top-0 end-0 p-3';
+      toastContainer.style.zIndex = '1050';
+      document.body.appendChild(toastContainer);
+    }
+    
+    $(toastContainer).append(toast);
+    const toastElement = $('.toast').last();
+    
+    try {
+      const bsToast = new bootstrap.Toast(toastElement[0], {
+        autohide: true,
+        delay: 3000
+      });
+      bsToast.show();
+      
+      // 自动移除
+      toastElement.on('hidden.bs.toast', function() {
+        $(this).remove();
+      });
+    } catch (error) {
+      console.error('显示toast失败:', error);
+      alert(`${type === 'success' ? '成功' : '错误'}: ${message}`);
+    }
+  }
+</script>
+{% endblock %} 

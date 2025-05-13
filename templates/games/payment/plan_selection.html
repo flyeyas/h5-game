@@ -1,0 +1,289 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load games_payment_tags %}
+
+{% block title %}{% trans "会员计划" %} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plans-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .section-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    .section-header h1 {
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    .section-header p {
+        color: #6c757d;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .plan-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    .plan-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+    .plan-card.recommended {
+        border: 2px solid #6a11cb;
+    }
+    .recommended-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .plan-header {
+        padding: 30px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        text-align: center;
+    }
+    .current-plan {
+        background: #28a745;
+    }
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 15px 0;
+        line-height: 1;
+    }
+    .plan-price small {
+        font-size: 1rem;
+        font-weight: 400;
+    }
+    .plan-body {
+        padding: 30px;
+        flex-grow: 1;
+    }
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 30px 0;
+    }
+    .plan-features li {
+        padding: 10px 0;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .plan-features li:last-child {
+        border-bottom: none;
+    }
+    .plan-features i.fas.fa-check {
+        color: #28a745;
+        margin-right: 10px;
+    }
+    .plan-features i.fas.fa-times {
+        color: #dc3545;
+        margin-right: 10px;
+    }
+    .plan-footer {
+        padding: 20px 30px 30px;
+        text-align: center;
+    }
+    .current-subscription-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-top: 50px;
+        margin-bottom: 30px;
+    }
+    .current-subscription-header {
+        padding: 20px 30px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+    }
+    .current-subscription-body {
+        padding: 30px;
+    }
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .status-active {
+        background-color: #28a745;
+        color: white;
+    }
+    .status-trial {
+        background-color: #17a2b8;
+        color: white;
+    }
+    .status-auto-renew {
+        background-color: #007bff;
+        color: white;
+    }
+    .status-no-renew {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="plans-container">
+        <div class="section-header">
+            <h1>{% trans "会员计划" %}</h1>
+            <p>{% trans "升级到会员，畅享更多游戏特权和专属内容，提升您的游戏体验" %}</p>
+        </div>
+        
+        <div class="row">
+            {% for plan in plans %}
+            <div class="col-lg-4">
+                <div class="plan-card {% if current_subscription and current_subscription.plan.id == plan.id %}recommended{% endif %}">
+                    {% if current_subscription and current_subscription.plan.id == plan.id %}
+                        <div class="recommended-badge">{% trans "当前计划" %}</div>
+                    {% elif forloop.counter == 2 and not current_subscription %}
+                        <div class="recommended-badge">{% trans "推荐" %}</div>
+                    {% endif %}
+                    
+                    <div class="plan-header {% if current_subscription and current_subscription.plan.id == plan.id %}current-plan{% endif %}">
+                        <div class="plan-name">{{ plan.name }}</div>
+                        <div class="plan-price">
+                            ${{ plan.price }} <small>/{{ plan.get_period_display }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            {% if plan.features %}
+                                {% for feature in plan.features.splitlines %}
+                                <li><i class="fas fa-check"></i> {{ feature }}</li>
+                                {% endfor %}
+                            {% else %}
+                                <li><i class="fas fa-check"></i> {% trans "基本会员权益" %}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="plan-footer">
+                        {% if current_subscription and current_subscription.plan.id == plan.id %}
+                            <button class="btn btn-success btn-lg w-100" disabled>{% trans "当前计划" %}</button>
+                        {% elif current_subscription %}
+                            <a href="{% url 'games:checkout' plan_id=plan.id %}" class="btn btn-outline-primary btn-lg w-100">
+                                {% if current_subscription.plan.price < plan.price %}
+                                    {% trans "升级到此计划" %}
+                                {% else %}
+                                    {% trans "降级到此计划" %}
+                                {% endif %}
+                            </a>
+                        {% else %}
+                            <a href="{% url 'games:checkout' plan_id=plan.id %}" class="btn btn-primary btn-lg w-100">
+                                {% trans "选择此计划" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    {% trans "暂无可用的会员计划" %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if current_subscription %}
+        <div class="current-subscription-card">
+            <div class="current-subscription-header">
+                <h4 class="mb-0">{% trans "您当前的会员信息" %}</h4>
+            </div>
+            <div class="current-subscription-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>{% trans "会员计划" %}:</strong> {{ current_subscription.plan.name }}</p>
+                        <p><strong>{% trans "开始时间" %}:</strong> {{ current_subscription.start_date|date:"Y-m-d H:i" }}</p>
+                        <p><strong>{% trans "到期时间" %}:</strong> {{ current_subscription.end_date|date:"Y-m-d H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p>
+                            <strong>{% trans "状态" %}:</strong> 
+                            {% if current_subscription.status == 'active' %}
+                            <span class="status-badge status-active">{% trans "有效" %}</span>
+                            {% elif current_subscription.status == 'trial' %}
+                            <span class="status-badge status-trial">{% trans "试用期" %}</span>
+                            {% else %}
+                            <span class="status-badge">{{ current_subscription.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                        <p>
+                            <strong>{% trans "自动续费" %}:</strong> 
+                            {% if current_subscription.auto_renew %}
+                            <span class="status-badge status-auto-renew">{% trans "已开启" %}</span>
+                            {% else %}
+                            <span class="status-badge status-no-renew">{% trans "未开启" %}</span>
+                            {% endif %}
+                        </p>
+                        <p>
+                            <a href="{% url 'games:subscription_settings' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-cog"></i> {% trans "管理订阅" %}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- 会员特权说明 -->
+        <div class="mt-5">
+            <h2 class="text-center mb-4">{% trans "会员特权说明" %}</h2>
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-ad text-danger me-2"></i>{% trans "无广告体验" %}</h5>
+                            <p class="card-text">{% trans "会员用户可以享受全站无广告的纯净体验，让您的游戏过程更加流畅" %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-cloud-upload-alt text-primary me-2"></i>{% trans "游戏进度云存储" %}</h5>
+                            <p class="card-text">{% trans "自动将您的游戏进度保存到云端，随时随地继续您的游戏" %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-percentage text-success me-2"></i>{% trans "游戏折扣" %}</h5>
+                            <p class="card-text">{% trans "会员用户购买游戏可享受专属折扣，等级越高折扣越大" %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

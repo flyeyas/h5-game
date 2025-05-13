@@ -1,0 +1,143 @@
+<div class="filter-group">
+    <h6>排序方式</h6>
+    <div class="form-check">
+        <input class="form-check-input filter-option" type="radio" name="sort" id="sortPopular" value="popular" {% if current_sort == 'popular' or not current_sort %}checked{% endif %}>
+        <label class="form-check-label" for="sortPopular">最热门</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input filter-option" type="radio" name="sort" id="sortRating" value="rating" {% if current_sort == 'rating' %}checked{% endif %}>
+        <label class="form-check-label" for="sortRating">评分最高</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input filter-option" type="radio" name="sort" id="sortNewest" value="newest" {% if current_sort == 'newest' %}checked{% endif %}>
+        <label class="form-check-label" for="sortNewest">最新上线</label>
+    </div>
+</div>
+
+<div class="filter-group">
+    <h6>游戏分类</h6>
+    <!-- 前5个分类 -->
+    {% for category in categories|slice:":5" %}
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="category{{ category.id }}" name="category" value="{{ category.id }}"
+            {% if category.id|stringformat:"i" in selected_categories %}checked{% endif %}>
+        <label class="form-check-label" for="category{{ category.id }}">
+            {{ category.name }} {% if category.games_count %}({{ category.games_count }}){% endif %}
+        </label>
+    </div>
+    {% endfor %}
+    
+    <!-- 折叠的更多分类 -->
+    {% if categories|length > 5 %}
+    <div class="collapse" id="moreCategoriesCollapse">
+        {% for category in categories|slice:"5:" %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="category{{ category.id }}" name="category" value="{{ category.id }}"
+                {% if category.id|stringformat:"i" in selected_categories %}checked{% endif %}>
+            <label class="form-check-label" for="category{{ category.id }}">
+                {{ category.name }} {% if category.games_count %}({{ category.games_count }}){% endif %}
+            </label>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 展开/折叠按钮 -->
+    <a class="mt-2 d-block small text-secondary" style="color: #6c757d !important;" data-bs-toggle="collapse" href="#moreCategoriesCollapse" role="button" aria-expanded="false" aria-controls="moreCategoriesCollapse">
+        <span class="more-text">显示更多</span>
+        <span class="less-text d-none">收起</span>
+        <i class="fas fa-chevron-down more-icon"></i>
+        <i class="fas fa-chevron-up less-icon d-none"></i>
+    </a>
+    {% endif %}
+</div>
+
+<div class="filter-group">
+    <h6>评分</h6>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="rating" id="rating5" value="5" {% if '5' in rating %}checked{% endif %}>
+        <label class="form-check-label d-flex align-items-center" for="rating5">
+            <span class="rating d-inline-block me-1">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+            </span>
+            <span>(5星)</span>
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="rating" id="rating4" value="4" {% if '4' in rating %}checked{% endif %}>
+        <label class="form-check-label d-flex align-items-center" for="rating4">
+            <span class="rating d-inline-block me-1">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i>
+            </span>
+            <span>(4星)</span>
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="rating" id="rating3" value="3" {% if '3' in rating %}checked{% endif %}>
+        <label class="form-check-label d-flex align-items-center" for="rating3">
+            <span class="rating d-inline-block me-1">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+            </span>
+            <span>(3星)</span>
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="rating" id="rating2" value="2" {% if '2' in rating %}checked{% endif %}>
+        <label class="form-check-label d-flex align-items-center" for="rating2">
+            <span class="rating d-inline-block me-1">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+            </span>
+            <span>(2星)</span>
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="rating" id="rating1" value="1" {% if '1' in rating %}checked{% endif %}>
+        <label class="form-check-label d-flex align-items-center" for="rating1">
+            <span class="rating d-inline-block me-1">
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+            </span>
+            <span>(1星)</span>
+        </label>
+    </div>
+</div>
+
+<div class="filter-group">
+    <h6>上线时间</h6>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="time" id="time_today" value="today" {% if 'today' in time_filter %}checked{% endif %}>
+        <label class="form-check-label" for="time_today">
+            今天
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="time" id="time_week" value="week" {% if 'week' in time_filter %}checked{% endif %}>
+        <label class="form-check-label" for="time_week">
+            本周
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="time" id="time_month" value="month" {% if 'month' in time_filter %}checked{% endif %}>
+        <label class="form-check-label" for="time_month">
+            本月
+        </label>
+    </div>
+</div>

@@ -1,0 +1,132 @@
+{% load static %}
+<div class="tab-pane fade {% if active_tab == 'membership' %}show active{% endif %}" id="subscription" role="tabpanel">
+    <!-- 当前会员信息 -->
+    <div class="subscription-card">
+        <div class="subscription-header">
+            <div class="subscription-title">
+                <h4>当前会员</h4>
+                <p>您当前的会员计划和详细信息</p>
+            </div>
+            <div class="subscription-badge">{{ user.profile.membership_type_display }}</div>
+        </div>
+        <div class="subscription-details">
+            <p>
+                <span>会员状态</span>
+                <span class="text-success">{{ user.profile.membership_status_display }}</span>
+            </p>
+            <p>
+                <span>开始日期</span>
+                <span class="text-muted">{{ user.profile.membership_start_date|date:"Y年m月d日" }}</span>
+            </p>
+            <p>
+                <span>下次续费日期</span>
+                <span class="text-muted">{{ user.profile.membership_renewal_date|date:"Y年m月d日" }}</span>
+            </p>
+            <p>
+                <span>当前计费周期</span>
+                <span class="text-muted">{{ user.profile.billing_cycle_display }} - {{ user.profile.membership_fee_display }}</span>
+            </p>
+            <p>
+                <span>支付方式</span>
+                <span class="text-muted">{{ user.profile.payment_method_display }}</span>
+            </p>
+        </div>
+        <div class="d-flex">
+            <a href="{% url 'games:subscription_plans' %}" class="btn btn-outline-primary me-2 flex-grow-1">更改计划</a>
+            {% if user.profile.can_cancel_membership %}
+                <button class="btn btn-outline-danger flex-grow-1" data-bs-toggle="modal" data-bs-target="#cancelMembershipModal">取消订阅</button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 会员特权 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4 class="mb-0">{{ user.profile.membership_type_display }}特权</h4>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for feature in membership_features %}
+                    <li class="list-group-item d-flex align-items-center">
+                        {% if feature.is_available %}
+                            <i class="fas fa-check-circle text-success me-3"></i>
+                        {% else %}
+                            <i class="fas fa-times-circle text-muted me-3"></i>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-1">{{ feature.name }}</h5>
+                            <p class="mb-0 text-muted">{{ feature.description }}</p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% if upgrade_available %}
+            <div class="card-footer text-center">
+                <a href="{% url 'games:subscription_plans' %}" class="btn btn-primary">升级到{{ next_tier_membership }}</a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- 交易历史 -->
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">交易历史</h4>
+            <button class="btn btn-sm btn-outline-secondary" id="exportTransactions">导出记录</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>描述</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if transactions %}
+                            {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.date|date:"Y-m-d" }}</td>
+                                    <td>{{ transaction.description }}</td>
+                                    <td>{{ transaction.amount_display }}</td>
+                                    <td><span class="badge bg-{{ transaction.status_class }}">{{ transaction.status_display }}</span></td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3">暂无交易记录</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 取消会员确认模态框 -->
+<div class="modal fade" id="cancelMembershipModal" tabindex="-1" aria-labelledby="cancelMembershipModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelMembershipModalLabel">确认取消会员</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要取消您的会员订阅吗？</p>
+                <ul>
+                    <li>您将继续享有会员特权直至当前计费周期结束（{{ user.profile.membership_renewal_date|date:"Y年m月d日" }}）</li>
+                    <li>此后，您的账号将被降级为免费账号</li>
+                    <li>您可以随时重新订阅会员服务</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">返回</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelMembership">确认取消</button>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,291 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}游戏商城 - HTML5游戏平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .game-card {
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    .card-img-top {
+        height: 180px;
+        object-fit: cover;
+    }
+    .price-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+    .category-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: #6a11cb;
+    }
+    .featured-section {
+        background-color: #f8f9fa;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    .section-title {
+        position: relative;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+    }
+    .section-title:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    }
+    .membership-badge {
+        margin-left: 10px;
+        font-size: 0.8rem;
+        padding: 3px 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="section-title">游戏商城</h1>
+        </div>
+    </div>
+    
+    <!-- 热门游戏 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="section-title">热门付费游戏</h3>
+        </div>
+        
+        {% for game in popular_paid_games %}
+        <div class="col-md-3 mb-4">
+            <div class="card game-card h-100">
+                <div class="position-relative">
+                    <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                    <div class="price-tag">¥{{ game.price }}</div>
+                    {% if game.is_discounted %}
+                    <div class="discount-badge">-{{ game.discount_rate }}%</div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ game.title }}</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="small text-muted">{{ game.categories.first.name }}</div>
+                        <div>
+                            <i class="fas fa-star text-warning"></i>
+                            <span>{{ game.rating }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-outline-primary w-100">查看详情</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">暂无热门付费游戏</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 折扣游戏 -->
+    <div class="featured-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="section-title">限时折扣</h3>
+                </div>
+                
+                {% for game in discounted_games %}
+                <div class="col-md-3 mb-4">
+                    <div class="card game-card h-100">
+                        <div class="position-relative">
+                            <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                            <div class="price-tag">
+                                <span class="text-decoration-line-through small">¥{{ game.original_price }}</span>
+                                ¥{{ game.price }}
+                            </div>
+                            <div class="discount-badge">-{{ game.discount_rate }}%</div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ game.title }}</h5>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="small text-muted">{{ game.categories.first.name }}</div>
+                                <div>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span>{{ game.rating }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-outline-primary w-100">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">暂无折扣游戏</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 游戏分类 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="section-title">游戏分类</h3>
+        </div>
+        
+        {% for category in categories %}
+        <div class="col-md-2 col-sm-4 mb-4 text-center">
+            <a href="{% url 'games:game_list_by_category' category.slug %}" class="text-decoration-none">
+                <div class="card h-100 border-0">
+                    <div class="card-body">
+                        <div class="category-icon">
+                            <i class="fas fa-{{ category.icon|default:'gamepad' }}"></i>
+                        </div>
+                        <h5>{{ category.name }}</h5>
+                        <small class="text-muted">{{ category.game_count|default:'0' }} 个游戏</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">暂无游戏分类</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 最新游戏 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="section-title">最新上架</h3>
+        </div>
+        
+        {% for game in new_paid_games %}
+        <div class="col-md-3 mb-4">
+            <div class="card game-card h-100">
+                <div class="position-relative">
+                    <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                    <div class="price-tag">¥{{ game.price }}</div>
+                    {% if game.is_discounted %}
+                    <div class="discount-badge">-{{ game.discount_rate }}%</div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ game.title }}</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="small text-muted">{{ game.categories.first.name }}</div>
+                        <div>
+                            <i class="fas fa-star text-warning"></i>
+                            <span>{{ game.rating }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-outline-primary w-100">查看详情</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">暂无新上架游戏</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 会员专享 -->
+    <div class="featured-section">
+        <div class="container">
+            {% if show_member_content %}
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="section-title">会员专享</h3>
+                    <p class="text-muted">成为会员即可享受更多游戏特权和折扣</p>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-percentage display-4 text-primary mb-3"></i>
+                            <h4>会员专享折扣</h4>
+                            <p>会员可享受游戏购买额外折扣，最高可达30%</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-gift display-4 text-primary mb-3"></i>
+                            <h4>每月免费游戏</h4>
+                            <p>高级会员每月可免费领取价值50元的游戏</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock display-4 text-primary mb-3"></i>
+                            <h4>新游戏抢先体验</h4>
+                            <p>会员可提前体验即将上线的新游戏</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 text-center mt-3">
+                {% if is_logged_in %}
+                    {% if user_membership_type %}
+                        <a href="{% url 'games:profile_membership' %}" class="btn btn-primary btn-lg">管理会员</a>
+                    {% else %}
+                        <a href="{% url 'games:subscription_plans' %}" class="btn btn-primary btn-lg">立即成为会员</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'games:login' %}" class="btn btn-primary btn-lg">登录后成为会员</a>
+                {% endif %}
+            </div>
+            
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 可以添加一些商城相关的交互效果
+    $(document).ready(function() {
+        // 例如：购买确认、添加到购物车等
+    });
+</script>
+{% endblock %} 

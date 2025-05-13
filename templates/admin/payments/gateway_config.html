@@ -1,0 +1,94 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+{% load payment_tags %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:payment_gateway_list' %}">{% trans '支付网关管理' %}</a></li>
+    <li class="breadcrumb-item active">{% trans '配置支付网关' %}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title">{% trans '配置支付网关' %}: {{ object.name }} ({{ gateway_type }})</h3>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <p>{% trans '请更正以下错误:' %}</p>
+                        <ul>
+                            {% for field in form %}
+                            {% if field.errors %}
+                            <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> {% trans '请根据您的支付网关账户信息完成以下配置。所有敏感信息将进行安全加密存储。' %}
+                    </div>
+                    
+                    {% for field_name, field_info in config_fields.items %}
+                    <div class="form-group">
+                        <label for="config_{{ field_name }}">{{ field_info.label }}</label>
+                        
+                        {% if field_info.type == 'text' %}
+                        <input type="text" class="form-control" id="config_{{ field_name }}" name="config_{{ field_name }}" 
+                               value="{{ object.config|get_item:field_name|default:field_info.default|default:'' }}">
+                        
+                        {% elif field_info.type == 'password' %}
+                        <input type="password" class="form-control" id="config_{{ field_name }}" name="config_{{ field_name }}"
+                               value="{{ object.config|get_item:field_name|default:'' }}">
+                        
+                        {% elif field_info.type == 'textarea' %}
+                        <textarea class="form-control" id="config_{{ field_name }}" name="config_{{ field_name }}" rows="5">{{ object.config|get_item:field_name|default:field_info.default|default:'' }}</textarea>
+                        
+                        {% elif field_info.type == 'select' %}
+                        <select class="form-control select2" id="config_{{ field_name }}" name="config_{{ field_name }}">
+                            {% for option_value, option_label in field_info.options %}
+                            <option value="{{ option_value }}" 
+                                {% if object.config|get_item:field_name == option_value %}selected
+                                {% elif not object.config|get_item:field_name and field_info.default|default:'' == option_value %}selected
+                                {% endif %}>
+                                {{ option_label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                        
+                        {% if field_info.help_text %}
+                        <small class="form-text text-muted">{{ field_info.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{% trans '保存配置' %}</button>
+                    <a href="{% url 'admin_panel:payment_gateway_list' %}" class="btn btn-default">{% trans '返回' %}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $(function() {
+        // Select2初始化
+        $('.select2').select2();
+    });
+</script>
+{% endblock %} 

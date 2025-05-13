@@ -1,0 +1,943 @@
+{% load i18n %}
+
+<!-- 核心JavaScript库 -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<!-- 管理面板核心JS -->
+<script>
+  // 管理面板核心JS - 使用IIFE模块化方式封装
+  (function() {
+    'use strict';
+    
+    // 应用状态管理
+    const AdminApp = {
+      state: {
+        lastLoadedUrl: window.location.href,
+        isLoading: false,
+        collapsing: false,
+        clickTimeout: null,
+        activeAjaxRequest: null
+      },
+      
+      // 初始化应用
+      init() {
+        this.bindGlobalEvents();
+        this.bindMenuEvents();
+        this.initBootstrapComponents();
+        this.initTopNavBar();
+        this.initContentScripts();
+        this.handleResponsiveLayout();
+      },
+      
+      // 绑定全局事件
+      bindGlobalEvents() {
+        // 使用事件委托处理下拉菜单按钮点击
+        $(document).on('click', '[data-bs-toggle="dropdown"]', this.handleDropdownToggle);
+        
+        // 移动端侧边栏切换
+        $('#sidebarToggle').on('click', () => $('#sidebar').toggleClass('show'));
+        
+        // 点击内容区域时关闭移动端侧边栏
+        $('.content-wrapper').on('click', () => {
+          if ($('#sidebar').hasClass('show')) {
+            $('#sidebar').removeClass('show');
+          }
+        });
+        
+        // 监听窗口大小变化
+        $(window).on('resize', this.handleResponsiveLayout.bind(this));
+        
+        // 页面卸载前清理模态框遮罩
+        $(window).on('beforeunload', this.cleanupModalBackdrops);
+        
+        // 监听popstate事件，处理浏览器前进和后退按钮
+        $(window).on('popstate', this.handleHistoryNavigation.bind(this));
+      },
+      
+      // 处理下拉菜单切换
+      handleDropdownToggle(e) {
+        if (typeof bootstrap === 'undefined') return;
+          
+        const dropdownEl = this;
+        const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownEl);
+        
+        if (!dropdownInstance) {
+          try {
+            const newDropdown = new bootstrap.Dropdown(dropdownEl);
+            newDropdown.toggle();
+            e.stopPropagation();
+            e.preventDefault();
+          } catch (error) {
+            console.warn('Error initializing dropdown:', error);
+          }
+        }
+      },
+      
+      // 绑定菜单事件
+      bindMenuEvents() {
+        // 先移除现有绑定，防止重复
+        $('.menu-link').off('click.menuNav');
+        
+        // 使用debounce防止重复点击
+        $('.menu-link').on('click.menuNav', this.debounce(this.handleMenuClick.bind(this), 300));
+        
+        // 折叠菜单点击处理
+        $('.sidebar-menu [data-bs-toggle="collapse"]')
+          .off('click.menuCollapse')
+          .on('click.menuCollapse', this.handleCollapseToggle.bind(this));
+        
+        // 为菜单项添加活动状态
+        this.updateActiveMenuState();
+      },
+      
+      // 更新菜单活动状态
+      updateActiveMenuState() {
+        $('.menu-link').each((_, item) => {
+          const $item = $(item);
+          const menuUrl = $item.data('url');
+          
+          if (!menuUrl) return;
+          
+          const { lastLoadedUrl } = this.state;
+          
+          // 更严格的URL匹配
+          if (menuUrl === lastLoadedUrl || 
+              (lastLoadedUrl.indexOf('?') > 0 && 
+               lastLoadedUrl.substring(0, lastLoadedUrl.indexOf('?')) === menuUrl)) {
+            
+            $item.addClass('active');
+            
+            // 如果是子菜单，确保父菜单保持展开状态
+            if ($item.closest('.collapse').length) {
+              const $collapse = $item.closest('.collapse');
+              $collapse.addClass('show');
+              $collapse.prev('[data-bs-toggle="collapse"]')
+                .addClass('active')
+                .attr('aria-expanded', 'true');
+            }
+          }
+        });
+      },
+      
+      // 处理折叠菜单切换
+      handleCollapseToggle(e) {
+        if (this.state.collapsing) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        
+        this.state.collapsing = true;
+        
+        const $toggler = $(e.currentTarget);
+        const targetId = $toggler.attr('href');
+        
+        // 关闭其他所有折叠菜单
+        $('.collapse').not(targetId).collapse('hide');
+        
+        // 更新活动状态
+        $('.sidebar-menu [data-bs-toggle="collapse"]').not($toggler).removeClass('active');
+        $toggler.toggleClass('active');
+        
+        // 重置collapsing状态
+        const resetCollapsing = () => {
+          this.state.collapsing = false;
+        };
+        
+        // 监听折叠完成事件
+        $(targetId).one('shown.bs.collapse hidden.bs.collapse', resetCollapsing);
+        
+        // 设置超时保护
+        setTimeout(resetCollapsing, 500);
+      },
+      
+      // 防抖函数
+      debounce(func, wait) {
+        return (...args) => {
+          const context = this;
+          clearTimeout(this.state.clickTimeout);
+          this.state.clickTimeout = setTimeout(() => {
+            this.state.clickTimeout = null;
+            func.apply(context, args);
+          }, wait);
+        };
+      },
+      
+      // 处理菜单点击
+      handleMenuClick(e) {
+        e.preventDefault();
+        
+        const $menuItem = $(e.currentTarget);
+        
+        // 忽略禁用或处理中的按钮
+        if ($menuItem.hasClass('disabled') || $menuItem.data('processing')) {
+          return;
+        }
+        
+        const url = $menuItem.data('url');
+        
+        // 忽略空URL
+        if (!url || url === '#') {
+          return;
+        }
+        
+        // URL比较考虑查询参数
+        const { lastLoadedUrl, isLoading } = this.state;
+        const currentUrlWithoutParams = lastLoadedUrl.indexOf('?') > 0 ? 
+                                       lastLoadedUrl.substring(0, lastLoadedUrl.indexOf('?')) : 
+                                       lastLoadedUrl;
+        const clickedUrlWithoutParams = url.indexOf('?') > 0 ? 
+                                      url.substring(0, url.indexOf('?')) : 
+                                      url;
+        
+        // 避免重复加载同一页面
+        if (isLoading || (currentUrlWithoutParams === clickedUrlWithoutParams && 
+                         (lastLoadedUrl === url || !url.includes('?')))) {
+          return;
+        }
+        
+        // 标记处理状态
+        $menuItem.data('processing', true);
+        $('.menu-link').addClass('disabled');
+        
+        // 设置加载状态
+        this.state.isLoading = true;
+        
+        // 更新活动菜单状态
+        $('.sidebar-menu .list-group-item').removeClass('active');
+        $menuItem.addClass('active');
+        
+        // 处理子菜单展开状态
+        if ($menuItem.closest('.collapse').length) {
+          $('.collapse').not($menuItem.closest('.collapse')).collapse('hide');
+          $menuItem.closest('.collapse').collapse('show');
+        } else {
+          $('.collapse').collapse('hide');
+        }
+        
+        // 在移动设备上点击菜单后关闭侧边栏
+        if (window.innerWidth <= 768) {
+          $('#sidebar').removeClass('show');
+        }
+        
+        // 在加载新内容前清理模态框
+        this.cleanupModalBackdrops();
+        
+        // 显示加载指示器
+        $('#content-main').html(
+          '<div class="d-flex justify-content-center mt-5">' +
+          '<div class="spinner-border text-primary" role="status">' +
+          '<span class="visually-hidden">加载中...</span>' +
+          '</div></div>'
+        );
+        
+        // 取消正在进行的AJAX请求
+        if (this.state.activeAjaxRequest) {
+          this.state.activeAjaxRequest.abort();
+        }
+        
+        // 加载新内容
+        this.loadContent(url, $menuItem);
+      },
+      
+      // 加载内容
+      loadContent(url, $menuItem = null) {
+        this.state.activeAjaxRequest = $.ajax({
+          url,
+          type: 'GET',
+          cache: false,
+          success: (response) => {
+            // 更新URL记录
+            this.state.lastLoadedUrl = url;
+            
+            // 解析响应内容
+            const tempDiv = $('<div>').html(response);
+            const contentHtml = tempDiv.find('#content-main').html();
+            
+            if (contentHtml) {
+              // 更新内容区域
+              $('#content-main').html(contentHtml);
+              
+              // 处理页面样式
+              this.processPageStyles(tempDiv);
+              
+              // 处理模态框
+              this.processModals(tempDiv);
+              
+              // 处理脚本
+              this.processScripts(tempDiv);
+              
+              // 更新浏览器历史记录
+              if (window.history && window.history.pushState) {
+                window.history.pushState(null, null, url);
+              }
+              
+              // 清理临时DOM
+              tempDiv.remove();
+              
+              // 初始化新加载内容的脚本
+              this.initContentScripts();
+              
+              // 确保顶部导航栏正常工作
+              this.initTopNavBar();
+            } else {
+              // 找不到内容区域，直接跳转
+              window.location.href = url;
+            }
+            
+            // 重置状态
+            this.resetLoadingState($menuItem);
+          },
+          error: (xhr, status, error) => {
+            // 非用户中止的错误才处理
+            if (status !== 'abort') {
+              console.error("AJAX request failed:", error);
+              window.location.href = url;
+            }
+            
+            // 重置状态
+            this.resetLoadingState($menuItem);
+          }
+        });
+      },
+      
+      // 重置加载状态
+      resetLoadingState($menuItem = null) {
+        this.state.isLoading = false;
+        this.state.activeAjaxRequest = null;
+        
+        if ($menuItem) {
+          $menuItem.data('processing', false);
+          $('.menu-link').removeClass('disabled');
+        }
+      },
+      
+      // 处理页面样式
+      processPageStyles(tempDiv) {
+        const pageStyles = tempDiv.find('style, link[rel="stylesheet"]');
+        if (pageStyles.length > 0) {
+          $('head .page-specific-styles').remove();
+          pageStyles.addClass('page-specific-styles');
+          $('head').append(pageStyles);
+        }
+      },
+      
+      // 处理模态框
+      processModals(tempDiv) {
+        const modals = tempDiv.find('.modal');
+        if (modals.length > 0) {
+          modals.each((_, modal) => {
+            const modalId = $(modal).attr('id');
+            if (modalId) {
+              $(`#${modalId}`).remove();
+            }
+          });
+          $('body').append(modals);
+        }
+      },
+      
+      // 处理脚本
+      processScripts(tempDiv) {
+        const pageScripts = tempDiv.find('script:not([src])');
+        if (pageScripts.length > 0) {
+          pageScripts.each((_, script) => {
+            try {
+              eval($(script).html());
+            } catch(e) {
+              console.error('Error executing script:', e);
+            }
+          });
+        }
+      },
+      
+      // 处理历史导航
+      handleHistoryNavigation() {
+        // 清理模态框
+        this.cleanupModalBackdrops();
+        
+        // 获取当前URL
+        const currentUrl = window.location.href;
+        
+        // 重置状态
+        this.state.isLoading = false;
+        
+        if (this.state.activeAjaxRequest) {
+          this.state.activeAjaxRequest.abort();
+          this.state.activeAjaxRequest = null;
+        }
+        
+        // 恢复菜单链接
+        $('.menu-link').removeClass('disabled').data('processing', false);
+        
+        // 查找匹配的菜单项
+        const $matchingMenuItem = this.findMatchingMenuItem(currentUrl);
+        
+        if ($matchingMenuItem.length) {
+          // 强制重载
+          const tempUrl = this.state.lastLoadedUrl;
+          this.state.lastLoadedUrl = '';
+          
+          const $firstMenuItem = $matchingMenuItem.first();
+          
+          // 更新UI状态
+          $('.sidebar-menu .list-group-item').removeClass('active');
+          $firstMenuItem.addClass('active');
+          
+          // 处理折叠菜单
+          if ($firstMenuItem.closest('.collapse').length) {
+            $('.collapse').not($firstMenuItem.closest('.collapse')).collapse('hide');
+            $firstMenuItem.closest('.collapse').collapse('show');
+          } else {
+            $('.collapse').collapse('hide');
+          }
+          
+          // 加载内容
+          const url = $firstMenuItem.data('url');
+          if (url && url !== '#') {
+            this.state.isLoading = true;
+            this.loadContent(url);
+          }
+        } else {
+          // 找不到匹配菜单，刷新页面
+          window.location.reload();
+        }
+      },
+      
+      // 查找匹配当前URL的菜单项
+      findMatchingMenuItem(currentUrl) {
+        return $('.menu-link').filter((_, item) => {
+          const menuUrl = $(item).data('url');
+          if (!menuUrl) return false;
+          
+          // 完全匹配
+          if (menuUrl === currentUrl) return true;
+          
+          // URL不含参数时的匹配
+          const currentUrlWithoutParams = currentUrl.indexOf('?') > 0 ? 
+                                        currentUrl.substring(0, currentUrl.indexOf('?')) : 
+                                        currentUrl;
+          return (menuUrl === currentUrlWithoutParams);
+        });
+      },
+      
+      // 清理模态框和遮罩层
+      cleanupModalBackdrops() {
+        // 关闭所有打开的模态框
+        $('.modal').each((_, modal) => {
+          try {
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) {
+              modalInstance.hide();
+            }
+          } catch (e) {
+            console.warn('Error closing modal:', e);
+          }
+        });
+        
+        // 移除遮罩和样式
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('overflow', '');
+        $('body').css('padding-right', '');
+      },
+      
+      // 处理响应式布局
+      handleResponsiveLayout() {
+        if (window.innerWidth <= 768) {
+          // 移动设备视图
+          $('#sidebar').removeClass('show');
+        } else if (window.innerWidth > 768 && window.innerWidth <= 992) {
+          // 平板视图 - 显示小图标侧边栏
+          $('#sidebar').removeClass('show');
+        }
+        // 桌面视图不需要特殊处理
+      },
+      
+      // 初始化顶部导航栏
+      initTopNavBar() {
+        if ($('.navbar').length === 0) return;
+        
+        // 清理现有实例
+        $('.navbar .dropdown-toggle').each((_, dropdown) => {
+          const instance = bootstrap.Dropdown.getInstance(dropdown);
+          if (instance) instance.dispose();
+        });
+        
+        // 重新初始化下拉菜单
+        $('.navbar .dropdown-toggle').each((_, dropdown) => {
+          try {
+            new bootstrap.Dropdown(dropdown);
+          } catch (e) {
+            console.warn('Error initializing navbar dropdown:', e);
+          }
+        });
+        
+        // 特别处理用户下拉菜单
+        const userDropdown = document.getElementById('userDropdown');
+        if (userDropdown) {
+          $(userDropdown)
+            .off('click.userMenu')
+            .on('click.userMenu', (e) => {
+              const instance = bootstrap.Dropdown.getInstance(userDropdown);
+              if (instance) {
+                instance.toggle();
+              } else {
+                try {
+                  new bootstrap.Dropdown(userDropdown).toggle();
+                } catch (e) {
+                  console.warn('User dropdown initialization error:', e);
+                }
+              }
+            });
+        }
+        
+        // 事件委托处理动态加载的下拉菜单
+        $('.navbar')
+          .off('click.dropdown')
+          .on('click.dropdown', '[data-bs-toggle="dropdown"]', (e) => {
+            const dropdown = e.currentTarget;
+            const instance = bootstrap.Dropdown.getInstance(dropdown);
+            
+            if (!instance) {
+              try {
+                const newDropdown = new bootstrap.Dropdown(dropdown);
+                newDropdown.toggle();
+                e.preventDefault();
+                e.stopPropagation();
+              } catch (e) {
+                console.warn('Dropdown click handler error:', e);
+              }
+            }
+          });
+      },
+      
+      // 初始化Bootstrap组件
+      initBootstrapComponents() {
+        if (typeof bootstrap === 'undefined') return;
+        
+        // 初始化折叠面板
+        document.querySelectorAll('.collapse').forEach(collapseEl => {
+          try {
+            new bootstrap.Collapse(collapseEl, { toggle: false });
+          } catch (e) {
+            console.warn('Collapse initialization error:', e);
+          }
+        });
+        
+        // 初始化下拉菜单
+        document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(dropdownEl => {
+          try {
+            if (!bootstrap.Dropdown.getInstance(dropdownEl)) {
+              new bootstrap.Dropdown(dropdownEl);
+            }
+          } catch (e) {
+            console.warn('Dropdown initialization error:', e);
+          }
+        });
+        
+        // 初始化模态框
+        document.querySelectorAll('.modal').forEach(modalEl => {
+          try {
+            if (!bootstrap.Modal.getInstance(modalEl)) {
+              const modal = new bootstrap.Modal(modalEl);
+              
+              // 确保模态框隐藏后清理遮罩
+              $(modalEl).off('hidden.bs.modal').on('hidden.bs.modal', () => {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('overflow', '');
+                $('body').css('padding-right', '');
+              });
+            }
+          } catch (e) {
+            console.warn('Modal initialization error:', e);
+          }
+        });
+        
+        // 初始化工具提示
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltipEl => {
+          try {
+            if (!bootstrap.Tooltip.getInstance(tooltipEl)) {
+              new bootstrap.Tooltip(tooltipEl);
+            }
+          } catch (e) {
+            console.warn('Tooltip initialization error:', e);
+          }
+        });
+        
+        // 初始化弹出框
+        document.querySelectorAll('[data-bs-toggle="popover"]').forEach(popoverEl => {
+          try {
+            if (!bootstrap.Popover.getInstance(popoverEl)) {
+              new bootstrap.Popover(popoverEl);
+            }
+          } catch (e) {
+            console.warn('Popover initialization error:', e);
+          }
+        });
+      },
+      
+      // 初始化内容区域脚本
+      initContentScripts() {
+        // 检查内容区域中的菜单链接
+        if ($('#content-main .menu-link').length) {
+          console.warn("发现内容区域中有菜单链接，可能导致菜单点击事件重复绑定");
+        }
+        
+        // 初始化Bootstrap组件
+        this.initBootstrapComponents();
+        
+        // 表格按钮事件
+        this.initTableActions();
+        
+        // 搜索框功能
+        this.initSearchBox();
+        
+        // 模态框关闭按钮
+        this.initModalCloseButtons();
+        
+        // 初始化管理员模态框
+        this.initAdminModals();
+        
+        // 触发内容加载完成事件
+        $(document).trigger('content:loaded');
+      },
+      
+      // 初始化管理员模态框和相关事件
+      initAdminModals() {
+        console.log("Initializing admin modals and events");
+        
+        // 绑定编辑按钮事件（防止多次调用AJAX）
+        $('.admin-table .edit-admin-btn').each(function() {
+          const $btn = $(this);
+          const hasClickHandler = $._data($btn[0], 'events') && $._data($btn[0], 'events')['click'];
+          
+          if (!hasClickHandler) {
+            console.log("Binding edit button click event for admin ID:", $btn.data('id'));
+            $btn.on('click', function() {
+              console.log("Edit button clicked for admin ID:", $(this).data('id'));
+              
+              // 获取管理员数据
+              const adminId = $(this).data('id');
+              const username = $(this).data('username');
+              const realName = $(this).data('real-name');
+              const email = $(this).data('email');
+              const mobile = $(this).data('mobile');
+              const role = $(this).data('role');
+              const status = $(this).data('status');
+              const notes = $(this).data('notes');
+              const avatarUrl = $(this).data('avatar');
+              
+              // 填充表单
+              $('#edit_admin_id').val(adminId);
+              $('#edit_username').val(username);
+              $('#edit_real_name').val(realName);
+              $('#edit_email').val(email);
+              $('#edit_mobile').val(mobile);
+              $('#edit_role').val(role);
+              $('#edit_status').val(status);
+              $('#edit_notes').val(notes);
+              
+              // 设置头像
+              if (avatarUrl) {
+                $('#current_avatar').attr('src', avatarUrl);
+                $('#current_avatar_container').show();
+              } else {
+                $('#current_avatar_container').hide();
+              }
+              
+              // 设置表单提交地址
+              $('#editAdminForm').attr('action', '/admin/users/edit/' + adminId + '/');
+              
+              // 打开模态框
+              try {
+                const editModal = document.getElementById('editAdminModal');
+                if (editModal) {
+                  const modalInstance = bootstrap.Modal.getInstance(editModal) || new bootstrap.Modal(editModal);
+                  modalInstance.show();
+                } else {
+                  console.error('Edit modal element not found');
+                }
+              } catch (e) {
+                console.error('Error showing edit modal:', e);
+              }
+            });
+          }
+        });
+        
+        // 确保提交编辑表单事件绑定
+        if ($('#submitEditAdmin').length) {
+          $('#submitEditAdmin').off('click').on('click', function() {
+            console.log('Edit admin submit button clicked');
+            
+            // 获取表单数据
+            const form = $('#editAdminForm')[0];
+            const formData = new FormData(form);
+            
+            // 获取管理员ID和表单提交URL
+            const adminId = $('#edit_admin_id').val();
+            const actionUrl = form.getAttribute('action');
+            
+            // 简单校验密码
+            const password = $('#edit_password').val();
+            const confirmPassword = $('#edit_confirm_password').val();
+            
+            if (password && password !== confirmPassword) {
+              showToast('两次输入的密码不一致', 'error');
+              return;
+            }
+            
+            console.log('Submitting edit form to:', actionUrl);
+            
+            // 禁用提交按钮，防止重复提交
+            $(this).prop('disabled', true);
+            $(this).html('<i class="fas fa-spinner fa-spin me-1"></i>保存中...');
+            
+            // 发送AJAX请求
+            $.ajax({
+              url: actionUrl,
+              type: 'POST',
+              data: formData,
+              processData: false,
+              contentType: false,
+              headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              success: function(response) {
+                console.log('Edit response received:', response);
+                
+                // 关闭模态框
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editAdminModal'));
+                if (editModal) {
+                  editModal.hide();
+                }
+                
+                // 显示成功消息
+                showToast(response.message || '管理员信息已成功更新', 'success');
+                
+                // 1秒后刷新页面
+                setTimeout(function() {
+                  window.location.reload();
+                }, 1000);
+              },
+              error: function(xhr, status, error) {
+                console.error('Edit AJAX error:', xhr.responseText);
+                showToast('保存失败，请检查表单数据后重试', 'error');
+              },
+              complete: function() {
+                // 启用提交按钮
+                $('#submitEditAdmin').prop('disabled', false).html('<i class="fas fa-save me-1"></i>保存修改');
+              }
+            });
+          });
+        }
+        
+        // 初始化删除按钮事件
+        $('.admin-table .delete-admin').off('click').on('click', function() {
+          console.log("Delete button clicked for admin ID:", $(this).data('id'));
+          const adminId = $(this).data('id');
+          const adminName = $(this).closest('tr').find('td:eq(3)').text().trim();
+          
+          // 设置模态框内容
+          $('#delete_admin_id').val(adminId);
+          $('#delete_admin_name').text(adminName);
+          
+          // 打开模态框
+          const deleteModal = document.getElementById('deleteAdminModal');
+          if (deleteModal) {
+            const modalInstance = bootstrap.Modal.getInstance(deleteModal) || new bootstrap.Modal(deleteModal);
+            modalInstance.show();
+          }
+        });
+        
+        // 确保删除确认按钮事件绑定
+        if ($('#confirmDeleteAdmin').length) {
+          $('#confirmDeleteAdmin').off('click').on('click', function() {
+            console.log('Delete confirmation clicked');
+            const adminId = $('#delete_admin_id').val();
+            
+            // 清除之前的错误信息
+            $('#delete-admin-error').addClass('d-none');
+            
+            const deleteUrl = '/admin/users/delete/' + adminId + '/';
+            console.log('Sending delete request to:', deleteUrl);
+            
+            $.ajax({
+              url: deleteUrl,
+              type: 'POST',
+              headers: {
+                'X-CSRFToken': getCsrfToken()
+              },
+              success: function(response) {
+                console.log('Delete response received:', response);
+                
+                if (response.status === 'success') {
+                  // 关闭模态框
+                  const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteAdminModal'));
+                  if (deleteModal) {
+                    deleteModal.hide();
+                  }
+                  
+                  // 显示成功消息
+                  showToast(response.message || '管理员已成功删除', 'success');
+                  
+                  // 刷新页面
+                  setTimeout(function() {
+                    window.location.reload();
+                  }, 1000);
+                } else {
+                  // 显示错误消息
+                  $('#delete-admin-error').removeClass('d-none');
+                  $('#delete-error-message').text(response.message || '删除失败，请重试');
+                }
+              },
+              error: function(xhr, status, error) {
+                console.error('Delete AJAX error:', xhr.responseText);
+                $('#delete-admin-error').removeClass('d-none');
+                $('#delete-error-message').text('删除失败，请重试');
+              }
+            });
+          });
+        }
+        
+        // 初始化状态切换按钮事件
+        $('.admin-table .toggle-status').off('click').on('click', function() {
+          console.log("Toggle status button clicked for admin ID:", $(this).data('id'));
+          // 实现状态切换逻辑
+        });
+      },
+      
+      // 初始化表格操作按钮
+      initTableActions() {
+        $('.admin-table .edit-admin-btn').off('click').on('click', function() {
+          console.log("Edit button clicked for admin ID:", $(this).data('id'));
+        });
+        
+        $('.admin-table .delete-admin').off('click').on('click', function() {
+          console.log("Delete button clicked for admin ID:", $(this).data('id'));
+        });
+        
+        $('.admin-table .toggle-status').off('click').on('click', function() {
+          console.log("Toggle status button clicked for admin ID:", $(this).data('id'));
+        });
+      },
+      
+      // 初始化搜索框
+      initSearchBox() {
+        $('.search-box input').off('keyup').on('keyup', function(e) {
+          if (e.key === 'Enter') {
+            const query = $(this).val();
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('q', query);
+            window.location.href = currentUrl.toString();
+          }
+        });
+      },
+      
+      // 初始化模态框关闭按钮
+      initModalCloseButtons() {
+        $('[data-bs-dismiss="modal"]').off('click').on('click', function() {
+          const $modal = $(this).closest('.modal');
+          const modalId = $modal.attr('id');
+          
+          if (modalId) {
+            const modalEl = document.getElementById(modalId);
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            
+            if (modalInstance) {
+              modalInstance.hide();
+            } else {
+              // 手动清理
+              $modal.modal('hide');
+              $('.modal-backdrop').remove();
+              $('body').removeClass('modal-open').css('overflow', '');
+              $('body').css('padding-right', '');
+            }
+          }
+        });
+      }
+    };
+    
+    // DOM加载完成后初始化应用
+    $(document).ready(() => AdminApp.init());
+  })();
+</script>
+
+<!-- 全局工具函数 -->
+<script>
+  // 通知提示函数
+  function showToast(message, type = 'info') {
+    // 检查是否已有toast容器
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+      document.body.appendChild(toastContainer);
+    }
+    
+    // 创建toast元素
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    
+    // 设置toast内容
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+    
+    // 添加到容器
+    toastContainer.appendChild(toastEl);
+    
+    // 创建Bootstrap Toast实例并显示
+    const toast = new bootstrap.Toast(toastEl, {
+      autohide: true,
+      delay: 3000
+    });
+    toast.show();
+    
+    // 自动移除
+    toastEl.addEventListener('hidden.bs.toast', function() {
+      toastEl.remove();
+    });
+  }
+  
+  // CSRF令牌获取函数
+  function getCsrfToken() {
+    // 优先从表单token获取
+    const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (tokenInput) {
+      return tokenInput.value;
+    }
+    
+    // 尝试从cookie获取
+    const cookies = document.cookie.split(';');
+    const csrfCookie = cookies.find(cookie => cookie.trim().startsWith('csrftoken='));
+    if (csrfCookie) {
+      return csrfCookie.split('=')[1];
+    }
+    
+    return '';
+  }
+  
+  // 为所有AJAX请求添加CSRF令牌
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined') {
+      $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+          if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+          }
+        }
+      });
+    }
+  });
+</script>
+
+{% block extrafootjs %}{% endblock %} 

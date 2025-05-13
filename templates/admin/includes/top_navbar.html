@@ -1,0 +1,23 @@
+{% load i18n %}
+
+<!-- 顶部导航 -->
+<nav class="navbar">
+    <div class="d-flex align-items-center">
+        <span class="navbar-brand mb-0 h1">{{ page_title|default:title }}</span>
+    </div>
+    <div class="d-flex align-items-center">
+        
+        <div class="dropdown">
+            <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="{% if request.user.avatar %}{{ request.user.avatar.url }}{% elif request.user.avatar_url %}{{ request.user.avatar_url }}{% else %}https://randomuser.me/api/portraits/men/1.jpg{% endif %}" alt="{% trans '管理员头像' %}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                <span>{{ request.user.username }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>{% trans '个人资料' %}</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>{% trans '账号设置' %}</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'admin_panel:admin_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans '退出登录' %}</a></li>
+            </ul>
+        </div>
+    </div>
+</nav> 

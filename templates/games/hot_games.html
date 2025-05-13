@@ -1,0 +1,572 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}热门游戏 - GameHub{% endblock %}
+
+{% block meta_description %}GameHub热门游戏列表，探索玩家最喜爱的游戏，这些游戏因其出色的游戏体验和精彩的内容而备受欢迎{% endblock %}
+
+{% block meta_keywords %}热门游戏,HTML5游戏,在线游戏,免费游戏,手机游戏,休闲游戏{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 全局样式覆盖 */
+    main {
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+    
+    main > .container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    /* 热门游戏页面样式 */
+    .popular-header {
+        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+    }
+    
+    /* 确保头部容器撑满浏览器宽度 */
+    .popular-header-wrapper {
+        width: 100%;
+        position: relative;
+        overflow: visible;
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* 确保头部内容有合适的边距 */
+    .popular-header .container-fluid {
+        max-width: 1320px;
+        margin: 0 auto;
+    }
+    
+    /* 使头部文案向右移动 */
+    .popular-header-content {
+        padding-left: 30px; /* 增加左侧内边距，使文案向右移动 */
+    }
+    
+    /* 为较窄屏幕优化标题显示 */
+    @media (max-width: 576px) {
+        .popular-header h1 {
+            font-size: 1.8rem;
+        }
+        .popular-header .lead {
+            font-size: 1rem;
+        }
+    }
+    
+    /* 会员广告条容器样式 */
+    .ad-banner-container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+        background-color: transparent !important;
+        border-bottom: none !important;
+    }
+    
+    /* 主内容区域样式 */
+    .content-container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .game-card .card-body {
+        padding: 15px;
+    }
+    
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .game-card .rating {
+        color: #ffc107;
+    }
+    
+    .game-card .rating i {
+        color: #ffc107;
+        font-size: 0.85rem;
+        margin-right: 1px;
+    }
+    
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    
+    .filter-sidebar {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .filter-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    
+    .filter-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-link {
+        color: #6a11cb;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    
+    .popular-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 767.98px) {
+        .popular-header {
+            padding: 30px 0;
+        }
+        .game-card img {
+            height: 150px;
+        }
+        .filter-sidebar {
+            margin-bottom: 20px;
+        }
+    }
+    
+    /* 加载中动画 */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        border-radius: 10px;
+    }
+    
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+</style>
+{% endblock %}
+
+{# 设置hide_main_container为true #}
+{% with hide_main_container=True %}
+
+{% block fullwidth_container_class %}w-100 p-0 m-0{% endblock %}
+
+{% block content %}
+<!-- 热门游戏头部 -->
+{% include 'games/includes/hot_games_header.html' %}
+
+<!-- 会员广告条 -->
+{% if show_member_content and not user.is_authenticated or show_member_content and not user.is_member %}
+    <div class="content-container">
+        {% include 'games/includes/premium_banner.html' %}
+    </div>
+{% endif %}
+
+<div class="content-container mt-4">
+    <div class="row">
+        <!-- 左侧筛选栏 -->
+        <div class="col-md-3">
+            <div class="filter-sidebar sticky-md-top" style="top: 20px; z-index: 999;">
+                <h5 class="filter-title">筛选选项</h5>
+                
+                <form id="filterForm" action="{% url 'games:hot_games' %}" method="get">
+                    <div class="filter-group">
+                        <h6>排序方式</h6>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="radio" name="sort" id="sortPopular" value="popular" {% if current_sort == 'popular' %}checked{% endif %}>
+                            <label class="form-check-label" for="sortPopular">最热门</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="radio" name="sort" id="sortRating" value="rating" {% if current_sort == 'rating' %}checked{% endif %}>
+                            <label class="form-check-label" for="sortRating">评分最高</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="radio" name="sort" id="sortNewest" value="newest" {% if current_sort == 'newest' %}checked{% endif %}>
+                            <label class="form-check-label" for="sortNewest">最新上线</label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h6>游戏分类</h6>
+                        <!-- 前5个分类 -->
+                        {% for category in categories|slice:":5" %}
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="checkbox" name="category" id="category{{ category.slug }}" value="{{ category.slug }}" {% if category.slug in current_categories %}checked{% endif %}>
+                            <label class="form-check-label" for="category{{ category.slug }}">{{ category.name }}</label>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- 折叠的更多分类 -->
+                        {% if categories|length > 5 %}
+                        <div class="collapse" id="moreCategoriesCollapse">
+                            {% for category in categories|slice:"5:" %}
+                            <div class="form-check">
+                                <input class="form-check-input filter-option" type="checkbox" name="category" id="category{{ category.slug }}" value="{{ category.slug }}" {% if category.slug in current_categories %}checked{% endif %}>
+                                <label class="form-check-label" for="category{{ category.slug }}">{{ category.name }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- 展开/折叠按钮 -->
+                        <a class="mt-2 d-block small text-secondary" style="color: #6c757d !important;" data-bs-toggle="collapse" href="#moreCategoriesCollapse" role="button" aria-expanded="false" aria-controls="moreCategoriesCollapse">
+                            <span class="more-text">显示更多</span>
+                            <span class="less-text d-none">收起</span>
+                            <i class="fas fa-chevron-down more-icon"></i>
+                            <i class="fas fa-chevron-up less-icon d-none"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h6>评分筛选</h6>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="checkbox" name="rating" id="rating5" value="5" {% if '5' in current_ratings %}checked{% endif %}>
+                            <label class="form-check-label d-flex align-items-center" for="rating5">
+                                <span class="rating d-inline-block me-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </span>
+                                <span>(5星)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="checkbox" name="rating" id="rating4" value="4" {% if '4' in current_ratings %}checked{% endif %}>
+                            <label class="form-check-label d-flex align-items-center" for="rating4">
+                                <span class="rating d-inline-block me-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </span>
+                                <span>(4星)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="checkbox" name="rating" id="rating3" value="3" {% if '3' in current_ratings %}checked{% endif %}>
+                            <label class="form-check-label d-flex align-items-center" for="rating3">
+                                <span class="rating d-inline-block me-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </span>
+                                <span>(3星)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="checkbox" name="rating" id="rating2" value="2" {% if '2' in current_ratings %}checked{% endif %}>
+                            <label class="form-check-label d-flex align-items-center" for="rating2">
+                                <span class="rating d-inline-block me-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </span>
+                                <span>(2星)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-option" type="checkbox" name="rating" id="rating1" value="1" {% if '1' in current_ratings %}checked{% endif %}>
+                            <label class="form-check-label d-flex align-items-center" for="rating1">
+                                <span class="rating d-inline-block me-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </span>
+                                <span>(1星)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="per_page" id="perPage" value="{{ per_page }}">
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                    
+                    <button type="reset" id="resetFilters" class="btn btn-outline-secondary w-100 mt-3">重置筛选</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 右侧游戏列表 -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>游戏列表</h4>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                        显示: {{ per_page }}个游戏
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item per-page-option" href="#" data-per-page="12">显示: 12个游戏</a></li>
+                        <li><a class="dropdown-item per-page-option" href="#" data-per-page="24">显示: 24个游戏</a></li>
+                        <li><a class="dropdown-item per-page-option" href="#" data-per-page="36">显示: 36个游戏</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="row position-relative" id="games-container">
+                {% include 'games/includes/game_list_fragment.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 加载状态标志
+    var isLoading = false;
+    
+    // 游戏卡片鼠标悬停效果
+    $(document).on('mouseenter', '.game-card', function() {
+        $(this).addClass('shadow');
+    }).on('mouseleave', '.game-card', function() {
+        $(this).removeClass('shadow');
+    });
+    
+    // 筛选选项改变时触发AJAX请求
+    $('.filter-option').change(function() {
+        loadGames();
+    });
+    
+    // 每页显示数量选项点击事件
+    $('.per-page-option').click(function(e) {
+        e.preventDefault();
+        $('#perPage').val($(this).data('per-page'));
+        loadGames();
+    });
+    
+    // 重置筛选按钮点击事件
+    $('#resetFilters').click(function(e) {
+        e.preventDefault();
+        // 取消选中所有复选框
+        $('.filter-option[type="checkbox"]').prop('checked', false);
+        // 恢复排序选项默认值
+        $('#sortPopular').prop('checked', true);
+        // 恢复每页显示数量默认值
+        $('#perPage').val('12');
+        // 加载游戏
+        loadGames();
+    });
+    
+    // 初始化折叠按钮状态
+    initCollapseButton();
+    
+    // Bootstrap collapse事件监听
+    $('#moreCategoriesCollapse').on('show.bs.collapse', function() {
+        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+        $button.find('.more-text').addClass('d-none');
+        $button.find('.less-text').removeClass('d-none');
+        $button.find('.more-icon').addClass('d-none');
+        $button.find('.less-icon').removeClass('d-none');
+    });
+    
+    $('#moreCategoriesCollapse').on('hide.bs.collapse', function() {
+        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+        $button.find('.more-text').removeClass('d-none');
+        $button.find('.less-text').addClass('d-none');
+        $button.find('.more-icon').removeClass('d-none');
+        $button.find('.less-icon').addClass('d-none');
+    });
+    
+    // AJAX分页链接点击事件
+    $(document).on('click', '.ajax-page-link', function(e) {
+        e.preventDefault();
+        if (isLoading) return;
+        
+        var page = $(this).data('page');
+        loadGames(page);
+    });
+    
+    // 加载游戏列表函数
+    function loadGames(page) {
+        if (isLoading) return;
+        isLoading = true;
+        
+        // 显示加载中动画
+        showLoading();
+        
+        // 获取筛选表单数据
+        var formData = $('#filterForm').serialize();
+        if (page) {
+            formData += '&page=' + page;
+        }
+        
+        // 发送AJAX请求
+        $.ajax({
+            url: '{% url "games:hot_games" %}',
+            type: 'GET',
+            data: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // 更新游戏列表
+                    $('#games-container').html(response.html);
+                    
+                    // 更新URL，但不刷新页面
+                    history.pushState({}, '', '{% url "games:hot_games" %}?' + formData);
+                    
+                    // 更新显示数量下拉菜单
+                    updatePerPageDropdown();
+                    
+                    // 重新初始化折叠按钮状态
+                    initCollapseButton();
+                    
+                    // 重新绑定Bootstrap collapse事件
+                    $('#moreCategoriesCollapse').off('show.bs.collapse hide.bs.collapse');
+                    $('#moreCategoriesCollapse').on('show.bs.collapse', function() {
+                        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+                        $button.find('.more-text').addClass('d-none');
+                        $button.find('.less-text').removeClass('d-none');
+                        $button.find('.more-icon').addClass('d-none');
+                        $button.find('.less-icon').removeClass('d-none');
+                    });
+                    
+                    $('#moreCategoriesCollapse').on('hide.bs.collapse', function() {
+                        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+                        $button.find('.more-text').removeClass('d-none');
+                        $button.find('.less-text').addClass('d-none');
+                        $button.find('.more-icon').removeClass('d-none');
+                        $button.find('.less-icon').addClass('d-none');
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('加载游戏数据出错:', error);
+                alert('加载游戏数据时出错，请稍后再试');
+            },
+            complete: function() {
+                // 隐藏加载中动画
+                hideLoading();
+                isLoading = false;
+            }
+        });
+    }
+    
+    // 显示加载中动画
+    function showLoading() {
+        if ($('#loading-overlay').length === 0) {
+            $('#games-container').append(
+                '<div id="loading-overlay" class="loading-overlay">' +
+                '<div class="spinner-border text-primary" role="status">' +
+                '<span class="visually-hidden">加载中...</span>' +
+                '</div>' +
+                '</div>'
+            );
+        }
+    }
+    
+    // 隐藏加载中动画
+    function hideLoading() {
+        $('#loading-overlay').remove();
+    }
+    
+    // 更新显示数量下拉菜单
+    function updatePerPageDropdown() {
+        var perPage = $('#perPage').val();
+        $('#dropdownMenuButton').text('显示: ' + perPage + '个游戏');
+    }
+    
+    // 初始化折叠按钮状态
+    function initCollapseButton() {
+        $('[data-bs-toggle="collapse"]').each(function() {
+            const $this = $(this);
+            const target = $this.attr('href') || $this.data('bs-target');
+            const isExpanded = $(target).hasClass('show');
+            
+            if (isExpanded) {
+                $this.find('.more-text').addClass('d-none');
+                $this.find('.less-text').removeClass('d-none');
+                $this.find('.more-icon').addClass('d-none');
+                $this.find('.less-icon').removeClass('d-none');
+            } else {
+                $this.find('.more-text').removeClass('d-none');
+                $this.find('.less-text').addClass('d-none');
+                $this.find('.more-icon').removeClass('d-none');
+                $this.find('.less-icon').addClass('d-none');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endwith %}

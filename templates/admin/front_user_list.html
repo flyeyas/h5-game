@@ -1,0 +1,730 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans '前台用户管理' %} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .filters {
+    margin-bottom: 1.5rem;
+  }
+  
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .status-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  .status-active {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+  }
+  
+  .status-inactive {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+  }
+  
+  .member-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  .member-active {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+  }
+  
+  .member-none {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+  }
+  
+  .member-expired {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+  }
+  
+  .stats-card {
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: none;
+    display: flex;
+    align-items: center;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+  }
+  
+  .stats-content {
+    flex-grow: 1;
+  }
+  
+  .stats-number {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    line-height: 1.1;
+  }
+  
+  .stats-label {
+    font-size: 0.925rem;
+    color: #6c757d;
+    font-weight: 500;
+  }
+  
+  .stats-icon {
+    margin-right: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 12px;
+    font-size: 1.75rem;
+  }
+  
+  .card-users-total {
+    background-color: rgba(13, 110, 253, 0.08);
+    border-left: 4px solid #0d6efd;
+  }
+  .card-users-total .stats-number {
+    color: #0d6efd;
+  }
+  .card-users-total .stats-icon {
+    background-color: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+  }
+  
+  .card-users-active {
+    background-color: rgba(25, 135, 84, 0.08);
+    border-left: 4px solid #198754;
+  }
+  .card-users-active .stats-number {
+    color: #198754;
+  }
+  .card-users-active .stats-icon {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+  }
+  
+  .card-users-inactive {
+    background-color: rgba(108, 117, 125, 0.08);
+    border-left: 4px solid #6c757d;
+  }
+  .card-users-inactive .stats-number {
+    color: #6c757d;
+  }
+  .card-users-inactive .stats-icon {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+  }
+  
+  .card-users-members {
+    background-color: rgba(255, 193, 7, 0.08);
+    border-left: 4px solid #ffc107;
+  }
+  .card-users-members .stats-number {
+    color: #ffc107;
+  }
+  .card-users-members .stats-icon {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+  }
+  
+  .card-expired-members {
+    background-color: rgba(220, 53, 69, 0.08);
+    border-left: 4px solid #dc3545;
+  }
+  .card-expired-members .stats-number {
+    color: #dc3545;
+  }
+  .card-expired-members .stats-icon {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+  }
+  
+  .search-form .form-control {
+    border-radius: 20px 0 0 20px;
+    max-width: 250px;
+  }
+  
+  .search-form .btn {
+    border-radius: 0 20px 20px 0;
+    height: 38px;
+  }
+  
+  .filter-controls .form-select,
+  .filter-controls .btn {
+    height: 38px;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+  
+  .filter-controls .form-select {
+    width: auto;
+    min-width: 120px;
+  }
+  
+  @media (max-width: 768px) {
+    .filter-controls {
+      flex-direction: column;
+      gap: 0.5rem !important;
+    }
+    
+    .filter-controls .form-select,
+    .filter-controls .btn {
+      width: 100%;
+    }
+    
+    .search-form {
+      margin-bottom: 0.5rem;
+    }
+  }
+  
+  .custom-container-sm {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .user-detail-modal .modal-dialog {
+    max-width: 700px;
+  }
+  
+  .user-detail-modal .user-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .user-detail-modal .user-avatar-lg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 1rem;
+  }
+  
+  .user-detail-modal .user-info h4 {
+    margin-bottom: 0.25rem;
+  }
+  
+  .user-detail-modal .user-meta {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+  
+  .user-detail-modal .detail-row {
+    display: flex;
+    margin-bottom: 1rem;
+  }
+  
+  .user-detail-modal .detail-label {
+    width: 140px;
+    font-weight: 500;
+    color: #495057;
+  }
+  
+  .user-detail-modal .detail-value {
+    flex: 1;
+  }
+  
+  .pagination-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="custom-container-sm">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">{% trans '前台用户管理' %}</h1>
+    <div>
+      <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-sm btn-outline-secondary me-2">
+        <i class="fas fa-tachometer-alt me-1"></i> {% trans '返回仪表盘' %}
+      </a>
+    </div>
+  </div>
+  
+  <!-- 统计卡片 -->
+  <div class="row mb-4">
+    <div class="col-md">
+      <div class="stats-card card-users-total">
+        <div class="stats-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stats-content">
+          <div class="stats-number">{{ total_users }}</div>
+          <div class="stats-label">{% trans '总用户数' %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md">
+      <div class="stats-card card-users-active">
+        <div class="stats-icon">
+          <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stats-content">
+          <div class="stats-number">{{ active_users }}</div>
+          <div class="stats-label">{% trans '活跃用户' %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md">
+      <div class="stats-card card-users-inactive">
+        <div class="stats-icon">
+          <i class="fas fa-user-slash"></i>
+        </div>
+        <div class="stats-content">
+          <div class="stats-number">{{ inactive_users }}</div>
+          <div class="stats-label">{% trans '禁用用户' %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md">
+      <div class="stats-card card-users-members">
+        <div class="stats-icon">
+          <i class="fas fa-crown"></i>
+        </div>
+        <div class="stats-content">
+          <div class="stats-number">{{ members }}</div>
+          <div class="stats-label">{% trans '活跃会员' %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md">
+      <div class="stats-card card-expired-members">
+        <div class="stats-icon">
+          <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="stats-content">
+          <div class="stats-number">{{ expired_members }}</div>
+          <div class="stats-label">{% trans '过期会员' %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 搜索和筛选 -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="get" action="{% url 'admin_panel:front_users_list' %}" class="row g-3">
+        <div class="col-lg-3 col-md-4">
+          <div class="input-group search-form">
+            <input type="text" name="q" class="form-control" placeholder="{% trans '搜索用户名或邮箱...' %}" value="{{ query }}">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-lg-9 col-md-8">
+          <div class="d-flex flex-wrap gap-2 filter-controls">
+            <select name="is_active" class="form-select">
+              <option value="" {% if is_active_filter == '' %}selected{% endif %}>{% trans '所有状态' %}</option>
+              <option value="true" {% if is_active_filter == 'true' %}selected{% endif %}>{% trans '活跃' %}</option>
+              <option value="false" {% if is_active_filter == 'false' %}selected{% endif %}>{% trans '禁用' %}</option>
+            </select>
+            <select name="is_member" class="form-select">
+              <option value="" {% if is_member_filter == '' %}selected{% endif %}>{% trans '所有会员类型' %}</option>
+              <option value="true" {% if is_member_filter == 'true' %}selected{% endif %}>{% trans '会员' %}</option>
+              <option value="false" {% if is_member_filter == 'false' %}selected{% endif %}>{% trans '非会员' %}</option>
+            </select>
+            <select name="member_type" class="form-select">
+              <option value="" {% if member_type_filter == '' %}selected{% endif %}>{% trans '所有会员套餐' %}</option>
+              {% for key, value in member_types %}
+              <option value="{{ key }}" {% if member_type_filter == key %}selected{% endif %}>{{ value }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-primary">
+              <i class="fas fa-filter me-1"></i>{% trans '筛选' %}
+            </button>
+            <a href="{% url 'admin_panel:front_users_list' %}" class="btn btn-outline-secondary">
+              <i class="fas fa-undo me-1"></i>{% trans '重置' %}
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 用户列表 -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th>ID</th>
+              <th>{% trans '头像' %}</th>
+              <th>{% trans '用户名' %}</th>
+              <th>{% trans '邮箱' %}</th>
+              <th>{% trans '状态' %}</th>
+              <th>{% trans '会员' %}</th>
+              <th>{% trans '注册时间' %}</th>
+              <th>{% trans '最后登录' %}</th>
+              <th>{% trans '操作' %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in user_list %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>
+                  <img src="{% if user.profile.avatar_url %}{{ user.profile.avatar_url }}{% elif user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=random&color=fff{% endif %}" alt="{% trans '用户头像' %}" class="user-avatar">
+                </td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <span class="status-tag {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                    {% if user.is_active %}
+                      {% trans '活跃' %}
+                    {% else %}
+                      {% trans '禁用' %}
+                    {% endif %}
+                  </span>
+                </td>
+                <td>
+                  {% if user.profile.is_member %}
+                    {% if user.profile.member_until and user.profile.member_until < now %}
+                      <span class="member-tag member-expired">{% trans '已过期' %}</span>
+                    {% else %}
+                      <span class="member-tag member-active">
+                        {% for key, value in member_types %}
+                          {% if key == user.profile.member_type %}{{ value }}{% endif %}
+                        {% endfor %}
+                      </span>
+                    {% endif %}
+                  {% else %}
+                    <span class="member-tag member-none">{% trans '非会员' %}</span>
+                  {% endif %}
+                </td>
+                <td>{{ user.date_joined|date:'Y-m-d H:i' }}</td>
+                <td>{{ user.last_login|date:'Y-m-d H:i'|default:'-' }}</td>
+                <td>
+                  <div class="d-flex">
+                    <button type="button" class="btn btn-sm btn-outline-info me-1 view-user" data-id="{{ user.id }}">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                          <form action="{% url 'admin_panel:toggle_front_user_status' user.id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">
+                              <i class="fas fa-{% if user.is_active %}lock{% else %}unlock{% endif %} me-2"></i>
+                              {% if user.is_active %}{% trans '禁用账号' %}{% else %}{% trans '启用账号' %}{% endif %}
+                            </button>
+                          </form>
+                        </li>
+                        <li>
+                          <a class="dropdown-item reset-password-btn" href="#" data-id="{{ user.id }}" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                            <i class="fas fa-key me-2"></i>{% trans '重置密码' %}
+                          </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <form action="{% url 'admin_panel:toggle_front_user_member' user.id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">
+                              <i class="fas fa-{% if user.profile.is_member %}user-minus{% else %}user-plus{% endif %} me-2"></i>
+                              {% if user.profile.is_member %}{% trans '取消会员' %}{% else %}{% trans '设为会员' %}{% endif %}
+                            </button>
+                          </form>
+                        </li>
+                        <li>
+                          <a class="dropdown-item extend-member-btn" href="#" data-id="{{ user.id }}" data-bs-toggle="modal" data-bs-target="#extendMemberModal">
+                            <i class="fas fa-calendar-plus me-2"></i>{% trans '延长会员' %}
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9" class="text-center py-4">{% trans '没有找到符合条件的用户' %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- 分页 -->
+    {% if pagination.items_count > 0 %}
+      <div class="card-footer d-flex align-items-center justify-content-between">
+        <div class="pagination-info">
+          {% trans '显示' %} {{ pagination.start_index }}-{{ pagination.end_index }} {% trans '条，共' %} {{ pagination.items_count }} {% trans '条数据' %}
+        </div>
+        <nav aria-label="Page navigation">
+          <ul class="pagination mb-0">
+            {% if pagination.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if is_member_filter %}&is_member={{ is_member_filter }}{% endif %}{% if member_type_filter %}&member_type={{ member_type_filter }}{% endif %}" aria-label="First">
+                  <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if is_member_filter %}&is_member={{ is_member_filter }}{% endif %}{% if member_type_filter %}&member_type={{ member_type_filter }}{% endif %}" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+            {% endif %}
+            
+            {% for page_num in pagination.page_range %}
+              <li class="page-item {% if page_num == pagination.current_page %}active{% endif %}">
+                <a class="page-link" href="?page={{ page_num }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if is_member_filter %}&is_member={{ is_member_filter }}{% endif %}{% if member_type_filter %}&member_type={{ member_type_filter }}{% endif %}">
+                  {{ page_num }}
+                </a>
+              </li>
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if is_member_filter %}&is_member={{ is_member_filter }}{% endif %}{% if member_type_filter %}&member_type={{ member_type_filter }}{% endif %}" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.total_pages }}{% if query %}&q={{ query }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}{% if is_member_filter %}&is_member={{ is_member_filter }}{% endif %}{% if member_type_filter %}&member_type={{ member_type_filter }}{% endif %}" aria-label="Last">
+                  <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- 用户详情模态框 -->
+<div class="modal fade user-detail-modal" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userDetailModalLabel">{% trans '用户详情' %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="user-header">
+          <img src="" alt="{% trans '用户头像' %}" class="user-avatar-lg" id="userDetailAvatar">
+          <div class="user-info">
+            <h4 id="userDetailUsername"></h4>
+            <div class="user-meta" id="userDetailMeta"></div>
+          </div>
+        </div>
+        <div class="user-detail-content">
+          <div class="detail-row">
+            <div class="detail-label">{% trans '电子邮箱' %}</div>
+            <div class="detail-value" id="userDetailEmail"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '账号状态' %}</div>
+            <div class="detail-value" id="userDetailStatus"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '会员类型' %}</div>
+            <div class="detail-value" id="userDetailMemberType"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '会员到期时间' %}</div>
+            <div class="detail-value" id="userDetailMemberUntil"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '注册时间' %}</div>
+            <div class="detail-value" id="userDetailJoined"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '最后登录' %}</div>
+            <div class="detail-value" id="userDetailLastLogin"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '游戏收藏数' %}</div>
+            <div class="detail-value" id="userDetailFavorites"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '游戏历史' %}</div>
+            <div class="detail-value" id="userDetailHistory"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '评论数' %}</div>
+            <div class="detail-value" id="userDetailComments"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '用户角色' %}</div>
+            <div class="detail-value" id="userDetailRole"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '邮箱验证状态' %}</div>
+            <div class="detail-value" id="userDetailEmailVerified"></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">{% trans '个人简介' %}</div>
+            <div class="detail-value" id="userDetailBio"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '关闭' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 重置密码模态框 -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="resetPasswordForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="resetPasswordModalLabel">{% trans '重置用户密码' %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="newPassword" class="form-label">{% trans '新密码' %}</label>
+            <input type="text" class="form-control" id="newPassword" name="new_password" required>
+            <div class="form-text">{% trans '密码将被明文传输给用户，请告知用户安全妥善保管。' %}</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans '重置密码' %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 延长会员期限模态框 -->
+<div class="modal fade" id="extendMemberModal" tabindex="-1" aria-labelledby="extendMemberModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="extendMemberForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="extendMemberModalLabel">{% trans '延长会员期限' %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="extendDays" class="form-label">{% trans '延长天数' %}</label>
+            <input type="number" class="form-control" id="extendDays" name="days" min="1" value="30" required>
+            <div class="form-text">{% trans '如果用户不是会员或会员已过期，会从当前日期开始计算。' %}</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans '延长会员' %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extrajs %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 查看用户详情
+    const viewButtons = document.querySelectorAll('.view-user');
+    viewButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const userId = this.getAttribute('data-id');
+        fetch(`/admin/front-users/get/${userId}/`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const user = data.user;
+              
+              // 填充用户信息
+              document.getElementById('userDetailUsername').textContent = user.username;
+              document.getElementById('userDetailMeta').textContent = `ID: ${user.id} · ${user.member_status}会员`;
+              document.getElementById('userDetailEmail').textContent = user.email;
+              document.getElementById('userDetailStatus').textContent = user.is_active ? '活跃' : '禁用';
+              document.getElementById('userDetailMemberType').textContent = user.member_type;
+              document.getElementById('userDetailMemberUntil').textContent = user.member_until;
+              document.getElementById('userDetailJoined').textContent = user.date_joined;
+              document.getElementById('userDetailLastLogin').textContent = user.last_login;
+              document.getElementById('userDetailFavorites').textContent = user.game_favorites || 0;
+              document.getElementById('userDetailHistory').textContent = user.game_history || 0;
+              document.getElementById('userDetailComments').textContent = user.game_comments || 0;
+              document.getElementById('userDetailRole').textContent = user.role;
+              document.getElementById('userDetailEmailVerified').textContent = user.email_verified ? '已验证' : '未验证';
+              document.getElementById('userDetailBio').textContent = user.bio || '无个人简介';
+              
+              // 设置头像
+              const avatarElement = document.getElementById('userDetailAvatar');
+              if (user.avatar_url) {
+                avatarElement.src = user.avatar_url;
+              } else {
+                avatarElement.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random&color=fff`;
+              }
+              
+              // 显示模态框
+              const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+              modal.show();
+            }
+          })
+          .catch(error => {
+            console.error('获取用户详情失败:', error);
+            alert('获取用户详情失败');
+          });
+      });
+    });
+    
+    // 设置重置密码表单
+    const resetPasswordBtns = document.querySelectorAll('.reset-password-btn');
+    resetPasswordBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const userId = this.getAttribute('data-id');
+        const form = document.getElementById('resetPasswordForm');
+        form.action = `/admin/front-users/reset-password/${userId}/`;
+        
+        // 生成随机密码
+        const randomPassword = Math.random().toString(36).slice(-8);
+        document.getElementById('newPassword').value = randomPassword;
+      });
+    });
+    
+    // 设置延长会员表单
+    const extendMemberBtns = document.querySelectorAll('.extend-member-btn');
+    extendMemberBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const userId = this.getAttribute('data-id');
+        const form = document.getElementById('extendMemberForm');
+        form.action = `/admin/front-users/extend-member/${userId}/`;
+      });
+    });
+  });
+</script>
+{% endblock %} 

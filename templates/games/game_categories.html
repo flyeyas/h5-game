@@ -1,0 +1,670 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}游戏分类 - GameHub{% endblock %}
+
+{% block meta_description %}浏览各种类型的精彩游戏，找到你喜欢的游戏类型。{% endblock %}
+
+{% block meta_keywords %}游戏分类,HTML5游戏,在线游戏,免费游戏,手机游戏,小游戏分类{% endblock %}
+
+{% block hide_main_container %}true{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 全局样式覆盖 */
+    main {
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+    
+    main > .container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    /* 游戏分类页面样式 */
+    .categories-header {
+        background: linear-gradient(90deg, #5829BB 0%, #3E85F3 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+    }
+    
+    /* 确保头部容器撑满浏览器宽度 */
+    .categories-header-wrapper {
+        width: 100%;
+        position: relative;
+        overflow: visible;
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* 确保头部内容有合适的边距 */
+    .categories-header .container-fluid {
+        max-width: 1320px;
+        margin: 0 auto;
+    }
+    
+    /* 使头部文案向右移动 */
+    .categories-header-content {
+        padding-left: 30px; /* 增加左侧内边距，使文案向右移动 */
+    }
+    
+    /* 为较窄屏幕优化标题显示 */
+    @media (max-width: 576px) {
+        .categories-header h1 {
+            font-size: 1.8rem;
+        }
+        .categories-header .lead {
+            font-size: 1rem;
+        }
+    }
+    
+    /* 会员广告条容器样式 */
+    .ad-banner-container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+        background-color: transparent !important;
+        border-bottom: none !important;
+    }
+    
+    /* 主内容区域样式 */
+    .content-container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    .category-filters {
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 10px 0;
+    }
+    
+    .category-scroll {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-bottom: 5px;
+    }
+    
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .game-card .card-body {
+        padding: 15px;
+    }
+    
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .game-card .rating {
+        color: #ffc107;
+    }
+    
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    
+    .filter-sidebar {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .filter-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    
+    .filter-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-link {
+        color: #6a11cb;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    
+    /* 分类标签导航 */
+    .category-pills {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+        justify-content: center;
+    }
+    
+    .category-pill {
+        display: inline-block;
+        padding: 8px 16px;
+        margin: 5px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        background-color: #f1f1f1;
+        color: #333;
+        border: 1px solid #dee2e6;
+    }
+    
+    .category-pill:hover, .category-pill.active {
+        background-color: #5829BB;
+        color: white;
+        border-color: #5829BB;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .category-pill .badge {
+        font-size: 11px;
+        font-weight: normal;
+        padding: 3px 6px;
+        border-radius: 10px;
+        background-color: #5829BB;
+        color: white;
+    }
+    
+    .category-pill:hover .badge, .category-pill.active .badge {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    
+    .category-pill-all.active {
+        background-color: #5829BB;
+        color: white;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 767.98px) {
+        .categories-header {
+            padding: 30px 0;
+        }
+        .game-card img {
+            height: 150px;
+        }
+        .filter-sidebar {
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% with hide_main_container=True %}
+
+{% block fullwidth_container_class %}w-100 p-0 m-0{% endblock %}
+
+{% block content %}
+<!-- 游戏分类头部 -->
+<div class="categories-header-wrapper">
+    <section class="categories-header">
+        <div class="container-fluid px-4">
+            <div class="row">
+                <div class="col-12 categories-header-content">
+                    <h1>游戏分类</h1>
+                    <p class="lead">浏览各种类型的精彩游戏，找到你喜欢的游戏类型</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 会员广告条 -->
+{% if show_member_content and not user.is_authenticated or show_member_content and not user.is_member %}
+    <div class="content-container">
+        {% include 'games/includes/premium_banner.html' %}
+    </div>
+{% endif %}
+
+<div class="content-container mt-4">
+    <!-- 分类过滤 - 水平滚动菜单 -->
+    <div class="category-filters mb-4">
+        <div class="category-scroll">
+            <a href="javascript:void(0)" data-url="{% url 'games:game_categories' %}" class="category-pill {% if not current_category %}active{% endif %}" data-category="">
+                全部 <span class="badge rounded-pill ms-1">{{ game_count }}</span>
+            </a>
+            {% for category in all_categories %}
+            <a href="javascript:void(0)" data-url="{% url 'games:category_detail' category.slug %}" class="category-pill {% if current_category and current_category.id == category.id %}active{% endif %}" data-category="{{ category.slug }}">
+                {{ category.name }} <span class="badge rounded-pill ms-1">{{ category.game_count }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- 左侧筛选栏 -->
+        <div class="col-md-3">
+            <div class="filter-sidebar">
+                <h5 class="filter-title">筛选条件</h5>
+                
+                <form id="filter-form" method="get" action="{% url 'games:game_categories' %}">
+                  {% if current_category %}
+                    <input type="hidden" name="category" value="{{ current_category.slug }}">
+                  {% endif %}
+                  
+                  <div class="filter-group">
+                    <h6>评分</h6>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="rating" value="5" id="rating5" {% if '5' in request.GET.rating|default:'' %}checked{% endif %}>
+                      <label class="form-check-label" for="rating5">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        (5星)
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="rating" value="4" id="rating4" {% if '4' in request.GET.rating|default:'' %}checked{% endif %}>
+                      <label class="form-check-label" for="rating4">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        (4星)
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="rating" value="3" id="rating3" {% if '3' in request.GET.rating|default:'' %}checked{% endif %}>
+                      <label class="form-check-label" for="rating3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        (3星)
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="rating" value="2" id="rating2" {% if '2' in request.GET.rating|default:'' %}checked{% endif %}>
+                      <label class="form-check-label" for="rating2">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        (2星)
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="rating" value="1" id="rating1" {% if '1' in request.GET.rating|default:'' %}checked{% endif %}>
+                      <label class="form-check-label" for="rating1">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        (1星)
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div class="filter-group">
+                    <h6>上线时间</h6>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="time" value="all" id="time1" {% if not request.GET.time or request.GET.time == 'all' %}checked{% endif %}>
+                      <label class="form-check-label" for="time1">
+                        全部时间
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="time" value="today" id="time2" {% if request.GET.time == 'today' %}checked{% endif %}>
+                      <label class="form-check-label" for="time2">
+                        今天
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="time" value="week" id="time3" {% if request.GET.time == 'week' %}checked{% endif %}>
+                      <label class="form-check-label" for="time3">
+                        本周
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="time" value="month" id="time4" {% if request.GET.time == 'month' %}checked{% endif %}>
+                      <label class="form-check-label" for="time4">
+                        本月
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div class="filter-group">
+                    <h6>排序方式</h6>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="sort" value="popular" id="sort1" {% if not request.GET.sort or request.GET.sort == 'popular' %}checked{% endif %}>
+                      <label class="form-check-label" for="sort1">
+                        最受欢迎
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="sort" value="newest" id="sort2" {% if request.GET.sort == 'newest' %}checked{% endif %}>
+                      <label class="form-check-label" for="sort2">
+                        最新上线
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="sort" value="rating" id="sort3" {% if request.GET.sort == 'rating' %}checked{% endif %}>
+                      <label class="form-check-label" for="sort3">
+                        评分最高
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="sort" value="name" id="sort4" {% if request.GET.sort == 'name' %}checked{% endif %}>
+                      <label class="form-check-label" for="sort4">
+                        名称 A-Z
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <button type="button" id="reset-filter-btn" class="btn btn-outline-secondary w-100 mt-2">重置筛选</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 右侧游戏列表 -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>游戏列表</h4>
+                <div class="d-flex gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="perPageDropdownBtn" data-bs-toggle="dropdown">
+                            显示: {{ per_page }}个游戏
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="perPageDropdownBtn">
+                            <li><a class="dropdown-item per-page-option" href="#" data-per-page="12">显示: 12个游戏</a></li>
+                            <li><a class="dropdown-item per-page-option" href="#" data-per-page="24">显示: 24个游戏</a></li>
+                            <li><a class="dropdown-item per-page-option" href="#" data-per-page="36">显示: 36个游戏</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row" id="games-container">
+                {% include 'games/includes/game_list_fragment.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% endwith %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    console.log('页面准备就绪，开始初始化');
+
+    // 游戏卡片鼠标悬停效果
+    $('.game-card').hover(
+        function() {
+            $(this).addClass('shadow');
+        },
+        function() {
+            $(this).removeClass('shadow');
+        }
+    );
+    
+    // 为筛选表单中的所有输入元素添加事件监听
+    $('#filter-form input[type="checkbox"], #filter-form input[type="radio"]').change(function() {
+        console.log('筛选表单输入变化，加载数据');
+        loadGamesAsync();
+    });
+    
+    // 绑定分类标签点击事件
+    $('.category-pill').click(function(e) {
+        console.log('分类标签点击');
+        e.preventDefault();
+        
+        // 移除所有标签的激活状态
+        $('.category-pill').removeClass('active');
+        
+        // 添加当前标签的激活状态
+        $(this).addClass('active');
+        
+        // 获取分类slug
+        const categorySlug = $(this).data('category');
+        console.log('分类Slug:', categorySlug);
+        
+        // 不再更新浏览器地址栏URL
+        // const originalUrl = $(this).attr('href');
+        // window.history.pushState({}, '', originalUrl);
+        
+        // 异步加载该分类的游戏
+        loadGamesAsync(null, null, null, categorySlug);
+    });
+    
+    // 绑定每页显示数量点击事件
+    $('.per-page-option').click(function(e) {
+        console.log('每页显示数量点击:', $(this).data('per-page'));
+        e.preventDefault();
+        const perPage = $(this).data('per-page');
+        const activeCategory = $('.category-pill.active').data('category');
+        // 获取当前选中的排序
+        const currentSort = $('input[name="sort"]:checked').val() || 'popular';
+        loadGamesAsync(null, perPage, currentSort, activeCategory);
+    });
+    
+    // 异步加载游戏数据
+    function loadGamesAsync(page, perPage, sort, categorySlug) {
+        console.log('开始异步加载游戏数据:', { page, perPage, sort, categorySlug });
+        
+        // 显示加载指示器
+        const loadingHtml = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span></div></div>';
+        $('#games-container').html(loadingHtml);
+        
+        try {
+            // 构建查询参数
+            const params = new URLSearchParams();
+            
+            // 如果有页码参数，添加到请求中
+            if (page) {
+                params.append('page', page);
+            }
+            
+            // 如果有每页显示数量参数，添加到请求中
+            if (perPage) {
+                params.append('per_page', perPage);
+            }
+            
+            // 排序参数处理 - 确保获取正确的排序参数
+            // 如果传入了sort参数，优先使用传入的值
+            // 否则从表单中获取当前选中的排序选项
+            const sortValue = sort || $('input[name="sort"]:checked').val() || 'popular';
+            console.log('当前选择的排序方式:', sortValue);
+            params.append('sort', sortValue);
+            
+            // 如果有分类参数，添加到请求中
+            if (categorySlug) {
+                params.append('category', categorySlug);
+            } else {
+                // 获取当前激活的分类（如果有）
+                const activeCategory = $('.category-pill.active').data('category');
+                if (activeCategory) {
+                    params.append('category', activeCategory);
+                }
+            }
+            
+            // 尝试获取筛选表单数据
+            const filterForm = document.getElementById('filter-form');
+            if (filterForm) {
+                console.log('筛选表单元素存在，获取数据');
+                const formData = new FormData(filterForm);
+                for (const [key, value] of formData.entries()) {
+                    // 避免重复添加参数 - 分类、排序、页码和每页数量都已单独处理
+                    if (key !== 'category' && key !== 'sort' && key !== 'page' && key !== 'per_page') {
+                        params.append(key, value);
+                    }
+                }
+            } else {
+                console.warn('筛选表单元素不存在');
+            }
+            
+            console.log('请求参数:', params.toString());
+            
+            // 使用更简单的$.get方法进行请求
+            $.get({
+                url: '{% url "games:game_categories" %}?' + params.toString(),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    console.log('请求成功，响应数据:', response);
+                    if (response.success) {
+                        // 更新游戏列表
+                        $('#games-container').html(response.html);
+                        
+                        // 不要在AJAX请求后更新URL，避免与点击分类标签时的URL更新冲突
+                        // 而是通过参数传递保持请求状态
+                        
+                        // 更新每页显示数量下拉菜单
+                        if (perPage) {
+                            $('#perPageDropdownBtn').text('显示: ' + perPage + '个游戏');
+                        }
+                        
+                        // 重新绑定卡片悬停效果
+                        $('.game-card').hover(
+                            function() {
+                                $(this).addClass('shadow');
+                            },
+                            function() {
+                                $(this).removeClass('shadow');
+                            }
+                        );
+                        
+                        // 绑定分页链接点击事件
+                        $('.ajax-page-link').on('click', function(e) {
+                            e.preventDefault();
+                            const clickedPage = $(this).data('page');
+                            
+                            // 获取当前分类、排序和每页数量，保持状态
+                            const currentCategory = $('.category-pill.active').data('category');
+                            const currentSort = $('input[name="sort"]:checked').val() || 'popular';
+                            const currentPerPage = perPage || $('#perPageDropdownBtn').text().match(/\d+/)[0];
+                            
+                            // 异步加载新页面数据，保持当前筛选状态
+                            loadGamesAsync(clickedPage, currentPerPage, currentSort, currentCategory);
+                            
+                            // 滚动到页面顶部
+                            $('html, body').animate({ scrollTop: $('#games-container').offset().top - 100 }, 'slow');
+                        });
+                    } else {
+                        console.error('加载游戏数据失败');
+                        $('#games-container').html('<div class="col-12"><div class="alert alert-danger">加载游戏数据失败，请刷新页面重试</div></div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX请求失败:', { xhr, status, error });
+                    $('#games-container').html('<div class="col-12"><div class="alert alert-danger">加载游戏数据失败，请刷新页面重试</div></div>');
+                }
+            });
+        } catch (error) {
+            console.error('loadGamesAsync函数执行出错:', error);
+            $('#games-container').html('<div class="col-12"><div class="alert alert-danger">加载游戏数据失败，请刷新页面重试</div></div>');
+        }
+    }
+    
+    // 初始绑定分页链接点击事件
+    $(document).on('click', '.ajax-page-link', function(e) {
+        console.log('分页链接点击:', $(this).data('page'));
+        e.preventDefault();
+        const page = $(this).data('page');
+        const activeCategory = $('.category-pill.active').data('category');
+        const currentSort = $('input[name="sort"]:checked').val() || 'popular';
+        loadGamesAsync(page, null, currentSort, activeCategory);
+        // 滚动到页面顶部
+        $('html, body').animate({ scrollTop: $('#games-container').offset().top - 100 }, 'slow');
+    });
+    
+    // 添加一个初始化按钮，用于手动触发数据加载
+    $('#games-container').prepend('<button id="init-load-btn" class="btn btn-primary mb-3">点击加载游戏数据</button>');
+    $('#init-load-btn').click(function() {
+        console.log('手动加载按钮点击');
+        const activeCategory = $('.category-pill.active').data('category');
+        const currentSort = $('input[name="sort"]:checked').val() || 'popular';
+        loadGamesAsync(null, null, currentSort, activeCategory);
+        $(this).remove();
+    });
+    
+    // 页面加载完成后自动加载一次数据
+    setTimeout(function() {
+        console.log('自动加载游戏数据');
+        const activeCategory = $('.category-pill.active').data('category');
+        const currentSort = $('input[name="sort"]:checked').val() || 'popular';
+        loadGamesAsync(null, null, currentSort, activeCategory);
+        $('#init-load-btn').remove();
+    }, 1000);
+    
+    // 绑定重置筛选按钮点击事件
+    $('#reset-filter-btn').click(function(e) {
+        console.log('重置筛选按钮点击');
+        e.preventDefault();
+        
+        // 重置所有筛选表单项
+        $('#filter-form')[0].reset();
+        
+        // 设置默认排序为"最受欢迎"
+        $('input[name="sort"][value="popular"]').prop('checked', true);
+        
+        // 移除所有分类标签的激活状态，并激活"全部"按钮
+        $('.category-pill').removeClass('active');
+        $('.category-pill').first().addClass('active');
+        
+        // 重新加载游戏列表
+        loadGamesAsync(null, null, 'popular', '');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,570 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}最新上线游戏 - GameHub{% endblock %}
+
+{% block meta_description %}探索GameHub平台上最新上线的精彩HTML5游戏，享受最新鲜的游戏体验{% endblock %}
+
+{% block meta_keywords %}最新游戏,HTML5游戏,免费游戏,新上线游戏{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 全局样式覆盖 */
+    main {
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+    
+    main > .container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    /* 最新游戏页面样式 */
+    .new-header {
+        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+    }
+    
+    /* 确保头部容器撑满浏览器宽度 */
+    .new-header-wrapper {
+        width: 100%;
+        position: relative;
+        overflow: visible;
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* 确保头部内容有合适的边距 */
+    .new-header .container-fluid {
+        max-width: 1320px;
+        margin: 0 auto;
+    }
+    
+    /* 使头部文案向右移动 */
+    .new-header-content {
+        padding-left: 30px; /* 增加左侧内边距，使文案向右移动 */
+    }
+    
+    /* 为较窄屏幕优化标题显示 */
+    @media (max-width: 576px) {
+        .new-header h1 {
+            font-size: 1.8rem;
+        }
+        .new-header .lead {
+            font-size: 1rem;
+        }
+    }
+    
+    /* 会员广告条容器样式 */
+    .ad-banner-container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+        background-color: transparent !important;
+        border-bottom: none !important;
+    }
+    
+    /* 主内容区域样式 */
+    .content-container {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .game-card .card-body {
+        padding: 15px;
+    }
+    
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .game-card .rating {
+        color: #ffc107;
+    }
+    
+    .game-card .rating i {
+        color: #ffc107;
+        font-size: 0.85rem;
+        margin-right: 1px;
+    }
+    
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    
+    .filter-sidebar {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .filter-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    
+    .filter-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-link {
+        color: #6a11cb;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    
+    .new-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 767.98px) {
+        .new-header {
+            padding: 30px 0;
+        }
+        .game-card img {
+            height: 150px;
+        }
+        .filter-sidebar {
+            margin-bottom: 20px;
+        }
+    }
+    
+    /* 加载中动画 */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        border-radius: 10px;
+    }
+    
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+</style>
+{% endblock %}
+
+{# 设置hide_main_container为true #}
+{{ "{% with hide_main_container=True %}" }}
+
+{% block fullwidth_container_class %}w-100 p-0 m-0{% endblock %}
+
+{% block content %}
+<!-- 最新上线游戏头部 -->
+<div class="new-header-wrapper">
+    <section class="new-header">
+        <div class="container-fluid px-4">
+            <div class="row">
+                <div class="col-12 new-header-content">
+                    <h1>最新上线</h1>
+                    <p class="lead">探索我们平台上最新添加的游戏，抢先体验最新的游戏乐趣</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 会员广告条 -->
+{% if show_member_content and not user.is_authenticated or show_member_content and not user.is_member %}
+    <div class="content-container">
+        {% include 'games/includes/premium_banner.html' %}
+    </div>
+{% endif %}
+
+<div class="content-container mt-4">
+    <div class="row">
+        <!-- 左侧筛选栏 -->
+        <div class="col-md-3">
+            <div class="filter-sidebar sticky-md-top" style="top: 20px; z-index: 999;">
+                <h5 class="filter-title">筛选选项</h5>
+                
+                <form id="filterForm" action="{% url 'games:new_games' %}" method="get">
+                    <div class="filter-group">
+                        <h6>排序方式</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sortNewest" value="newest" {% if current_sort == 'newest' %}checked{% endif %}>
+                            <label class="form-check-label" for="sortNewest">最新上线</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sortRating" value="rating" {% if current_sort == 'rating' %}checked{% endif %}>
+                            <label class="form-check-label" for="sortRating">评分最高</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sortPlays" value="plays" {% if current_sort == 'plays' %}checked{% endif %}>
+                            <label class="form-check-label" for="sortPlays">游玩次数最多</label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h6>上线时间</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="time" id="timeToday" value="today" {% if current_time_filter == 'today' %}checked{% endif %}>
+                            <label class="form-check-label" for="timeToday">今天</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="time" id="timeWeek" value="week" {% if current_time_filter == 'week' %}checked{% endif %}>
+                            <label class="form-check-label" for="timeWeek">本周</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="time" id="timeMonth" value="month" {% if current_time_filter == 'month' %}checked{% endif %}>
+                            <label class="form-check-label" for="timeMonth">本月</label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h6>游戏分类</h6>
+                        {% for category in categories|slice:":5" %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="type" id="type{{ category.slug }}" value="{{ category.slug }}" {% if category.slug in current_types %}checked{% endif %}>
+                            <label class="form-check-label" for="type{{ category.slug }}">{{ category.name }}</label>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- 折叠的更多分类 -->
+                        {% if categories|length > 5 %}
+                        <div class="collapse" id="moreCategoriesCollapse">
+                            {% for category in categories|slice:"5:" %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="type" id="type{{ category.slug }}" value="{{ category.slug }}" {% if category.slug in current_types %}checked{% endif %}>
+                                <label class="form-check-label" for="type{{ category.slug }}">{{ category.name }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- 展开/折叠按钮 -->
+                        <a class="mt-2 d-block small text-secondary" style="color: #6c757d !important;" data-bs-toggle="collapse" href="#moreCategoriesCollapse" role="button" aria-expanded="false" aria-controls="moreCategoriesCollapse">
+                            <span class="more-text">显示更多</span>
+                            <span class="less-text d-none">收起</span>
+                            <i class="fas fa-chevron-down more-icon"></i>
+                            <i class="fas fa-chevron-up less-icon d-none"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <input type="hidden" name="per_page" id="perPage" value="{{ per_page|default:'12' }}">
+                    
+                    <button type="reset" id="resetFilters" class="btn btn-outline-secondary w-100 mt-3">重置筛选</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 右侧游戏列表 -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>游戏列表</h4>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                        显示: {{ per_page }}个游戏
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item per-page-option" href="#" data-per-page="12">显示: 12个游戏</a></li>
+                        <li><a class="dropdown-item per-page-option" href="#" data-per-page="24">显示: 24个游戏</a></li>
+                        <li><a class="dropdown-item per-page-option" href="#" data-per-page="36">显示: 36个游戏</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="row position-relative" id="games-container">
+                {% include 'games/includes/game_list_fragment.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{{ "{% endwith %}" }}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 游戏卡片鼠标悬停效果
+    $('.game-card').hover(
+        function() {
+            $(this).addClass('shadow');
+        },
+        function() {
+            $(this).removeClass('shadow');
+        }
+    );
+    
+    // 初始化折叠按钮状态
+    initCollapseButton();
+    
+    // Bootstrap collapse事件监听
+    $('#moreCategoriesCollapse').on('show.bs.collapse', function() {
+        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+        $button.find('.more-text').addClass('d-none');
+        $button.find('.less-text').removeClass('d-none');
+        $button.find('.more-icon').addClass('d-none');
+        $button.find('.less-icon').removeClass('d-none');
+    });
+    
+    $('#moreCategoriesCollapse').on('hide.bs.collapse', function() {
+        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+        $button.find('.more-text').removeClass('d-none');
+        $button.find('.less-text').addClass('d-none');
+        $button.find('.more-icon').removeClass('d-none');
+        $button.find('.less-icon').addClass('d-none');
+    });
+    
+    // 处理时间筛选单选逻辑
+    const timeCheckboxes = document.querySelectorAll('input[name="time"]');
+    timeCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                timeCheckboxes.forEach(otherCheckbox => {
+                    if (otherCheckbox !== this) {
+                        otherCheckbox.checked = false;
+                    }
+                });
+                // 异步加载数据，不提交表单
+                loadGamesAsync();
+            }
+        });
+    });
+    
+    // 为所有筛选项添加异步加载功能
+    const filterInputs = document.querySelectorAll('#filterForm input[type="radio"], #filterForm input[type="checkbox"]');
+    filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            loadGamesAsync();
+        });
+    });
+    
+    // 绑定每页游戏数量点击事件
+    $('.per-page-option').on('click', function(e) {
+        e.preventDefault();
+        const perPage = $(this).data('per-page');
+        loadGamesAsync(null, perPage);
+    });
+    
+    // 重置筛选按钮点击事件
+    $('#resetFilters').click(function(e) {
+        e.preventDefault();
+        // 取消选中所有复选框
+        $('#filterForm input[type="checkbox"]').prop('checked', false);
+        // 恢复排序选项默认值
+        $('#sortNewest').prop('checked', true);
+        // 恢复每页显示数量默认值
+        $('#perPage').val('12');
+        // 加载游戏
+        loadGamesAsync();
+    });
+    
+    // 异步加载游戏数据
+    function loadGamesAsync(page, perPage) {
+        // 显示加载指示器
+        showLoading();
+        
+        // 获取筛选表单数据
+        const formData = new FormData(document.getElementById('filterForm'));
+        const params = new URLSearchParams(formData);
+        
+        // 如果有页码参数，添加到请求中
+        if (page) {
+            params.append('page', page);
+        }
+        
+        // 如果有每页显示数量参数，添加到请求中
+        if (perPage) {
+            params.append('per_page', perPage);
+        }
+        
+        // 发送AJAX请求
+        $.ajax({
+            url: '{% url "games:new_games" %}',
+            type: 'GET',
+            data: params.toString(),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // 更新游戏列表
+                    $('#games-container').html(response.html);
+                    
+                    // 更新URL，不刷新页面
+                    window.history.pushState({}, '', '{% url "games:new_games" %}?' + params.toString());
+                    
+                    // 更新下拉菜单显示的数量
+                    if (perPage) {
+                        $('#dropdownMenuButton').text('显示: ' + perPage + '个游戏');
+                    }
+                    
+                    // 重新绑定卡片悬停效果
+                    $('.game-card').hover(
+                        function() {
+                            $(this).addClass('shadow');
+                        },
+                        function() {
+                            $(this).removeClass('shadow');
+                        }
+                    );
+                    
+                    // 重新初始化折叠按钮状态
+                    initCollapseButton();
+                    
+                    // 重新绑定Bootstrap collapse事件
+                    $('#moreCategoriesCollapse').off('show.bs.collapse hide.bs.collapse');
+                    $('#moreCategoriesCollapse').on('show.bs.collapse', function() {
+                        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+                        $button.find('.more-text').addClass('d-none');
+                        $button.find('.less-text').removeClass('d-none');
+                        $button.find('.more-icon').addClass('d-none');
+                        $button.find('.less-icon').removeClass('d-none');
+                    });
+                    
+                    $('#moreCategoriesCollapse').on('hide.bs.collapse', function() {
+                        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+                        $button.find('.more-text').removeClass('d-none');
+                        $button.find('.less-text').addClass('d-none');
+                        $button.find('.more-icon').removeClass('d-none');
+                        $button.find('.less-icon').addClass('d-none');
+                    });
+                    
+                    // 绑定分页链接点击事件
+                    $('.ajax-page-link').on('click', function(e) {
+                        e.preventDefault();
+                        const page = $(this).data('page');
+                        loadGamesAsync(page, perPage);
+                        // 滚动到页面顶部
+                        $('html, body').animate({ scrollTop: $('#games-container').offset().top - 100 }, 'slow');
+                    });
+                } else {
+                    console.error('加载游戏数据失败');
+                    $('#games-container').html('<div class="col-12"><div class="alert alert-danger">加载游戏数据失败，请刷新页面重试</div></div>');
+                }
+            },
+            error: function() {
+                console.error('加载游戏数据请求失败');
+                $('#games-container').html('<div class="col-12"><div class="alert alert-danger">加载游戏数据失败，请刷新页面重试</div></div>');
+            },
+            complete: function() {
+                // 隐藏加载指示器
+                hideLoading();
+            }
+        });
+    }
+    
+    // 显示加载中动画
+    function showLoading() {
+        if ($('#loading-overlay').length === 0) {
+            $('#games-container').append(
+                '<div id="loading-overlay" class="loading-overlay">' +
+                '<div class="spinner-border text-primary" role="status">' +
+                '<span class="visually-hidden">加载中...</span>' +
+                '</div>' +
+                '</div>'
+            );
+        }
+    }
+    
+    // 隐藏加载中动画
+    function hideLoading() {
+        $('#loading-overlay').remove();
+    }
+    
+    // 初始绑定分页链接点击事件
+    $(document).on('click', '.ajax-page-link', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        loadGamesAsync(page);
+        // 滚动到页面顶部
+        $('html, body').animate({ scrollTop: $('#games-container').offset().top - 100 }, 'slow');
+    });
+    
+    // 初始化折叠按钮状态
+    function initCollapseButton() {
+        $('[data-bs-toggle="collapse"]').each(function() {
+            const $this = $(this);
+            const target = $this.attr('href') || $this.data('bs-target');
+            const isExpanded = $(target).hasClass('show');
+            
+            if (isExpanded) {
+                $this.find('.more-text').addClass('d-none');
+                $this.find('.less-text').removeClass('d-none');
+                $this.find('.more-icon').addClass('d-none');
+                $this.find('.less-icon').removeClass('d-none');
+            } else {
+                $this.find('.more-text').removeClass('d-none');
+                $this.find('.less-text').addClass('d-none');
+                $this.find('.more-icon').removeClass('d-none');
+                $this.find('.less-icon').addClass('d-none');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

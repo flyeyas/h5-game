@@ -1,0 +1,386 @@
+{% load i18n %}
+{% load csrf_tags %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'zh-hans' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_title }} | {{ site_header }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .card-body {
+            padding: 2rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+        }
+        
+        .input-group-text {
+            background-color: #f8f9fa;
+        }
+        
+        .btn-primary {
+            background-color: #343a40;
+            border-color: #343a40;
+            width: 100%;
+            padding: 0.6rem;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background-color: #23272b;
+            border-color: #23272b;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+        
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+            color: #6c757d;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            color: #343a40;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .logo {
+            max-height: 40px;
+        }
+
+        /* 登录状态样式 - 优化版 */
+        .login-status {
+            display: none;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .login-status.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f2f7ff;
+            color: #0d6efd;
+            border: 1px solid #cfe2ff;
+        }
+        
+        .login-status.success {
+            display: block;
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        
+        .login-status.error {
+            display: block;
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+        
+        .login-spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-right: 0.5rem;
+            border: 0.2rem solid #0d6efd;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 添加表单禁用状态样式 */
+        .form-control:disabled, 
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+            opacity: 0.8;
+        }
+        
+        /* 添加动画效果 */
+        .login-status.success,
+        .login-status.error {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="card">
+            <div class="card-header">
+                <div class="logo-container">
+                    <img src="/static/images/gamehub-logo.png" alt="GameHub Logo" class="logo" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22%23f8f9fa%22%2F%3E%3Ctext%20x%3D%225%22%20y%3D%2225%22%20style%3D%22font-family%3A%20Arial%2C%20sans-serif%3B%20font-weight%3A%20bold%3B%20font-size%3A%2012px%3B%20fill%3A%20white%3B%22%3EGameHub%3C%2Ftext%3E%3C%2Fsvg%3E';">                     
+                </div>
+                <div>{% trans '管理员登录' %}</div>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    <div class="admin-messages">
+                        {% for message in messages %}
+                            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-danger{% endif %} mb-3">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- 登录状态显示区域 - 优化版 -->
+                <div id="loginStatus" class="login-status">
+                    <div class="login-spinner"></div>
+                    <span id="statusMessage">{% trans '正在处理...' %}</span>
+                </div>
+                
+                <form id="loginForm" method="post" action="{% url 'admin_panel:admin_login' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">{% trans '用户名' %}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                            <input type="text" name="username" id="id_username" class="form-control" placeholder="{% trans '请输入管理员用户名' %}" required autofocus>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">{% trans '密码' %}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input type="password" name="password" id="id_password" class="form-control" placeholder="{% trans '请输入密码' %}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input type="checkbox" name="remember_me" id="id_remember_me" class="form-check-input">
+                            <label class="form-check-label" for="id_remember_me">{% trans '记住我' %}</label>
+                        </div>
+                        <a href="#" class="text-decoration-none">{% trans '忘记密码?' %}</a>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="submit" id="loginButton" class="btn btn-primary">{% trans '登录' %}</button>
+                    </div>
+                    
+                    {% if next %}
+                        <input type="hidden" name="next" id="next_url" value="{{ next }}">
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © {% now "Y" %} GameHub {% trans '管理系统. 保留所有权利.' %}
+        </div>
+        
+        <a href="#" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            {% trans '返回前台首页' %}
+        </a>
+    </div>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 消息自动消失脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有后台登录页面的消息提醒
+            const loginAlerts = document.querySelectorAll('.admin-messages .alert');
+            
+            // 如果有消息提醒，设置自动消失
+            if (loginAlerts.length > 0) {
+                loginAlerts.forEach(function(alert) {
+                    // 初始化Bootstrap的alert组件
+                    const bsAlert = new bootstrap.Alert(alert);
+                    
+                    // 4秒后自动关闭
+                    setTimeout(function() {
+                        // 添加淡出动画效果
+                        alert.style.transition = 'opacity 0.5s ease';
+                        alert.style.opacity = '0';
+                        
+                        // 关闭提醒
+                        setTimeout(function() {
+                            bsAlert.close();
+                        }, 500);
+                    }, 4000);
+                });
+            }
+        });
+    </script>
+    
+    <!-- 异步登录脚本 - 优化版 -->
+    <script>
+        // 当文档加载时，确保CSRF令牌已设置
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取登录表单和必要元素
+            const loginForm = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            const loginStatus = document.getElementById('loginStatus');
+            const statusMessage = document.getElementById('statusMessage');
+            const usernameInput = document.getElementById('id_username');
+            const passwordInput = document.getElementById('id_password');
+            const rememberMeCheckbox = document.getElementById('id_remember_me');
+            
+            // 监听表单提交事件
+            loginForm.addEventListener('submit', function(event) {
+                // 阻止表单默认提交行为
+                event.preventDefault();
+                
+                // 获取表单数据
+                const username = usernameInput.value;
+                const password = passwordInput.value;
+                const rememberMe = rememberMeCheckbox.checked;
+                const nextUrl = document.getElementById('next_url') ? document.getElementById('next_url').value : '';
+                
+                // 验证表单数据
+                if (!username || !password) {
+                    showStatus('error', '{% trans "请输入用户名和密码" %}');
+                    return;
+                }
+                
+                // 显示加载状态
+                showStatus('loading', '{% trans "正在登录，请稍候..." %}');
+                
+                // 禁用表单控件
+                toggleFormControls(true);
+                
+                // 准备请求数据
+                const formData = {
+                    username: username,
+                    password: password,
+                    remember_me: rememberMe,
+                    next: nextUrl
+                };
+                
+                // 发送异步登录请求
+                fetch('{% url "admin_panel:admin_ajax_login" %}', {
+                    method: 'POST',
+                    body: JSON.stringify(formData),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    // 解析响应数据
+                    return response.json().then(data => {
+                        // 处理响应结果
+                        if (data.success || data.status === 'success') {
+                            // 登录成功
+                            const message = data.message || '{% trans "登录成功，正在跳转..." %}';
+                            showStatus('success', message);
+                            
+                            // 在状态消息中显示用户名
+                            const username = data.data?.username || data.username;
+                            if (username) {
+                                statusMessage.innerHTML = `<strong>${username}</strong>, ${message}`;
+                            }
+                            
+                            // 延迟重定向，给用户时间看到成功消息
+                            setTimeout(() => {
+                                // 优先使用data.data.redirect_url，如果不存在则使用data.redirect_url
+                                const redirectUrl = data.data?.redirect_url || data.redirect_url || '{% url "admin_panel:dashboard" %}';
+                                window.location.href = redirectUrl;
+                            }, 1500);
+                        } else {
+                            // 登录失败
+                            showStatus('error', data.message || '{% trans "登录失败，请检查用户名和密码" %}');
+                            toggleFormControls(false);
+                        }
+                    });
+                })
+                .catch(error => {
+                    // 处理网络错误
+                    console.error('登录出错:', error);
+                    showStatus('error', '{% trans "网络错误，请稍后再试" %}');
+                    toggleFormControls(false);
+                });
+            });
+            
+            // 显示状态消息的函数
+            function showStatus(type, message) {
+                // 移除所有状态类
+                loginStatus.classList.remove('loading', 'success', 'error');
+                
+                // 添加当前状态类
+                loginStatus.classList.add(type);
+                
+                // 设置消息文本
+                statusMessage.textContent = message;
+            }
+            
+            // 禁用/启用表单控件
+            function toggleFormControls(disabled) {
+                // 禁用/启用所有输入控件
+                usernameInput.disabled = disabled;
+                passwordInput.disabled = disabled;
+                rememberMeCheckbox.disabled = disabled;
+                loginButton.disabled = disabled;
+                
+                // 更新登录按钮文本
+                if (disabled) {
+                    loginButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> {% trans "正在登录..." %}';
+                } else {
+                    loginButton.textContent = '{% trans "登录" %}';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

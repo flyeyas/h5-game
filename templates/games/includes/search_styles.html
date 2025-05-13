@@ -1,0 +1,154 @@
+{% block extra_css %}
+<style>
+    .search-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+    }
+    .search-input-wrapper {
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .search-input-wrapper .form-control {
+        border-radius: 20px;
+        padding-left: 45px;
+        height: 50px;
+        font-size: 1.1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        background-color: rgba(255,255,255,0.1);
+        color: white;
+        transition: all 0.3s ease;
+    }
+    .search-input-wrapper .form-control:focus {
+        background-color: rgba(255,255,255,0.2);
+        box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.3);
+    }
+    .search-input-wrapper .form-control::placeholder {
+        color: rgba(255,255,255,0.7);
+    }
+    .search-input-wrapper .search-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.7);
+        font-size: 1.2rem;
+        z-index: 5;
+    }
+    .search-btn {
+        border-radius: 20px;
+        height: 50px;
+        padding: 0 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .game-card .card-body {
+        padding: 15px;
+    }
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .game-card .rating {
+        color: #ffc107;
+    }
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    .filter-card {
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .filter-card .fa-star, .filter-card .fa-star-half-alt {
+        color: #ffc107;
+    }
+    .filter-header {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+    }
+    .filter-body {
+        padding: 15px;
+    }
+    .category-filter .form-check {
+        margin-bottom: 8px;
+    }
+    .section-title {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .search-results-info {
+        margin-bottom: 20px;
+        color: #6c757d;
+    }
+    .ad-banner {
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .pagination .page-link {
+        color: #6a11cb;
+        border-radius: 5px;
+        margin: 0 3px;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    .no-results {
+        text-align: center;
+        padding: 50px 0;
+    }
+    .no-results i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    @media (max-width: 767.98px) {
+        .search-header {
+            padding: 20px 0;
+        }
+        .game-card img {
+            height: 150px;
+        }
+        .search-btn {
+            margin-top: 10px;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,146 @@
+{% comment %}
+异步分页组件 - 使用AJAX加载分页的页面
+参数:
+- is_paginated: 是否分页
+- paginator: 分页器
+- page_obj: 页面对象
+{% endcomment %}
+
+{% if is_paginated %}
+<div class="pagination-container mt-4">
+    <!-- 分页信息 - 顶部显示 -->
+    
+
+    <!-- 移动端优化的分页样式 -->
+    <style>
+        @media (max-width: 576px) {
+            .pagination .page-link {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.9rem;
+            }
+            .pagination-info-text {
+                font-size: 0.8rem;
+            }
+        }
+        /* 增强页码按钮可见性 */
+        .page-item.active .page-link {
+            background-color: #6a11cb;
+            border-color: #6a11cb;
+        }
+        .page-link {
+            color: #6a11cb;
+        }
+        .page-link:hover {
+            color: #2575fc;
+            background-color: #f0f0f0;
+        }
+    </style>
+
+    <nav aria-label="分页导航">
+        <ul class="pagination justify-content-center flex-wrap">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link ajax-page-link" href="#" data-page="1" aria-label="首页">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link ajax-page-link" href="#" data-page="{{ page_obj.previous_page_number }}" aria-label="上一页">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% if paginator.num_pages <= 7 %}
+                {% for num in paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link ajax-page-link" href="#" data-page="{{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                {% if page_obj.number > 3 %}
+                    <li class="page-item">
+                        <a class="page-link ajax-page-link" href="#" data-page="1">1</a>
+                    </li>
+                    {% if page_obj.number > 4 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endif %}
+                
+                {% for num in paginator.page_range %}
+                    {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link ajax-page-link" href="#" data-page="{{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.number < paginator.num_pages|add:'-2' %}
+                    {% if page_obj.number < paginator.num_pages|add:'-3' %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                    <li class="page-item">
+                        <a class="page-link ajax-page-link" href="#" data-page="{{ paginator.num_pages }}">{{ paginator.num_pages }}</a>
+                    </li>
+                {% endif %}
+            {% endif %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link ajax-page-link" href="#" data-page="{{ page_obj.next_page_number }}" aria-label="下一页">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link ajax-page-link" href="#" data-page="{{ paginator.num_pages }}" aria-label="末页">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    
+    <!-- 分页信息 - 底部显示 -->
+    <div class="text-center text-muted mt-2 pagination-info-text">
+        共 {{ paginator.count }} 个游戏，第 {{ page_obj.number }} 页/共 {{ paginator.num_pages }} 页
+    </div>
+</div>
+{% endif %} 

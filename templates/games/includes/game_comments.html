@@ -1,0 +1,455 @@
+<section class="comment-section">
+    <h2 class="section-title">玩家评论 ({{ comment_count|default:"0" }})</h2>
+    
+    <!-- 评论表单 -->
+    {% if user.is_authenticated %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">发表评论</h5>
+            <form id="comment-form" data-game-id="{{ game.id }}" data-initialized="false">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">您的评分</label>
+                    <div>
+                        {% for i in "12345" %}
+                        <i class="far fa-star text-warning fs-4 me-1 rating-star" data-rating="{{ forloop.counter }}" style="cursor: pointer;"></i>
+                        {% endfor %}
+                        <input type="hidden" name="rating" id="rating-input" value="0">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" name="content" rows="3" placeholder="分享您的游戏体验..."></textarea>
+                </div>
+                <div class="alert alert-danger d-none" id="comment-error"></div>
+                <div class="alert alert-success d-none" id="comment-success"></div>
+                <button type="submit" class="btn btn-primary">提交评论</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info mb-4">
+        <p class="mb-0">请<a href="{% url 'games:login' %}?next={{ request.path }}">登录</a>后发表评论</p>
+    </div>
+    {% endif %}
+    
+    <!-- 评论列表 - 使用异步加载 -->
+    <div class="comment-list" id="comment-list">
+        <!-- 加载中状态 -->
+        <div id="comments-loading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <p class="mt-2 text-muted">正在加载评论...</p>
+        </div>
+        
+        <!-- 评论将通过JS动态加载 -->
+        <div id="comments-container"></div>
+        
+        <!-- 无评论提示 -->
+        <p class="text-muted d-none" id="no-comments-message">暂无评论，成为第一个评论者吧！</p>
+    </div>
+    
+    <!-- 加载更多按钮 -->
+    <div class="text-center mt-4 mb-4 d-none" id="load-more-container">
+        <button class="btn btn-sm btn-outline-secondary" id="load-more-btn" data-game-id="{{ game.id }}" data-next-page="2" data-initialized="false">
+            查看更多评论
+        </button>
+        <div class="spinner-border text-primary d-none" id="loading-spinner" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+    </div>
+    
+    <!-- 评论模板（用于动态添加评论） -->
+    <template id="comment-template">
+        <div class="comment-item d-flex">
+            <div class="comment-avatar">
+                <img src="" alt="" class="template-avatar">
+            </div>
+            <div class="comment-content">
+                <div class="comment-header">
+                    <span class="comment-author template-author"></span>
+                    <span class="comment-date template-date"></span>
+                </div>
+                <div class="comment-rating template-rating">
+                </div>
+                <p class="comment-text template-content"></p>
+            </div>
+        </div>
+    </template>
+    
+    <!-- 异步加载评论的脚本 -->
+    <script>
+    // 添加一个提交锁，防止重复提交
+    let isSubmitting = false;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取游戏ID，确保它在全局可用
+        const gameIdElement = document.getElementById('load-more-btn');
+        const gameId = gameIdElement ? gameIdElement.getAttribute('data-game-id') : null;
+        
+        if (!gameId) {
+            console.error('游戏ID未找到，无法加载评论');
+            const commentsContainer = document.getElementById('comments-container');
+            commentsContainer.innerHTML = '<div class="alert alert-danger">加载评论失败：游戏ID未找到</div>';
+            document.getElementById('comments-loading').classList.add('d-none');
+            return;
+        }
+        
+        // 页面加载时立即获取第一页评论
+        loadComments(1, gameId, null);
+        
+        // 添加全局点击事件处理程序，确保每个点击只处理一次
+        document.addEventListener('click', function(e) {
+            // 检查点击的是否是加载更多按钮或其子元素
+            let target = e.target;
+            while (target && target !== document) {
+                if (target.id === 'load-more-btn') {
+                    // 如果按钮被禁用，则不处理
+                    if (target.disabled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    
+                    // 标记事件已处理，防止其他处理程序再次处理
+                    if (e.handled) {
+                        return false;
+                    }
+                    e.handled = true;
+                    
+                    // 禁用按钮防止重复点击
+                    target.disabled = true;
+                    
+                    // 获取页码并加载评论
+                    const nextPage = parseInt(target.getAttribute('data-next-page')) || 1;
+                    loadComments(nextPage, gameId, function() {
+                        target.disabled = false;
+                    });
+                    
+                    // 阻止默认行为和冒泡
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                target = target.parentNode;
+            }
+        }, true); // 使用捕获模式，确保比其他事件处理程序先执行
+        
+        // 加载更多评论按钮事件 - 保留此绑定但做标记，确保不会重复处理
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            // 标记按钮已初始化，即使有双重绑定也不会有问题
+            loadMoreBtn.setAttribute('data-initialized', 'true');
+        }
+        
+        // 评论表单提交事件 - 检查表单是否已初始化
+        const commentForm = document.getElementById('comment-form');
+        if (commentForm && commentForm.getAttribute('data-initialized') !== 'true') {
+            // 标记表单已初始化
+            commentForm.setAttribute('data-initialized', 'true');
+            
+            // 当其他脚本可能也会绑定submit事件时，使用事件捕获
+            // 在捕获阶段处理事件，可以在其他处理程序之前执行
+            commentForm.addEventListener('submit', function(e) {
+                // 阻止表单默认提交
+                e.preventDefault();
+                
+                // 阻止事件冒泡，避免其他绑定的处理程序执行
+                e.stopPropagation();
+                
+                // 检查是否已经在提交中
+                if (isSubmitting) {
+                    console.log('表单已在提交中，请勿重复提交');
+                    return false;
+                }
+                
+                // 调用提交函数
+                handleCommentSubmit(e.target, gameId);
+                
+                // 返回false，确保表单不会被其他处理程序处理
+                return false;
+            }, true); // true表示在捕获阶段处理事件
+        }
+        
+        // 评分星星点击事件
+        document.querySelectorAll('.rating-star').forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                document.getElementById('rating-input').value = rating;
+                
+                // 更新星星显示
+                document.querySelectorAll('.rating-star').forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+        });
+    });
+    
+    // 处理评论提交
+    function handleCommentSubmit(form, gameId) {
+        // 获取按钮和表单对象
+        const submitButton = form.querySelector('button[type="submit"]');
+        gameId = gameId || form.getAttribute('data-game-id');
+        
+        // 获取评论内容和评分
+        const content = form.querySelector('textarea[name="content"]').value;
+        const rating = form.querySelector('#rating-input').value;
+        const errorContainer = document.getElementById('comment-error');
+        const successContainer = document.getElementById('comment-success');
+        
+        // 清除之前的消息
+        errorContainer.textContent = '';
+        errorContainer.classList.add('d-none');
+        successContainer.textContent = '';
+        successContainer.classList.add('d-none');
+        
+        // 表单验证
+        if (!content.trim()) {
+            errorContainer.textContent = '请输入评论内容';
+            errorContainer.classList.remove('d-none');
+            return;
+        }
+        
+        if (rating === '0') {
+            errorContainer.textContent = '请为游戏评分(1-5星)';
+            errorContainer.classList.remove('d-none');
+            return;
+        }
+        
+        // 禁用提交按钮，显示加载状态
+        isSubmitting = true;
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...';
+        }
+        
+        // 准备表单数据
+        const formData = new FormData();
+        formData.append('game_id', gameId);
+        formData.append('content', content);
+        formData.append('rating', rating);
+        
+        // 获取CSRF令牌
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // 发送请求
+        fetch('/api/comment/submit/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 恢复按钮状态
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '提交评论';
+            }
+            
+            if (data.success) {
+                // 直接使用返回的评论数据添加到列表顶部，避免重新请求
+                if (data.data && data.data.comment) {
+                    const newComment = data.data.comment;
+                    
+                    // 更新评论总数
+                    const totalElement = document.querySelector('.comment-section .section-title');
+                    if (totalElement) {
+                        // 提取评论数并增加
+                        const currentCountMatch = totalElement.textContent.match(/\((\d+)\)/);
+                        if (currentCountMatch && currentCountMatch[1]) {
+                            const newCount = parseInt(currentCountMatch[1]) + 1;
+                            totalElement.textContent = totalElement.textContent.replace(/\(\d+\)/, `(${newCount})`);
+                        }
+                    }
+                    
+                    // 隐藏"暂无评论"消息
+                    const noCommentsMessage = document.getElementById('no-comments-message');
+                    if (noCommentsMessage) {
+                        noCommentsMessage.classList.add('d-none');
+                    }
+                    
+                    // 创建新评论元素
+                    const template = document.getElementById('comment-template');
+                    const commentElement = document.importNode(template.content, true);
+                    
+                    // 设置评论数据
+                    commentElement.querySelector('.template-avatar').src = newComment.user.avatar_url || 'https://randomuser.me/api/portraits/men/1.jpg';
+                    commentElement.querySelector('.template-avatar').alt = newComment.user.username;
+                    commentElement.querySelector('.template-author').textContent = newComment.user.username;
+                    commentElement.querySelector('.template-date').textContent = newComment.created_at;
+                    commentElement.querySelector('.template-content').textContent = newComment.content;
+                    
+                    // 设置评分星星
+                    const ratingContainer = commentElement.querySelector('.template-rating');
+                    ratingContainer.innerHTML = '';
+                    for (let i = 1; i <= 5; i++) {
+                        const star = document.createElement('i');
+                        star.classList.add(i <= newComment.rating ? 'fas' : 'far', 'fa-star');
+                        ratingContainer.appendChild(star);
+                    }
+                    
+                    // 添加到容器顶部
+                    const commentsContainer = document.getElementById('comments-container');
+                    commentsContainer.insertBefore(commentElement, commentsContainer.firstChild);
+                }
+                
+                // 清空表单
+                form.querySelector('textarea[name="content"]').value = '';
+                form.querySelector('#rating-input').value = '0';
+                
+                // 重置星星
+                document.querySelectorAll('.rating-star').forEach(star => {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                });
+                
+                // 显示成功消息
+                successContainer.textContent = '评论发表成功！';
+                successContainer.classList.remove('d-none');
+            } else {
+                // 显示错误消息
+                errorContainer.textContent = data.message || '评论提交失败，请稍后再试';
+                errorContainer.classList.remove('d-none');
+            }
+            
+            // 解除提交锁定状态
+            isSubmitting = false;
+        })
+        .catch(error => {
+            console.error('提交评论请求错误:', error);
+            
+            // 恢复按钮状态
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '提交评论';
+            }
+            
+            // 显示错误消息
+            errorContainer.textContent = '网络错误，请稍后再试';
+            errorContainer.classList.remove('d-none');
+            
+            // 解除提交锁定状态
+            isSubmitting = false;
+        });
+    }
+    
+    // 加载评论函数
+    function loadComments(page, gameId, callback) {
+        if (!gameId) {
+            console.error('游戏ID未定义，无法加载评论');
+            return;
+        }
+        
+        // 确保页码是一个有效的数字
+        page = parseInt(page) || 1;
+        
+        const loadingElement = document.getElementById('comments-loading');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const noCommentsMessage = document.getElementById('no-comments-message');
+        const loadMoreContainer = document.getElementById('load-more-container');
+        
+        // 显示加载状态
+        if (page === 1) {
+            loadingElement.classList.remove('d-none');
+        } else {
+            loadMoreBtn.classList.add('d-none');
+            loadingSpinner.classList.remove('d-none');
+        }
+        
+        // 发起API请求 - 确保page参数是纯数字
+        fetch(`/api/game/${gameId}/comments/?page=${page}&per_page=10`)
+            .then(response => response.json())
+            .then(data => {
+                // 隐藏加载状态
+                loadingElement.classList.add('d-none');
+                loadingSpinner.classList.add('d-none');
+                
+                if (data.success) {
+                    const comments = data.data.comments;
+                    const commentsContainer = document.getElementById('comments-container');
+                    
+                    // 如果是第一页且没有评论
+                    if (page === 1 && comments.length === 0) {
+                        noCommentsMessage.classList.remove('d-none');
+                        loadMoreContainer.classList.add('d-none');
+                        return;
+                    }
+                    
+                    // 渲染评论
+                    const template = document.getElementById('comment-template');
+                    
+                    comments.forEach(comment => {
+                        const commentElement = document.importNode(template.content, true);
+                        
+                        // 设置评论数据
+                        commentElement.querySelector('.template-avatar').src = comment.user.avatar_url || 'https://randomuser.me/api/portraits/men/1.jpg';
+                        commentElement.querySelector('.template-avatar').alt = comment.user.username;
+                        commentElement.querySelector('.template-author').textContent = comment.user.username;
+                        commentElement.querySelector('.template-date').textContent = comment.created_at;
+                        commentElement.querySelector('.template-content').textContent = comment.content;
+                        
+                        // 设置评分星星
+                        const ratingContainer = commentElement.querySelector('.template-rating');
+                        ratingContainer.innerHTML = '';
+                        for (let i = 1; i <= 5; i++) {
+                            const star = document.createElement('i');
+                            star.classList.add(i <= comment.rating ? 'fas' : 'far', 'fa-star');
+                            ratingContainer.appendChild(star);
+                        }
+                        
+                        // 添加到容器
+                        commentsContainer.appendChild(commentElement);
+                    });
+                    
+                    // 更新加载更多按钮状态
+                    if (data.data.has_next) {
+                        loadMoreBtn.setAttribute('data-next-page', data.data.next_page);
+                        loadMoreBtn.classList.remove('d-none');
+                        loadMoreContainer.classList.remove('d-none');
+                    } else {
+                        loadMoreContainer.classList.add('d-none');
+                    }
+                } else {
+                    // 显示错误消息
+                    console.error('加载评论失败:', data.message);
+                    if (page === 1) {
+                        const commentsContainer = document.getElementById('comments-container');
+                        commentsContainer.innerHTML = `<div class="alert alert-danger">加载评论失败: ${data.message}</div>`;
+                    }
+                }
+                
+                // 加载完成后恢复按钮状态
+                if (callback) {
+                    callback();
+                }
+            })
+            .catch(error => {
+                console.error('加载评论请求错误:', error);
+                loadingElement.classList.add('d-none');
+                loadingSpinner.classList.add('d-none');
+                
+                // 显示错误消息
+                if (page === 1) {
+                    const commentsContainer = document.getElementById('comments-container');
+                    commentsContainer.innerHTML = '<div class="alert alert-danger">网络错误，请稍后再试</div>';
+                } else {
+                    loadMoreBtn.classList.remove('d-none');
+                }
+                
+                // 加载完成后恢复按钮状态
+                if (callback) {
+                    callback();
+                }
+            });
+    }
+    </script>
+</section> 

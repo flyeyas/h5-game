@@ -1,0 +1,23 @@
+{% load static %}
+{% if favorites %}
+    {% for favorite in favorites %}
+        <div class="col-sm-6 col-md-4 col-lg-3 mb-4 game-card-wrapper">
+            {% include "games/includes/game_card.html" with game=favorite.game is_favorite=True %}
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="col-12 text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-heart-broken fa-4x text-muted"></i>
+        </div>
+        {% if search_query or selected_category %}
+            <h4>没有找到符合条件的游戏</h4>
+            <p class="text-muted">尝试使用其他关键词或筛选条件</p>
+            <a href="javascript:void(0);" class="btn btn-primary mt-3 clear-filter-btn">查看全部收藏</a>
+        {% else %}
+            <h4>您还没有收藏任何游戏</h4>
+            <p class="text-muted">浏览游戏并添加到您的收藏夹</p>
+            <a href="{% url 'games:game_list' %}" class="btn btn-primary mt-3">浏览游戏</a>
+        {% endif %}
+    </div>
+{% endif %} 

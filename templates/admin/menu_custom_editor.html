@@ -1,0 +1,463 @@
+<!-- 自定义菜单编辑器 -->
+<style>
+/* 遮罩层 */
+.custom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: none;
+}
+
+/* 编辑表单 */
+.custom-edit-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 500px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  padding: 20px;
+  display: none;
+}
+
+.custom-edit-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.custom-edit-form-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.custom-edit-form-close {
+  cursor: pointer;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: #888;
+}
+
+.custom-edit-form-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.custom-form-group {
+  margin-bottom: 15px;
+}
+
+.custom-form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.custom-form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.custom-form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+}
+
+.custom-form-check {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.custom-form-check-input {
+  margin-right: 8px;
+}
+
+.custom-form-text {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 5px;
+}
+
+.custom-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.custom-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  margin-right: 10px;
+}
+
+.custom-btn-primary {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.custom-icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.custom-form-loading {
+  text-align: center;
+  padding: 20px;
+}
+
+.custom-form-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #0d6efd;
+  animation: custom-spinner 1s linear infinite;
+}
+
+@keyframes custom-spinner {
+  to {transform: rotate(360deg);}
+}
+
+.custom-alert {
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.custom-alert-danger {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+}
+</style>
+
+<!-- 自定义编辑表单HTML -->
+<div id="customEditOverlay" class="custom-overlay"></div>
+<div id="customEditForm" class="custom-edit-form">
+  <div class="custom-edit-form-header">
+    <div class="custom-edit-form-title">
+      <i class="fas fa-edit me-2 text-primary"></i>
+      编辑菜单项
+    </div>
+    <button type="button" class="custom-edit-form-close" id="customEditFormClose">&times;</button>
+  </div>
+  
+  <!-- 加载指示器 -->
+  <div id="customEditFormLoading" class="custom-form-loading">
+    <div class="custom-form-spinner"></div>
+    <p class="mt-2">正在加载菜单数据...</p>
+  </div>
+  
+  <!-- 表单内容 -->
+  <div id="customEditFormContent" style="display:none;">
+    <div id="customEditFormAlerts"></div>
+    
+    <form id="customEditMenuForm">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+      <input type="hidden" id="custom_edit_menu_id" name="menu_id">
+      
+      <div class="custom-form-group">
+        <label class="custom-form-label" for="custom_edit_name">菜单名称 <span class="text-danger">*</span></label>
+        <input type="text" class="custom-form-control" id="custom_edit_name" name="name" required maxlength="50" placeholder="输入菜单显示名称">
+      </div>
+      
+      <div class="custom-form-group">
+        <label class="custom-form-label" for="custom_edit_url">链接URL <span class="text-danger">*</span></label>
+        <input type="text" class="custom-form-control" id="custom_edit_url" name="url" required maxlength="200" placeholder="输入链接地址">
+      </div>
+      
+      <div class="custom-form-group">
+        <label class="custom-form-label" for="custom_edit_icon">图标</label>
+        <div style="display:flex;align-items:center;">
+          <div class="custom-icon-container">
+            <i id="custom_edit_icon_preview" class="fas fa-gear"></i>
+          </div>
+          <input type="text" class="custom-form-control" id="custom_edit_icon" name="icon" placeholder="选择或输入图标类名">
+        </div>
+        <div class="custom-form-text">输入FontAwesome图标类名，例如: fas fa-home</div>
+      </div>
+      
+      <div class="custom-form-group">
+        <label class="custom-form-label" for="custom_edit_parent">父级菜单</label>
+        <select class="custom-form-select" id="custom_edit_parent" name="parent">
+          <option value="">无 (作为顶级菜单)</option>
+          {% for menu in main_menus %}
+            <option value="{{ menu.id }}">{{ menu.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="custom-form-text">选择子菜单项所属的父级菜单</div>
+      </div>
+      
+      <div class="custom-form-group">
+        <label class="custom-form-label" for="custom_edit_order">排序</label>
+        <input type="number" class="custom-form-control" id="custom_edit_order" name="order" value="0" min="0">
+        <div class="custom-form-text">数字越小排序越靠前</div>
+      </div>
+      
+      <div class="custom-form-group">
+        <div class="custom-form-check">
+          <input type="checkbox" class="custom-form-check-input" id="custom_edit_is_active" name="is_active">
+          <label class="custom-form-label" for="custom_edit_is_active">是否启用</label>
+        </div>
+        <div class="custom-form-text">取消勾选表示暂不启用此菜单项</div>
+      </div>
+      
+      <div class="custom-form-footer">
+        <button type="button" id="customEditFormCancel" class="custom-btn custom-btn-secondary">
+          <i class="fas fa-times me-1"></i>
+          取消
+        </button>
+        <button type="submit" id="customEditFormSubmit" class="custom-btn custom-btn-primary">
+          <i class="fas fa-save me-1"></i>
+          保存修改
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// 在页面加载完成后初始化自定义编辑表单
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('初始化自定义菜单编辑器');
+  
+  // 获取DOM元素
+  const overlay = document.getElementById('customEditOverlay');
+  const editForm = document.getElementById('customEditForm');
+  const closeBtn = document.getElementById('customEditFormClose');
+  const cancelBtn = document.getElementById('customEditFormCancel');
+  const formLoading = document.getElementById('customEditFormLoading');
+  const formContent = document.getElementById('customEditFormContent');
+  const menuForm = document.getElementById('customEditMenuForm');
+  const alertsContainer = document.getElementById('customEditFormAlerts');
+  
+  // 为所有编辑按钮添加点击事件
+  document.querySelectorAll('.btn-outline-primary[title="编辑"]').forEach(function(button) {
+    button.removeAttribute('onclick');
+    const newButton = button.cloneNode(true);
+    button.parentNode.replaceChild(newButton, button);
+    
+    newButton.addEventListener('click', function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const menuId = this.getAttribute('data-menu-id');
+      console.log('编辑按钮被点击，菜单ID:', menuId);
+      
+      if (menuId) {
+        openEditForm(menuId);
+      } else {
+        console.error('编辑按钮缺少data-menu-id属性');
+        alert('无法获取菜单ID，请刷新页面后重试');
+      }
+    });
+  });
+  
+  // 打开编辑表单
+  window.openEditForm = function(menuId) {
+    // 显示遮罩和表单
+    overlay.style.display = 'block';
+    editForm.style.display = 'block';
+    
+    // 显示加载状态
+    formLoading.style.display = 'block';
+    formContent.style.display = 'none';
+    
+    // 设置菜单ID
+    document.getElementById('custom_edit_menu_id').value = menuId;
+    
+    // 加载菜单数据
+    loadMenuData(menuId);
+  };
+  
+  // 加载菜单数据
+  function loadMenuData(menuId) {
+    fetch(`/admin/menu/${menuId}/get/`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('获取菜单数据成功:', data);
+        
+        if (data.status === 'success' && data.menu) {
+          // 填充表单字段
+          document.getElementById('custom_edit_name').value = data.menu.name || '';
+          document.getElementById('custom_edit_url').value = data.menu.url || '';
+          document.getElementById('custom_edit_icon').value = data.menu.icon || '';
+          document.getElementById('custom_edit_order').value = data.menu.order || 0;
+          
+          // 设置父级菜单
+          const parentSelect = document.getElementById('custom_edit_parent');
+          parentSelect.value = data.menu.parent || '';
+          
+          // 如果找不到匹配的parent选项，需要添加一个
+          if (data.menu.parent && !Array.from(parentSelect.options).some(opt => opt.value == data.menu.parent)) {
+            const option = document.createElement('option');
+            option.value = data.menu.parent;
+            option.textContent = `ID:${data.menu.parent}`;
+            parentSelect.appendChild(option);
+            parentSelect.value = data.menu.parent;
+          }
+          
+          // 设置是否启用
+          document.getElementById('custom_edit_is_active').checked = data.menu.is_active;
+          
+          // 更新图标预览
+          document.getElementById('custom_edit_icon_preview').className = data.menu.icon || 'fas fa-gear';
+          
+          // 显示表单内容
+          formLoading.style.display = 'none';
+          formContent.style.display = 'block';
+        } else {
+          showAlert('加载菜单数据失败: ' + (data.message || '未知错误'));
+          closeEditForm();
+        }
+      })
+      .catch(error => {
+        console.error('加载菜单数据失败:', error);
+        showAlert('加载菜单数据失败: ' + error.message);
+        closeEditForm();
+      });
+  }
+  
+  // 显示错误提示
+  function showAlert(message) {
+    alertsContainer.innerHTML = `
+      <div class="custom-alert custom-alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        ${message}
+      </div>
+    `;
+  }
+  
+  // 关闭编辑表单
+  function closeEditForm() {
+    overlay.style.display = 'none';
+    editForm.style.display = 'none';
+    alertsContainer.innerHTML = '';
+    menuForm.reset();
+  }
+  
+  // 监听图标输入变化，实时更新预览
+  document.getElementById('custom_edit_icon').addEventListener('input', function() {
+    const iconPreview = document.getElementById('custom_edit_icon_preview');
+    iconPreview.className = this.value || 'fas fa-gear';
+  });
+  
+  // 关闭按钮事件
+  closeBtn.addEventListener('click', closeEditForm);
+  cancelBtn.addEventListener('click', closeEditForm);
+  
+  // 点击遮罩关闭表单
+  overlay.addEventListener('click', function(event) {
+    if (event.target === overlay) {
+      closeEditForm();
+    }
+  });
+  
+  // 表单提交
+  menuForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    const menuId = document.getElementById('custom_edit_menu_id').value;
+    if (!menuId) {
+      showAlert('无法获取菜单ID');
+      return;
+    }
+    
+    // 禁用提交按钮
+    const submitBtn = document.getElementById('customEditFormSubmit');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> 处理中...';
+    
+    // 收集表单数据
+    const formData = new FormData(this);
+    
+    // 特殊处理复选框
+    if (!formData.has('is_active')) {
+      formData.append('is_active', '');
+    }
+    
+    // 发送请求
+    fetch(`/admin/menus/edit/${menuId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('提交表单响应:', data);
+      
+      if (data.status === 'success') {
+        alert('菜单修改成功!');
+        // 刷新页面
+        window.location.reload();
+      } else {
+        showAlert('修改失败: ' + (data.message || '未知错误'));
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> 保存修改';
+      }
+    })
+    .catch(error => {
+      console.error('提交表单失败:', error);
+      showAlert('提交表单失败: ' + error.message);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> 保存修改';
+    });
+  });
+});
+</script> 

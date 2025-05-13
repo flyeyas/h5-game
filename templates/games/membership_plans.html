@@ -1,0 +1,600 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}会员计划 - HTML5游戏平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plans-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .section-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    .section-header h1 {
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    .section-header p {
+        color: #6c757d;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .plan-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    .plan-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+    .plan-card.recommended {
+        border: 2px solid #6a11cb;
+    }
+    .recommended-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .plan-header {
+        padding: 30px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        text-align: center;
+    }
+    .current-plan {
+        background: #28a745;
+    }
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 15px 0;
+        line-height: 1;
+    }
+    .plan-price small {
+        font-size: 1rem;
+        font-weight: 400;
+    }
+    .plan-body {
+        padding: 30px;
+        flex-grow: 1;
+    }
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 30px 0;
+    }
+    .plan-features li {
+        padding: 10px 0;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .plan-features li:last-child {
+        border-bottom: none;
+    }
+    .plan-features i.fas.fa-check {
+        color: #28a745;
+        margin-right: 10px;
+    }
+    .plan-features i.fas.fa-times {
+        color: #dc3545;
+        margin-right: 10px;
+    }
+    .plan-footer {
+        padding: 20px 30px 30px;
+        text-align: center;
+    }
+    .cycle-selector {
+        background-color: #f8f9fa;
+        border-radius: 50px;
+        padding: 10px;
+        display: inline-flex;
+        margin-bottom: 50px;
+    }
+    .cycle-option {
+        padding: 10px 20px;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    .cycle-option.active {
+        background-color: #6a11cb;
+        color: white;
+    }
+    .savings-text {
+        display: inline-block;
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+    .payment-modal .modal-body {
+        padding: 30px;
+    }
+    .payment-method {
+        margin-bottom: 30px;
+    }
+    .payment-option {
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .payment-option:hover {
+        border-color: #6a11cb;
+    }
+    .payment-option.selected {
+        border-color: #6a11cb;
+        background-color: rgba(106, 17, 203, 0.05);
+    }
+    .payment-option img {
+        height: 30px;
+        margin-right: 10px;
+    }
+    .features-comparison {
+        margin-top: 60px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="plans-container">
+        <div class="section-header">
+            <h1>会员计划</h1>
+            <p>升级到会员，畅享更多游戏特权和专属内容，提升您的游戏体验</p>
+            
+            <!-- 计费周期选择器 -->
+            <div class="cycle-selector mt-4">
+                <div class="cycle-option active" data-cycle="monthly">月付</div>
+                <div class="cycle-option" data-cycle="yearly">年付<span class="savings-text">省20%</span></div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- 基础会员 -->
+            <div class="col-lg-4">
+                <div class="plan-card {% if current_membership == 1 %}recommended{% endif %}">
+                    {% if current_membership == 1 %}<div class="recommended-badge">当前计划</div>{% endif %}
+                    <div class="plan-header {% if current_membership == 1 %}current-plan{% endif %}">
+                        <div class="plan-name">基础会员</div>
+                        <div class="monthly-price plan-price">
+                            ¥19 <small>/月</small>
+                        </div>
+                        <div class="yearly-price plan-price" style="display: none;">
+                            ¥199 <small>/年</small>
+                        </div>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 无广告体验</li>
+                            <li><i class="fas fa-check"></i> 游戏进度云端保存</li>
+                            <li><i class="fas fa-check"></i> 游戏购买享9折优惠</li>
+                            <li><i class="fas fa-times"></i> 专属游戏内容</li>
+                            <li><i class="fas fa-times"></i> 优先体验新游戏</li>
+                            <li><i class="fas fa-times"></i> 专属客服支持</li>
+                            <li><i class="fas fa-times"></i> 每月游戏礼包</li>
+                        </ul>
+                    </div>
+                    <div class="plan-footer">
+                        {% if current_membership == 1 %}
+                            <button class="btn btn-success btn-lg w-100" disabled>当前计划</button>
+                        {% elif current_membership > 1 %}
+                            <button class="btn btn-outline-primary btn-lg w-100 select-plan" data-plan="1">降级到此计划</button>
+                        {% else %}
+                            <button class="btn btn-primary btn-lg w-100 select-plan" data-plan="1">选择此计划</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 高级会员 -->
+            <div class="col-lg-4">
+                <div class="plan-card {% if current_membership != 3 %}recommended{% endif %}">
+                    {% if current_membership == 2 %}
+                        <div class="recommended-badge">当前计划</div>
+                    {% elif current_membership != 3 %}
+                        <div class="recommended-badge">推荐</div>
+                    {% endif %}
+                    <div class="plan-header {% if current_membership == 2 %}current-plan{% endif %}">
+                        <div class="plan-name">高级会员</div>
+                        <div class="monthly-price plan-price">
+                            ¥39 <small>/月</small>
+                        </div>
+                        <div class="yearly-price plan-price" style="display: none;">
+                            ¥399 <small>/年</small>
+                        </div>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 无广告体验</li>
+                            <li><i class="fas fa-check"></i> 游戏进度云端保存</li>
+                            <li><i class="fas fa-check"></i> 游戏购买享8折优惠</li>
+                            <li><i class="fas fa-check"></i> 专属游戏内容</li>
+                            <li><i class="fas fa-check"></i> 优先体验新游戏</li>
+                            <li><i class="fas fa-times"></i> 专属客服支持</li>
+                            <li><i class="fas fa-times"></i> 每月游戏礼包</li>
+                        </ul>
+                    </div>
+                    <div class="plan-footer">
+                        {% if current_membership == 2 %}
+                            <button class="btn btn-success btn-lg w-100" disabled>当前计划</button>
+                        {% elif current_membership > 2 %}
+                            <button class="btn btn-outline-primary btn-lg w-100 select-plan" data-plan="2">降级到此计划</button>
+                        {% else %}
+                            <button class="btn btn-primary btn-lg w-100 select-plan" data-plan="2">选择此计划</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 终极会员 -->
+            <div class="col-lg-4">
+                <div class="plan-card {% if current_membership == 3 %}recommended{% endif %}">
+                    {% if current_membership == 3 %}<div class="recommended-badge">当前计划</div>{% endif %}
+                    <div class="plan-header {% if current_membership == 3 %}current-plan{% endif %}">
+                        <div class="plan-name">终极会员</div>
+                        <div class="monthly-price plan-price">
+                            ¥69 <small>/月</small>
+                        </div>
+                        <div class="yearly-price plan-price" style="display: none;">
+                            ¥699 <small>/年</small>
+                        </div>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 无广告体验</li>
+                            <li><i class="fas fa-check"></i> 游戏进度云端保存</li>
+                            <li><i class="fas fa-check"></i> 游戏购买享7折优惠</li>
+                            <li><i class="fas fa-check"></i> 专属游戏内容</li>
+                            <li><i class="fas fa-check"></i> 优先体验新游戏</li>
+                            <li><i class="fas fa-check"></i> 专属客服支持</li>
+                            <li><i class="fas fa-check"></i> 每月游戏礼包</li>
+                        </ul>
+                    </div>
+                    <div class="plan-footer">
+                        {% if current_membership == 3 %}
+                            <button class="btn btn-success btn-lg w-100" disabled>当前计划</button>
+                        {% else %}
+                            <button class="btn btn-primary btn-lg w-100 select-plan" data-plan="3">选择此计划</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 特权对比表 -->
+        <div class="features-comparison">
+            <h2 class="text-center mb-4">会员特权对比</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>特权</th>
+                            <th class="text-center">基础会员</th>
+                            <th class="text-center">高级会员</th>
+                            <th class="text-center">终极会员</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feature in membership_features %}
+                        <tr>
+                            <td>
+                                <strong>{{ feature.name }}</strong>
+                                <p class="mb-0 text-muted small">{{ feature.description }}</p>
+                            </td>
+                            <td class="text-center">
+                                {% if feature.membership_level <= 1 %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if feature.membership_level <= 2 %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if feature.membership_level <= 3 %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- FAQ部分 -->
+        <div class="mt-5">
+            <h2 class="text-center mb-4">常见问题</h2>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq1">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
+                            会员费用如何收取？
+                        </button>
+                    </h2>
+                    <div id="faqCollapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            会员费用将根据您选择的计费周期（月付或年付）自动从您选择的支付方式中扣除。您可以随时在个人中心的会员信息页面查看您的计费详情。
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
+                            如何取消会员资格？
+                        </button>
+                    </h2>
+                    <div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            您可以随时在个人中心的会员信息页面取消会员资格。取消后，您的会员服务将持续到当前计费周期结束，不会退还已支付的费用。
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq3">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
+                            会员折扣如何计算？
+                        </button>
+                    </h2>
+                    <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            会员折扣是根据您的会员等级自动应用于游戏购买价格的。基础会员享受9折优惠，高级会员享受8折优惠，终极会员享受7折优惠。折扣会在您购买游戏时自动计算。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 支付模态框 -->
+<div class="modal fade payment-modal" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认购买会员</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="membership-summary mb-4">
+                    <h4 class="text-center mb-3">您选择的会员计划</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h5 id="selected-plan-name">高级会员</h5>
+                                    <p class="mb-0 text-muted" id="selected-plan-cycle">月付 - ¥39/月</p>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <span class="badge bg-primary" id="selected-plan-price">¥39</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="paymentForm" method="post" action="{% url 'games:subscription_plans' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="membership_type" id="membershipType" value="2">
+                    <input type="hidden" name="billing_cycle" id="billingCycle" value="monthly">
+                    
+                    <h5>选择支付方式</h5>
+                    <div class="payment-method">
+                        <div class="payment-option selected" data-method="wechat">
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'images/wechat_pay.png' %}" alt="微信支付">
+                                <div>
+                                    <strong>微信支付</strong>
+                                    <p class="mb-0 text-muted small">使用微信扫码支付</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-option" data-method="alipay">
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'images/alipay.png' %}" alt="支付宝">
+                                <div>
+                                    <strong>支付宝</strong>
+                                    <p class="mb-0 text-muted small">使用支付宝扫码支付</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-option" data-method="creditcard">
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'images/credit_card.png' %}" alt="信用卡">
+                                <div>
+                                    <strong>信用卡支付</strong>
+                                    <p class="mb-0 text-muted small">支持 Visa、Mastercard 等</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="payment_method" id="paymentMethod" value="wechat">
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="agreeTerms" checked>
+                        <label class="form-check-label" for="agreeTerms">
+                            我已阅读并同意<a href="{% url 'games:terms' %}" target="_blank">会员服务条款</a>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmPayment">确认支付</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 支付处理模态框 -->
+<div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+                <div id="paymentQR" class="mb-4">
+                    <img src="{% static 'images/qr_placeholder.png' %}" alt="支付二维码" class="img-fluid">
+                </div>
+                <h5 class="mb-3">请使用<span id="payment-method-name">微信</span>扫描上方二维码完成支付</h5>
+                <p class="text-muted">支付完成后页面将自动跳转</p>
+                <div class="spinner-border text-primary mt-3" role="status">
+                    <span class="visually-hidden">正在处理...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // 计费周期切换
+        $('.cycle-option').click(function() {
+            $('.cycle-option').removeClass('active');
+            $(this).addClass('active');
+            
+            var cycle = $(this).data('cycle');
+            $('#billingCycle').val(cycle);
+            
+            if (cycle === 'yearly') {
+                $('.monthly-price').hide();
+                $('.yearly-price').show();
+            } else {
+                $('.yearly-price').hide();
+                $('.monthly-price').show();
+            }
+        });
+        
+        // 选择会员计划
+        $('.select-plan').click(function() {
+            var plan = $(this).data('plan');
+            var cycle = $('.cycle-option.active').data('cycle');
+            
+            // 设置表单值
+            $('#membershipType').val(plan);
+            $('#billingCycle').val(cycle);
+            
+            // 更新支付模态框信息
+            var planName, monthlyPrice, yearlyPrice;
+            if (plan === 1) {
+                planName = '基础会员';
+                monthlyPrice = 19;
+                yearlyPrice = 199;
+            } else if (plan === 2) {
+                planName = '高级会员';
+                monthlyPrice = 39;
+                yearlyPrice = 399;
+            } else {
+                planName = '终极会员';
+                monthlyPrice = 69;
+                yearlyPrice = 699;
+            }
+            
+            var price = cycle === 'yearly' ? yearlyPrice : monthlyPrice;
+            var cycleText = cycle === 'yearly' ? '年付 - ¥' + yearlyPrice + '/年' : '月付 - ¥' + monthlyPrice + '/月';
+            
+            $('#selected-plan-name').text(planName);
+            $('#selected-plan-cycle').text(cycleText);
+            $('#selected-plan-price').text('¥' + price);
+            
+            // 显示支付模态框
+            var paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+        });
+        
+        // 支付方式选择
+        $('.payment-option').click(function() {
+            $('.payment-option').removeClass('selected');
+            $(this).addClass('selected');
+            $('#paymentMethod').val($(this).data('method'));
+            
+            // 更新支付方式名称
+            var methodName = '微信';
+            if ($(this).data('method') === 'alipay') {
+                methodName = '支付宝';
+            } else if ($(this).data('method') === 'creditcard') {
+                methodName = '信用卡';
+            }
+            $('#payment-method-name').text(methodName);
+        });
+        
+        // 确认支付
+        $('#confirmPayment').click(function() {
+            if (!$('#agreeTerms').is(':checked')) {
+                alert('请阅读并同意会员服务条款');
+                return;
+            }
+            
+            // 隐藏当前模态框
+            var paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+            paymentModal.hide();
+            
+            // 显示支付处理模态框
+            var processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+            processingModal.show();
+            
+            // AJAX提交支付表单
+            $.ajax({
+                url: $('#paymentForm').attr('action'),
+                type: 'POST',
+                data: $('#paymentForm').serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // 模拟支付成功后跳转
+                        setTimeout(function() {
+                            window.location.href = response.redirect_url;
+                        }, 2000);
+                    } else {
+                        processingModal.hide();
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr) {
+                    processingModal.hide();
+                    var response = xhr.responseJSON;
+                    alert(response.message || '支付处理出错，请稍后再试');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

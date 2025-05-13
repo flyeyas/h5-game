@@ -1,0 +1,49 @@
+{% load static %}
+<style>
+    /* 内联样式确保背景覆盖 */
+    .sidebar-bg {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        border-radius: 10px 0 0 10px;
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    
+    .unsplash-img {
+        width: 100%;
+        border-radius: 8px;
+        margin-top: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="auth-card">
+                    <div class="row g-0" style="min-height: 600px;">
+                        <!-- 左侧信息栏 -->
+                        <div class="col-md-5 position-relative">
+                            <div class="sidebar-bg"></div>
+                            <div class="position-relative" style="z-index: 1; padding: 40px;">
+                                {% include 'games/registration/auth_sidebar.html' %}
+                                
+                                <!-- 添加Unsplash图片 -->
+                                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
+                                     alt="游戏图片" class="unsplash-img">
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧表单区域 -->
+                        <div class="col-md-7 auth-content">
+                            {% include 'games/registration/auth_tabs.html' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

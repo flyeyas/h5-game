@@ -1,0 +1,60 @@
+{% comment %}
+搜索游戏列表片段 - 仅包含游戏卡片列表，用于AJAX加载
+{% endcomment %}
+
+{% for game in games %}
+<div class="col-sm-6 col-md-4">
+    <div class="game-card position-relative">
+        <span class="new-badge">
+            {% if game.categories.first %}
+                {{ game.categories.first.name }}
+            {% else %}
+                推荐游戏
+            {% endif %}
+        </span>
+        <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}" onerror="this.src='https://via.placeholder.com/500x300?text=游戏图片'">
+        <div class="card-body">
+            <h5 class="card-title">{{ game.title }}</h5>
+            <div class="mb-2">
+                <span class="rating">
+                    {% with rating_int=game.rating|floatformat:0|add:"0" %}
+                    {% with rating_decimal=game.rating|floatformat:1|slice:"-1:" %}
+                        {% for i in '12345'|make_list %}
+                            {% if forloop.counter <= rating_int|add:"0" %}
+                                <i class="fas fa-star"></i>
+                            {% elif forloop.counter == rating_int|add:"1" and rating_decimal > "0" %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                    {% endwith %}
+                    <small class="text-warning ms-1">{{ game.rating|floatformat:"1" }}</small>
+                    <small class="ms-2"><i class="far fa-comment text-secondary"></i> {{ game.comments.count }}</small>
+                </span>
+            </div>
+            <p class="card-text">{{ game.summary|default:game.description|truncatechars:60 }}</p>
+            <div class="mb-2">
+                {% for category in game.categories.all|slice:":2" %}
+                <span class="category-badge">{{ category.name }}</span>
+                {% endfor %}
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">游玩次数: {{ game.play_count }}</small>
+                    <br>
+                    <small class="text-muted">上线时间: {{ game.created_at|date:"Y-m-d" }}</small>
+                </div>
+                <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary">立即游玩</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="col-12">
+    <div class="alert alert-info text-center">
+        <i class="fas fa-info-circle me-2"></i> 暂无符合条件的游戏，请调整搜索关键词或筛选条件后重试。
+    </div>
+</div>
+{% endfor %} 

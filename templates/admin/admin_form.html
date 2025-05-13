@@ -1,0 +1,267 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .required-field label:after {
+    content: " *";
+    color: red;
+  }
+  
+  .admin-avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #dee2e6;
+  }
+  
+  .admin-avatar-container {
+    margin-bottom: 1rem;
+  }
+  
+  .random-avatar-container {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+  }
+  
+  .random-avatar-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <!-- 顶部导航 -->
+  {% include "admin/includes/top_navbar.html" with page_title=title %}
+  
+  <div class="card">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ title }}</h5>
+        <a href="{% url 'admin_panel:admin_users_list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-1"></i> {% trans '返回列表' %}
+        </a>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+          <div class="alert alert-danger">
+            {% for field in form %}
+              {% for error in field.errors %}
+                <p><strong>{{ field.label }}</strong>: {{ error }}</p>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+        
+        <div class="row mb-3 required-field">
+          <label for="{{ form.username.id_for_label }}" class="col-sm-2 col-form-label">{% trans '用户名' %}</label>
+          <div class="col-sm-10">
+            <input type="text" name="username" value="{{ form.username.value|default:'' }}" 
+                   class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                   id="{{ form.username.id_for_label }}" required>
+            {% if form.username.errors %}
+              <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <label for="{{ form.real_name.id_for_label }}" class="col-sm-2 col-form-label">{% trans '姓名' %}</label>
+          <div class="col-sm-10">
+            <input type="text" name="real_name" value="{{ form.real_name.value|default:'' }}" 
+                   class="form-control {% if form.real_name.errors %}is-invalid{% endif %}" 
+                   id="{{ form.real_name.id_for_label }}">
+            {% if form.real_name.errors %}
+              <div class="invalid-feedback">{{ form.real_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3 {% if is_add %}required-field{% endif %}">
+          <label for="{{ form.password.id_for_label }}" class="col-sm-2 col-form-label">{% trans '密码' %}</label>
+          <div class="col-sm-10">
+            <input type="password" name="password" 
+                   class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                   id="{{ form.password.id_for_label }}" {% if is_add %}required{% endif %}>
+            {% if not is_add %}
+              <div class="form-text">{% trans '如不修改密码，请留空' %}</div>
+            {% endif %}
+            {% if form.password.errors %}
+              <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3 {% if is_add %}required-field{% endif %}">
+          <label for="{{ form.confirm_password.id_for_label }}" class="col-sm-2 col-form-label">{% trans '确认密码' %}</label>
+          <div class="col-sm-10">
+            <input type="password" name="confirm_password" 
+                   class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" 
+                   id="{{ form.confirm_password.id_for_label }}" {% if is_add %}required{% endif %}>
+            {% if form.confirm_password.errors %}
+              <div class="invalid-feedback">{{ form.confirm_password.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <label for="{{ form.email.id_for_label }}" class="col-sm-2 col-form-label">{% trans '邮箱' %}</label>
+          <div class="col-sm-10">
+            <input type="email" name="email" value="{{ form.email.value|default:'' }}" 
+                   class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                   id="{{ form.email.id_for_label }}">
+            {% if form.email.errors %}
+              <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <label for="{{ form.mobile.id_for_label }}" class="col-sm-2 col-form-label">{% trans '手机号' %}</label>
+          <div class="col-sm-10">
+            <input type="text" name="mobile" value="{{ form.mobile.value|default:'' }}" 
+                   class="form-control {% if form.mobile.errors %}is-invalid{% endif %}" 
+                   id="{{ form.mobile.id_for_label }}">
+            {% if form.mobile.errors %}
+              <div class="invalid-feedback">{{ form.mobile.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3 required-field">
+          <label for="{{ form.role.id_for_label }}" class="col-sm-2 col-form-label">{% trans '角色' %}</label>
+          <div class="col-sm-10">
+            <select name="role" class="form-select {% if form.role.errors %}is-invalid{% endif %}" 
+                    id="{{ form.role.id_for_label }}" required>
+              <option value="10" {% if form.role.value == 10 %}selected{% endif %}>{% trans '超级管理员' %}</option>
+              <option value="20" {% if form.role.value == 20 %}selected{% endif %}>{% trans '管理员' %}</option>
+              <option value="30" {% if form.role.value == 30 %}selected{% endif %}>{% trans '内容编辑' %}</option>
+              <option value="40" {% if form.role.value == 40 %}selected{% endif %}>{% trans '客服' %}</option>
+            </select>
+            {% if form.role.errors %}
+              <div class="invalid-feedback">{{ form.role.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3 required-field">
+          <label for="{{ form.status.id_for_label }}" class="col-sm-2 col-form-label">{% trans '状态' %}</label>
+          <div class="col-sm-10">
+            <select name="status" class="form-select {% if form.status.errors %}is-invalid{% endif %}" 
+                    id="{{ form.status.id_for_label }}" required>
+              <option value="active" {% if form.status.value == 'active' %}selected{% endif %}>{% trans '活跃' %}</option>
+              <option value="inactive" {% if form.status.value == 'inactive' %}selected{% endif %}>{% trans '禁用' %}</option>
+              <option value="pending" {% if form.status.value == 'pending' %}selected{% endif %}>{% trans '待审核' %}</option>
+            </select>
+            {% if form.status.errors %}
+              <div class="invalid-feedback">{{ form.status.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <label for="{{ form.avatar.id_for_label }}" class="col-sm-2 col-form-label">{% trans '头像' %}</label>
+          <div class="col-sm-10">
+            {% if admin_user.avatar or admin_user.avatar_url %}
+              <div class="admin-avatar-container">
+                <img src="{% if admin_user.avatar %}{{ admin_user.avatar.url }}{% elif admin_user.avatar_url %}{{ admin_user.avatar_url }}{% endif %}" 
+                     class="admin-avatar-preview" alt="{% trans '管理员头像' %}">
+              </div>
+            {% endif %}
+            
+            <div class="input-group">
+              <input type="file" name="avatar" accept="image/*" 
+                     class="form-control {% if form.avatar.errors %}is-invalid{% endif %}" 
+                     id="{{ form.avatar.id_for_label }}">
+              <button type="button" id="generateRandomAvatar" class="btn btn-outline-primary">
+                <i class="fas fa-random me-1"></i>{% trans '随机生成' %}
+              </button>
+            </div>
+            
+            {% if form.avatar.errors %}
+              <div class="invalid-feedback d-block">{{ form.avatar.errors.0 }}</div>
+            {% endif %}
+            
+            <div id="random_avatar_preview" class="random-avatar-container" style="display: none;">
+              <img id="random_avatar_img" src="" alt="{% trans '随机头像' %}" class="random-avatar-preview">
+              <span class="text-muted">{% trans '随机头像预览' %}</span>
+              <input type="hidden" id="random_avatar_url" name="random_avatar_url">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <label for="{{ form.notes.id_for_label }}" class="col-sm-2 col-form-label">{% trans '备注' %}</label>
+          <div class="col-sm-10">
+            <textarea name="notes" class="form-control {% if form.notes.errors %}is-invalid{% endif %}" 
+                      id="{{ form.notes.id_for_label }}" rows="3">{{ form.notes.value|default:'' }}</textarea>
+            {% if form.notes.errors %}
+              <div class="invalid-feedback">{{ form.notes.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="offset-sm-2 col-sm-10">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-1"></i>{% trans '保存' %}
+            </button>
+            <a href="{% url 'admin_panel:admin_users_list' %}" class="btn btn-outline-secondary ms-2">
+              <i class="fas fa-times me-1"></i>{% trans '取消' %}
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrafootjs %}
+<script>
+  // 使用原生JavaScript代替jQuery，避免依赖问题
+  document.addEventListener('DOMContentLoaded', function() {
+    // 获取随机头像按钮元素
+    var generateRandomAvatarBtn = document.getElementById('generateRandomAvatar');
+    
+    // 确保元素存在
+    if (generateRandomAvatarBtn) {
+      // 添加点击事件处理函数
+      generateRandomAvatarBtn.addEventListener('click', function() {
+        // 生成随机头像，性别随机，ID随机
+        var gender = Math.random() > 0.5 ? 'men' : 'women';
+        var id = Math.floor(Math.random() * 99) + 1;
+        var randomAvatarUrl = 'https://randomuser.me/api/portraits/' + gender + '/' + id + '.jpg';
+        
+        // 获取元素引用
+        var previewImg = document.getElementById('random_avatar_img');
+        var urlInput = document.getElementById('random_avatar_url');
+        var previewContainer = document.getElementById('random_avatar_preview');
+        
+        // 设置预览和隐藏字段值
+        if (previewImg) previewImg.src = randomAvatarUrl;
+        if (urlInput) urlInput.value = randomAvatarUrl;
+        if (previewContainer) previewContainer.style.display = 'flex';
+      });
+    }
+  });
+</script>
+{% endblock %} 

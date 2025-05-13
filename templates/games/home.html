@@ -1,0 +1,54 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}HTML5游戏平台 - 首页{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+    /* 首页特定样式 */
+    .container.home-container {
+        margin-top: 0;
+    }
+    
+    /* 会员广告区域样式 - 与游戏分类页面保持一致 */
+
+</style>
+{% endblock %}
+
+{% with hide_main_container=True %}
+
+{% block hero_section %}
+    <!-- 英雄区域 -->
+    {% include "games/includes/hero_section.html" %}
+{% endblock %}
+
+{% block main_content %}
+    <!-- 会员广告条 - 英雄区域下方 -->
+    {% if show_member_content and not user.is_authenticated or show_member_content and not user.is_member %}
+    <div class="container">
+        {% include "games/includes/premium_banner.html" %}
+    </div>
+    {% endif %}
+    
+    <div class="container py-4">
+        <!-- 热门游戏 -->
+        {% include "games/includes/popular_games.html" %}
+
+        <!-- 游戏分类 -->
+        {% include "games/includes/game_categories.html" %}
+
+        <!-- 最新上线 -->
+        {% include "games/includes/new_games.html" %}
+
+        <!-- 侧边广告 + 推荐游戏 -->
+        {% include "games/includes/recommended_games.html" %}
+    </div>
+{% endblock %}
+
+{% endwith %}
+
+{% block extra_js %}
+<script src="{% static 'js/language-switcher.js' %}"></script>
+{% endblock %}

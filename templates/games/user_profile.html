@@ -1,0 +1,145 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}我的游戏 - HTML5游戏平台{% endblock %}
+
+{% block extra_css %}
+    {% include "games/includes/profile_styles.html" %}
+    <style>
+        /* 确保所有游戏卡片高度一致 */
+        .game-card {
+            height: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: none;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(106, 17, 203, 0.15);
+        }
+        
+        .game-card .card-img-top, .game-card .game-thumbnail {
+            height: 160px;
+            object-fit: cover;
+            width: 100%;
+            transition: transform 0.5s ease;
+        }
+        
+        .game-card:hover .card-img-top, .game-card:hover .game-thumbnail {
+            transform: scale(1.05);
+        }
+        
+        /* 筛选标签样式与profile_history.html一致 */
+        .filter-tags {
+            padding: 0.8rem 1rem;
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-tags .badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.7rem;
+            border-radius: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            transition: all 0.2s ease-in-out;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-tags .badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .filter-tags .badge .text-muted {
+            color: #6c757d;
+            cursor: pointer;
+        }
+        
+        .filter-tags .badge .fa-times:hover {
+            color: #dc3545;
+        }
+        
+        /* 加载更多按钮样式 */
+        #load-more-btn {
+            padding: 12px 30px;
+            font-weight: 500;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(106, 17, 203, 0.2);
+            border: none;
+        }
+        
+        #load-more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(106, 17, 203, 0.3);
+        }
+        
+        /* 确保页面主体有足够空间 */
+        .tab-content {
+            min-height: 600px;
+            margin-bottom: 50px;
+        }
+        
+        /* 统一所有Tab页样式 */
+        .tab-pane {
+            padding-top: 1.5rem;
+        }
+        
+        /* 搜索和筛选区域样式优化 */
+        .search-filter-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 767.98px) {
+            .search-filter-area {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-filter-area .input-group,
+            .search-filter-area .form-select,
+            .search-filter-area .dropdown {
+                width: 100% !important;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- 个人资料头部 -->
+    {% include "games/includes/profile_header.html" %}
+
+    <div class="container">
+        <!-- 选项卡导航 -->
+        {% include "games/includes/profile_tabs.html" with active_tab="games" %}
+        
+        <!-- 选项卡内容 -->
+        <div class="tab-content" id="profileTabContent">
+            <!-- 我的游戏 -->
+            {% include "games/includes/profile_games.html" with favorites=favorites active_tab="games" %}
+            
+            <!-- 游戏历史、会员信息和账号设置标签页在各自的页面中显示 -->
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% include "games/includes/profile_scripts.html" %}
+{% endblock %}

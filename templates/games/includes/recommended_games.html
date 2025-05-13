@@ -1,0 +1,61 @@
+{% load static %}
+
+<section class="mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="section-title">推荐游戏</h2>
+            <div class="row gy-4">
+                {% for game in recommended_games %}
+                <div class="col-md-6">
+                    <div class="game-card">
+                        <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ game.title }}</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="rating">
+                                    {% with rating_int=game.rating|floatformat:0|add:"0" %}
+                                    {% with rating_decimal=game.rating|floatformat:1|slice:"-1:" %}
+                                        {% for i in '12345'|make_list %}
+                                            {% if forloop.counter <= rating_int|add:"0" %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter == rating_int|add:"1" and rating_decimal > "0" %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                    {% endwith %}
+                                    <small class="text-muted ms-1">{{ game.rating|floatformat:1 }}</small>
+                                </span>
+                                <span class="category-badge">{{ game.categories.first.name }}</span>
+                            </div>
+                            <div class="mb-2">
+                                {% for category in game.categories.all|slice:":2" %}
+                                {% if not forloop.first %}
+                                <span class="category-badge">{{ category.name }}</span>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="card-text">{{ game.summary }}</p>
+                            <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary w-100">开始游戏</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">暂无推荐游戏</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="ad-banner h-100 d-flex flex-column justify-content-center align-items-center">
+                <h4>赞助广告</h4>
+                <img src="{% static 'img/ad-placeholder.svg' %}" class="img-fluid mt-3 ad-image" alt="广告">
+                <p class="mt-3 mb-0">成为会员，移除所有广告</p>
+                <a href="#" class="btn btn-warning mt-2">立即升级</a>
+            </div>
+        </div>
+    </div>
+</section> 

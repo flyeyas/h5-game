@@ -1,0 +1,32 @@
+<!-- 游戏列表 -->
+<div class="row">
+    {% for game in games %}
+    <div class="col-md-4 col-6">
+        {% include 'games/includes/game_card.html' with game=game %}
+    </div>
+    
+    {% if forloop.counter|divisibleby:6 %}
+    <!-- 中间广告 -->
+    <div class="col-12 my-3">
+        <div class="ad-banner">
+            <img src="https://via.placeholder.com/728x90/e9ecef/495057/?text=广告位" class="img-fluid" alt="广告">
+        </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <!-- 无搜索结果 -->
+    <div class="col-12">
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>未找到相关游戏</h3>
+            <p class="text-muted">尝试使用其他关键词或减少筛选条件</p>
+            <a href="{% url 'games:home' %}" class="btn btn-primary mt-3">返回首页</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 分页 -->
+{% if games %}
+    {% include 'games/includes/pagination.html' with page_obj=page_obj %}
+{% endif %} 

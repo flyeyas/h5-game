@@ -1,0 +1,747 @@
+{% load static %}
+<script>
+    // 当前页码
+    let currentHistoryPage = 1;
+    // 是否还有更多数据
+    let hasMoreHistory = true;
+    // 是否正在加载
+    let isHistoryLoading = false;
+    // 最后的筛选参数
+    let lastHistoryFilterParams = {};
+    // 标记是否已初始化
+    let isHistoryInitialized = false;
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 从URL获取筛选参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search') || '';
+        const categoryParam = urlParams.get('category') || '';
+        const sortParam = urlParams.get('sort') || 'recent';
+        
+        // 设置筛选控件初始值
+        document.getElementById('history-search-input').value = searchParam;
+        document.getElementById('history-sort-input').value = sortParam;
+        
+        // 更新排序下拉菜单文本
+        if (sortParam) {
+            let sortText = '最近游玩';
+            if (sortParam === 'name') sortText = '名称';
+            else if (sortParam === 'rating') sortText = '评分';
+            else if (sortParam === 'duration') sortText = '时长';
+            document.getElementById('historySortDropdown').textContent = sortText;
+            
+            // 更新排序选项状态
+            document.querySelectorAll('.history-sort-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.sort === sortParam);
+            });
+        }
+        
+        // 初次加载游戏历史（使用URL参数）
+        loadGameHistory({
+            search: searchParam,
+            category: categoryParam,
+            sort: sortParam
+        });
+        
+        // 加载更多按钮点击事件
+        document.getElementById('load-more-history').addEventListener('click', function() {
+            if (!isHistoryLoading && hasMoreHistory) {
+                currentHistoryPage++;
+                loadGameHistory(lastHistoryFilterParams, true);
+            }
+        });
+        
+        // 清空历史记录事件
+        document.getElementById('confirmClearHistory').addEventListener('click', function() {
+            clearAllHistory();
+        });
+        
+        // 初始化删除历史记录按钮点击事件（委托给父元素）
+        document.getElementById('history-container').addEventListener('click', function(e) {
+            if (e.target.closest('.delete-history-btn')) {
+                const btn = e.target.closest('.delete-history-btn');
+                const historyId = btn.dataset.historyId;
+                deleteHistoryItem(historyId, btn.closest('.col-12, .col-md-6, .col-lg-4, .col-xl-3'));
+            }
+        });
+        
+        // 搜索表单提交事件
+        document.getElementById('history-filter-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // 重置页码
+            currentHistoryPage = 1;
+            
+            // 获取筛选参数
+            const search = document.getElementById('history-search-input').value.trim();
+            const category = document.getElementById('history-category-select').value;
+            const sort = document.getElementById('history-sort-input').value;
+            
+            // 构建筛选参数对象
+            const filterParams = {
+                search: search,
+                category: category,
+                sort: sort
+            };
+            
+            // 加载游戏历史
+            loadGameHistory(filterParams);
+        });
+        
+        // 分类下拉菜单变更事件
+        document.getElementById('history-category-select').addEventListener('change', function() {
+            // 获取筛选参数
+            const search = document.getElementById('history-search-input').value.trim();
+            const category = this.value;
+            const sort = document.getElementById('history-sort-input').value;
+            
+            // 构建筛选参数对象
+            const filterParams = {
+                search: search,
+                category: category,
+                sort: sort
+            };
+            
+            // 加载游戏历史
+            loadGameHistory(filterParams);
+        });
+        
+        // 排序选项点击事件
+        document.querySelectorAll('.history-sort-option').forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 更新排序选项状态
+                document.querySelectorAll('.history-sort-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 更新排序下拉按钮文本
+                const sortText = this.textContent;
+                document.getElementById('historySortDropdown').textContent = sortText;
+                
+                // 更新隐藏字段值
+                const sortValue = this.dataset.sort;
+                document.getElementById('history-sort-input').value = sortValue;
+                
+                // 重置页码
+                currentHistoryPage = 1;
+                
+                // 获取筛选参数
+                const search = document.getElementById('history-search-input').value.trim();
+                const category = document.getElementById('history-category-select').value;
+                
+                // 构建筛选参数对象
+                const filterParams = {
+                    search: search,
+                    category: category,
+                    sort: sortValue
+                };
+                
+                // 加载游戏历史
+                loadGameHistory(filterParams);
+            });
+        });
+        
+        // 重试按钮点击事件
+        document.querySelector('.history-retry-button').addEventListener('click', function() {
+            // 隐藏错误提示
+            document.getElementById('history-error-container').style.display = 'none';
+            // 重新加载数据
+            loadGameHistory(lastHistoryFilterParams);
+        });
+    });
+    
+    // 加载游戏分类
+    function loadCategories(categories, selectedValue) {
+        const categorySelect = document.getElementById('history-category-select');
+        
+        // 保留"全部分类"选项
+        categorySelect.innerHTML = '<option value="">全部分类</option>';
+        
+        // 添加分类选项
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            
+            // 如果有选定的分类ID，设置为选中状态
+            if (selectedValue && selectedValue === category.id.toString()) {
+                option.selected = true;
+            }
+            
+            categorySelect.appendChild(option);
+        });
+    }
+    
+    // 加载游戏历史
+    function loadGameHistory(params = {}, isLoadMore = false) {
+        // 如果已经在加载中，则不再发起新请求
+        if (isHistoryLoading) return;
+        isHistoryLoading = true;
+        
+        // 隐藏错误提示
+        const errorContainer = document.getElementById('history-error-container');
+        if (errorContainer) {
+            errorContainer.style.display = 'none';
+        }
+        
+        // 显示加载指示器
+        const loadingIndicator = document.getElementById('history-loading');
+        if (loadingIndicator && !isLoadMore) {
+            loadingIndicator.style.display = 'block';
+        }
+        
+        // 更新加载更多按钮状态
+        const loadMoreBtn = document.getElementById('load-more-history');
+        if (loadMoreBtn && isLoadMore) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 加载中...';
+        }
+        
+        // 保存筛选参数，用于后续加载更多
+        if (!isLoadMore) {
+            lastHistoryFilterParams = {...params};
+            currentHistoryPage = 1;
+            // 如果是新的搜索或筛选，清空当前内容
+            const container = document.getElementById('history-container');
+            if (container) {
+                container.innerHTML = '';
+            }
+            // 重置状态
+            hasMoreHistory = true;
+        } else {
+            // 如果是加载更多，使用之前的筛选参数，只更新页码
+            params = {...lastHistoryFilterParams};
+            params.page = currentHistoryPage;
+        }
+        
+        // 构建请求参数
+        const queryParams = new URLSearchParams();
+        
+        // 添加基本参数
+        queryParams.append('page', currentHistoryPage);
+        queryParams.append('per_page', 12);
+        
+        // 添加筛选参数
+        if (params.search) queryParams.append('search', params.search);
+        if (params.category) queryParams.append('category', params.category);
+        if (params.sort) queryParams.append('sort', params.sort);
+        
+        // 如果是首次加载，获取分类数据
+        if (!isHistoryInitialized && !isLoadMore) {
+            queryParams.append('get_categories', 'true');
+        }
+        
+        // 如果不是加载更多，则更新浏览器历史记录
+        if (!isLoadMore) {
+            const historyParams = new URLSearchParams(queryParams);
+            const newUrl = window.location.pathname + (historyParams.toString() ? '?' + historyParams.toString() : '');
+            window.history.pushState({ path: newUrl }, '', newUrl);
+        }
+        
+        // 更新筛选标签显示
+        updateFilterTags(params);
+        
+        // 发送API请求获取游戏历史数据
+        fetch(`/api/history/?${queryParams.toString()}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('请求失败: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 标记为已初始化
+                isHistoryInitialized = true;
+                
+                // 隐藏加载指示器
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+                
+                // 更新加载更多按钮状态
+                if (loadMoreBtn) {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> 加载更多';
+                }
+                
+                // 如果有分类数据，加载分类列表
+                if (data.categories) {
+                    loadCategories(data.categories, params.category);
+                }
+                
+                if (data.history && data.history.length > 0) {
+                    renderGameHistory(data.history);
+                    hasMoreHistory = data.pagination.has_more;
+                    document.getElementById('load-more-container').style.display = hasMoreHistory ? 'block' : 'none';
+                    document.getElementById('history-empty').style.display = 'none';
+                    
+                    // 如果成功加载，增加页码（用于下次加载更多）
+                    if (isLoadMore) {
+                        currentHistoryPage++;
+                    }
+                } else if (currentHistoryPage === 1) {
+                    // 没有数据且是第一页
+                    document.getElementById('history-empty').style.display = 'block';
+                    document.getElementById('load-more-container').style.display = 'none';
+                    
+                    // 检查是否有搜索或筛选条件
+                    if (params.search || params.category) {
+                        // 更新空状态信息，表明是搜索/筛选结果为空
+                        const emptyStateTitle = document.querySelector('#history-empty h4');
+                        const emptyStateText = document.querySelector('#history-empty p.text-muted');
+                        const emptyStateButton = document.querySelector('#history-empty a.btn');
+                        
+                        if (emptyStateTitle) emptyStateTitle.textContent = '没有找到符合条件的游戏';
+                        if (emptyStateText) emptyStateText.textContent = '尝试使用其他搜索关键词或筛选条件';
+                        if (emptyStateButton) {
+                            emptyStateButton.textContent = '查看全部历史';
+                            emptyStateButton.href = 'javascript:void(0);';
+                            emptyStateButton.onclick = function() {
+                                // 清空所有筛选条件并重新加载
+                                document.getElementById('history-search-input').value = '';
+                                document.getElementById('history-category-select').value = '';
+                                document.getElementById('history-sort-input').value = 'recent';
+                                document.getElementById('historySortDropdown').textContent = '最近游玩';
+                                loadGameHistory();
+                            };
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('获取游戏历史失败:', error);
+                
+                // 隐藏加载指示器
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+                
+                // 更新加载更多按钮状态
+                if (loadMoreBtn) {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> 加载更多';
+                }
+                
+                // 显示错误信息
+                if (errorContainer) {
+                    document.getElementById('history-error-message').textContent = '加载数据失败，请稍后再试';
+                    errorContainer.style.display = 'block';
+                }
+            })
+            .finally(() => {
+                isHistoryLoading = false;
+            });
+    }
+    
+    // 渲染游戏历史数据
+    function renderGameHistory(historyItems) {
+        const container = document.getElementById('history-container');
+        const template = document.getElementById('history-card-template');
+        
+        historyItems.forEach(item => {
+            const historyCard = template.content.cloneNode(true);
+            
+            // 设置游戏封面
+            const imgElement = historyCard.querySelector('.game-thumbnail');
+            imgElement.src = item.game.thumbnail_url || 'https://via.placeholder.com/500x300';
+            imgElement.alt = item.game.title;
+            
+            // 设置游戏标题
+            historyCard.querySelector('.game-title').textContent = item.game.title;
+            
+            // 设置游戏评分星星
+            const ratingStarsElement = historyCard.querySelector('.game-rating-stars');
+            ratingStarsElement.innerHTML = generateRatingStars(item.game.rating);
+            
+            // 设置游戏评分数值
+            historyCard.querySelector('.game-rating-value').textContent = item.game.rating.toFixed(1);
+            
+            // 设置游戏分类
+            const categoryElement = historyCard.querySelector('.game-category');
+            if (item.game.category) {
+                categoryElement.textContent = item.game.category;
+                categoryElement.style.display = 'inline-block';
+            } else {
+                categoryElement.style.display = 'none';
+            }
+            
+            // 设置游戏简介
+            historyCard.querySelector('.game-intro').textContent = item.game.summary || '暂无简介';
+            
+            // 设置最后游玩时间
+            historyCard.querySelector('.game-last-played').textContent = item.last_played;
+            
+            // 设置游戏总时长
+            if (item.duration) {
+                historyCard.querySelector('.duration-text').textContent = formatDuration(item.duration);
+                historyCard.querySelector('.game-duration').style.display = 'inline-block';
+            } else {
+                historyCard.querySelector('.game-duration').style.display = 'none';
+            }
+            
+            // 设置游戏链接
+            historyCard.querySelector('.game-link').href = `/games/${item.game.slug}/`;
+            
+            // 设置删除按钮历史ID
+            historyCard.querySelector('.delete-history-btn').dataset.historyId = item.id;
+            
+            // 添加到容器
+            container.appendChild(historyCard);
+        });
+    }
+    
+    // 格式化游戏时长
+    function formatDuration(minutes) {
+        if (minutes < 60) {
+            return `${minutes}分钟`;
+        } else {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            if (mins === 0) {
+                return `${hours}小时`;
+            } else {
+                return `${hours}小时${mins}分钟`;
+            }
+        }
+    }
+    
+    // 生成星级评分HTML
+    function generateRatingStars(rating) {
+        let starsHtml = '';
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5;
+        const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+        
+        for (let i = 0; i < fullStars; i++) {
+            starsHtml += '<i class="fas fa-star"></i>';
+        }
+        
+        if (halfStar) {
+            starsHtml += '<i class="fas fa-star-half-alt"></i>';
+        }
+        
+        for (let i = 0; i < emptyStars; i++) {
+            starsHtml += '<i class="far fa-star"></i>';
+        }
+        
+        return starsHtml;
+    }
+    
+    // 删除单个历史记录
+    function deleteHistoryItem(historyId, cardElement) {
+        if (!historyId || !cardElement) return;
+        
+        // 显示加载状态
+        cardElement.style.opacity = '0.5';
+        cardElement.style.pointerEvents = 'none';
+        
+        // 获取CSRF Token
+        const csrftoken = getCookie('csrftoken');
+        
+        fetch(`/api/history/${historyId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('删除失败: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // 淡出动画
+                cardElement.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                cardElement.style.opacity = '0';
+                cardElement.style.transform = 'scale(0.8)';
+                
+                // 等待动画完成后移除卡片
+                setTimeout(() => {
+                    cardElement.remove();
+                    
+                    // 检查是否还有游戏卡片
+                    if (document.querySelectorAll('#history-container > div').length === 0) {
+                        // 显示空状态
+                        document.getElementById('history-empty').style.display = 'block';
+                        document.getElementById('load-more-container').style.display = 'none';
+                    }
+                    
+                    // 显示成功提示
+                    showToast('已删除游戏历史记录');
+                }, 500);
+            } else {
+                // 恢复卡片状态
+                cardElement.style.opacity = '1';
+                cardElement.style.pointerEvents = 'auto';
+                showToast(data.message || '删除失败，请稍后再试', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('删除历史记录失败:', error);
+            // 恢复卡片状态
+            cardElement.style.opacity = '1';
+            cardElement.style.pointerEvents = 'auto';
+            showToast('删除失败，请稍后再试', 'error');
+        });
+    }
+    
+    // 清空所有历史记录
+    function clearAllHistory() {
+        // 显示正在处理状态
+        const confirmBtn = document.getElementById('confirmClearHistory');
+        const originalBtnText = confirmBtn.textContent;
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理中...';
+        
+        // 获取CSRF Token
+        const csrftoken = getCookie('csrftoken');
+        
+        fetch('/api/history/clear/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('清空失败: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // 清空游戏历史列表
+                const container = document.getElementById('history-container');
+                if (container) {
+                    container.innerHTML = '';
+                }
+                
+                // 显示空状态
+                document.getElementById('history-empty').style.display = 'block';
+                document.getElementById('load-more-container').style.display = 'none';
+                
+                // 显示成功提示
+                showToast('已清空全部游戏历史记录');
+            } else {
+                // 显示错误提示
+                showToast(data.message || '操作失败，请稍后再试', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('清空历史记录失败:', error);
+            showToast('操作失败，请稍后再试', 'error');
+        })
+        .finally(() => {
+            // 无论成功失败，恢复按钮状态
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = originalBtnText;
+            
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('clearHistoryModal'));
+            modal.hide();
+        });
+    }
+    
+    // 获取CSRF Token的函数
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // 显示加载指示器
+    function showHistoryLoading(show) {
+        const loadingIndicator = document.getElementById('history-loading');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = show ? 'block' : 'none';
+        }
+    }
+    
+    // 更新筛选标签
+    function updateFilterTags(params) {
+        const tagsContainer = document.querySelector('.history-filter-tags');
+        const search = params.search || '';
+        const categoryId = params.category || '';
+        const sort = params.sort || 'recent';
+        
+        // 检查是否有筛选条件
+        const hasFilters = search || categoryId || (sort && sort !== 'recent');
+        
+        if (hasFilters) {
+            // 有筛选条件，更新或创建筛选标签区域
+            let filterTagsHTML = '<span class="me-2">筛选条件:</span>';
+            
+            // 添加搜索标签
+            if (search) {
+                filterTagsHTML += `
+                    <span class="badge bg-light text-dark p-2 me-2">
+                        <i class="fas fa-search me-1"></i> ${search}
+                        <a href="javascript:void(0);" class="text-muted ms-1 remove-search-btn"><i class="fas fa-times"></i></a>
+                    </span>
+                `;
+            }
+            
+            // 添加分类标签
+            if (categoryId) {
+                // 获取分类名称
+                let categoryText = '';
+                const categorySelect = document.getElementById('history-category-select');
+                if (categorySelect) {
+                    const selectedOption = categorySelect.querySelector(`option[value="${categoryId}"]`);
+                    if (selectedOption) {
+                        categoryText = selectedOption.textContent.trim();
+                    }
+                }
+                
+                // 如果找不到名称，使用ID作为替代
+                if (!categoryText) {
+                    categoryText = `ID:${categoryId}`;
+                }
+                
+                filterTagsHTML += `
+                    <span class="badge bg-light text-dark p-2 me-2">
+                        <i class="fas fa-tag me-1"></i> ${categoryText}
+                        <a href="javascript:void(0);" class="text-muted ms-1 remove-category-btn"><i class="fas fa-times"></i></a>
+                    </span>
+                `;
+            }
+            
+            // 添加排序标签
+            if (sort && sort !== 'recent') {
+                let sortText = '';
+                if (sort === 'name') sortText = '名称';
+                else if (sort === 'rating') sortText = '评分';
+                else if (sort === 'duration') sortText = '时长';
+                
+                filterTagsHTML += `
+                    <span class="badge bg-light text-dark p-2 me-2">
+                        <i class="fas fa-sort me-1"></i> 排序: ${sortText}
+                        <a href="javascript:void(0);" class="text-muted ms-1 remove-sort-btn"><i class="fas fa-times"></i></a>
+                    </span>
+                `;
+            }
+            
+            // 添加清除全部按钮
+            if ((search && categoryId) || 
+                (search && sort && sort !== 'recent') || 
+                (categoryId && sort && sort !== 'recent')) {
+                filterTagsHTML += `
+                    <a href="javascript:void(0);" class="btn btn-sm btn-outline-secondary ms-2 clear-all-btn">
+                        <i class="fas fa-trash-alt me-1"></i> 清除全部
+                    </a>
+                `;
+            }
+            
+            // 更新或创建筛选标签区域
+            tagsContainer.innerHTML = filterTagsHTML;
+            tagsContainer.style.display = 'block';
+            
+            // 重新绑定筛选条件按钮事件
+            bindFilterTagEvents();
+        } else {
+            // 没有筛选条件，隐藏筛选标签区域
+            tagsContainer.style.display = 'none';
+        }
+    }
+    
+    // 绑定事件
+    function bindFilterTagEvents() {
+        // 绑定移除搜索条件按钮
+        document.querySelectorAll('.remove-search-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // 清空搜索输入框
+                document.getElementById('history-search-input').value = '';
+                
+                // 获取当前的分类ID和排序方式
+                const categoryValue = document.getElementById('history-category-select').value;
+                const sortValue = document.getElementById('history-sort-input').value;
+                
+                // 重新加载游戏历史，只保留分类筛选和排序
+                loadGameHistory({
+                    category: categoryValue,
+                    sort: sortValue
+                });
+            });
+        });
+        
+        // 绑定移除分类条件按钮
+        document.querySelectorAll('.remove-category-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // 清空分类选择
+                document.getElementById('history-category-select').value = '';
+                
+                // 获取当前的搜索关键词和排序方式
+                const searchValue = document.getElementById('history-search-input').value.trim();
+                const sortValue = document.getElementById('history-sort-input').value;
+                
+                // 重新加载游戏历史，只保留搜索筛选和排序
+                loadGameHistory({
+                    search: searchValue,
+                    sort: sortValue
+                });
+            });
+        });
+        
+        // 绑定移除排序条件按钮
+        document.querySelectorAll('.remove-sort-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // 重置排序为默认值
+                document.getElementById('history-sort-input').value = 'recent';
+                document.getElementById('historySortDropdown').textContent = '最近游玩';
+                
+                // 更新排序选项状态
+                document.querySelectorAll('.history-sort-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.sort === 'recent');
+                });
+                
+                // 获取当前的搜索关键词和分类ID
+                const searchValue = document.getElementById('history-search-input').value.trim();
+                const categoryValue = document.getElementById('history-category-select').value;
+                
+                // 重新加载游戏历史，保留搜索和分类筛选，排序重置为默认
+                loadGameHistory({
+                    search: searchValue,
+                    category: categoryValue,
+                    sort: 'recent'
+                });
+            });
+        });
+        
+        // 绑定清除所有条件按钮
+        document.querySelectorAll('.clear-all-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // 清空输入框和选择器
+                document.getElementById('history-search-input').value = '';
+                document.getElementById('history-category-select').value = '';
+                document.getElementById('history-sort-input').value = 'recent';
+                document.getElementById('historySortDropdown').textContent = '最近游玩';
+                
+                // 更新排序选项状态
+                document.querySelectorAll('.history-sort-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.sort === 'recent');
+                });
+                
+                // 重新加载游戏历史，不带任何筛选条件
+                loadGameHistory({
+                    sort: 'recent'
+                });
+            });
+        });
+    }
+</script> 

@@ -1,0 +1,119 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load games_payment_tags %}
+
+{% block title %}{% trans "支付成功" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<section class="payment-result-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mx-auto">
+                <div class="card success-card">
+                    <div class="card-body text-center">
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h2>{% trans "支付成功" %}</h2>
+                        <p class="lead">{% trans "您的会员订阅已经成功开通！" %}</p>
+                        
+                        {% if subscription %}
+                        <div class="subscription-details mt-4">
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "会员计划" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p>{{ subscription.plan.name }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "开始日期" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p>{{ subscription.start_date|date:"Y-m-d" }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "到期日期" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p>{{ subscription.end_date|date:"Y-m-d" }}</p>
+                                </div>
+                            </div>
+                            {% if transaction %}
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "支付金额" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p>{{ transaction.amount|currency_format:transaction.currency }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 text-md-right">
+                                    <p><strong>{% trans "交易编号" %}:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-md-left">
+                                    <p class="transaction-id">{{ transaction.id }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="action-buttons mt-4">
+                            <a href="{% url 'games:index' %}" class="btn btn-primary btn-lg">{% trans "返回首页" %}</a>
+                            <a href="{% url 'games:profile' %}" class="btn btn-outline-primary btn-lg">{% trans "查看会员信息" %}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-result-section {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+    .success-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 40px 20px;
+    }
+    .success-icon {
+        font-size: 80px;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+    .subscription-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    .transaction-id {
+        font-family: monospace;
+        color: #6c757d;
+    }
+    .action-buttons .btn {
+        margin: 0 5px;
+    }
+    @media (max-width: 767.98px) {
+        .subscription-details .col-md-6 {
+            text-align: center !important;
+        }
+        .subscription-details .row {
+            margin-bottom: 10px;
+        }
+    }
+</style>
+{% endblock %} 

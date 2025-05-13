@@ -1,0 +1,401 @@
+{% load i18n %}
+
+<!-- 添加分类模态框 -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">{% trans '添加新分类' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="add-category-form" autocomplete="off">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="add-category-name" class="form-label">{% trans '分类名称' %} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add-category-name" name="name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="add-category-parent" class="form-label">{% trans '父级分类' %}</label>
+                            <select class="form-select" id="add-category-parent" name="parent">
+                                <option value="">{% trans '无 (顶级分类)' %}</option>
+                                {% for parent in parent_categories %}
+                                <option value="{{ parent.id }}">{{ parent.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add-category-description" class="form-label">{% trans '分类描述' %}</label>
+                        <textarea class="form-control" id="add-category-description" name="description" rows="3" placeholder="{% trans '简要描述该分类的特点和包含的游戏类型' %}"></textarea>
+                        <div class="form-text">{% trans '简要描述该分类的特点和包含的游戏类型' %}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add-category-icon" class="form-label">{% trans '分类图标' %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text icon-preview-container">
+                                    <i id="add-icon-preview" class="fas fa-gamepad"></i>
+                                </span>
+                                <input type="text" class="form-control" id="add-category-icon" name="icon" 
+                                    placeholder="{% trans '例如: fas fa-gamepad' %}">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#iconPickerModal" 
+                                    data-target-field="add-category-icon" data-preview-element="add-icon-preview">
+                                    <i class="fas fa-search"></i> {% trans '选择' %}
+                                </button>
+                            </div>
+                            <div class="form-text">{% trans '输入Font Awesome 6.0.0图标类名' %}</div>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="add-category-order" class="form-label">{% trans '排序' %}</label>
+                            <input type="number" class="form-control" id="add-category-order" name="order" value="0" min="0">
+                            <div class="form-text">{% trans '数字越小排序越靠前' %}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="add-category-color" class="form-label">{% trans '分类颜色' %}</label>
+                            <input type="color" class="form-control form-control-color w-100" id="add-category-color" name="color" value="#6EBD6E">
+                            <div class="form-text">{% trans '用于分类标签和图标背景' %}</div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add-category-slug" class="form-label">{% trans '分类别名' %}</label>
+                            <input type="text" class="form-control" id="add-category-slug" name="slug" placeholder="{% trans '英文别名' %}">
+                            <div class="form-text">{% trans '英文字母、数字和连字符，用于URL友好显示' %}</div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="add-category-is-active" name="is_active" checked>
+                                <label class="form-check-label" for="add-category-is-active">{% trans '启用此分类' %}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans '保存分类' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑分类模态框 -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCategoryModalLabel">{% trans '编辑分类' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-category-form" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" id="edit-category-id" name="id">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="edit-category-name" class="form-label">{% trans '分类名称' %} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit-category-name" name="name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit-category-parent" class="form-label">{% trans '父级分类' %}</label>
+                            <select class="form-select" id="edit-category-parent" name="parent">
+                                <option value="">{% trans '无 (顶级分类)' %}</option>
+                                {% for parent in parent_categories %}
+                                <option value="{{ parent.id }}">{{ parent.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-category-description" class="form-label">{% trans '分类描述' %}</label>
+                        <textarea class="form-control" id="edit-category-description" name="description" rows="3" placeholder="{% trans '简要描述该分类的特点和包含的游戏类型' %}"></textarea>
+                        <div class="form-text">{% trans '简要描述该分类的特点和包含的游戏类型' %}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-category-icon" class="form-label">{% trans '分类图标' %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text icon-preview-container">
+                                    <i id="edit-icon-preview" class="fas fa-gamepad"></i>
+                                </span>
+                                <input type="text" class="form-control" id="edit-category-icon" name="icon" 
+                                    placeholder="{% trans '例如: fas fa-gamepad' %}">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#iconPickerModal" 
+                                    data-target-field="edit-category-icon" data-preview-element="edit-icon-preview">
+                                    <i class="fas fa-search"></i> {% trans '选择' %}
+                                </button>
+                            </div>
+                            <div class="form-text">{% trans '输入Font Awesome 6.0.0图标类名' %}</div>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="edit-category-order" class="form-label">{% trans '排序' %}</label>
+                            <input type="number" class="form-control" id="edit-category-order" name="order" value="0" min="0">
+                            <div class="form-text">{% trans '数字越小排序越靠前' %}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit-category-color" class="form-label">{% trans '分类颜色' %}</label>
+                            <input type="color" class="form-control form-control-color w-100" id="edit-category-color" name="color" value="#6EBD6E">
+                            <div class="form-text">{% trans '用于分类标签和图标背景' %}</div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-category-slug" class="form-label">{% trans '分类别名' %}</label>
+                            <input type="text" class="form-control" id="edit-category-slug" name="slug" placeholder="{% trans '英文别名' %}">
+                            <div class="form-text">{% trans '英文字母、数字和连字符，用于URL友好显示' %}</div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="edit-category-is-active" name="is_active">
+                                <label class="form-check-label" for="edit-category-is-active">{% trans '启用此分类' %}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans '保存更改' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 查看分类模态框 -->
+<div class="modal fade" id="viewCategoryModal" tabindex="-1" aria-labelledby="viewCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewCategoryModalLabel">{% trans '分类详情' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="category-detail">
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '分类名称' %}:</div>
+                        <div class="col-8 fw-bold" id="view-category-name"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '分类图标' %}:</div>
+                        <div class="col-8">
+                            <span class="icon-preview-container me-2">
+                                <i id="view-category-icon" class=""></i>
+                            </span>
+                            <code id="view-category-icon-class"></code>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '分类描述' %}:</div>
+                        <div class="col-8" id="view-category-description"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '父级分类' %}:</div>
+                        <div class="col-8" id="view-category-parent"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '排序' %}:</div>
+                        <div class="col-8" id="view-category-order"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '分类别名' %}:</div>
+                        <div class="col-8" id="view-category-slug"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '分类颜色' %}:</div>
+                        <div class="col-8">
+                            <span id="view-category-color" class="category-color-box"></span>
+                            <code id="view-category-color-code"></code>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">{% trans '状态' %}:</div>
+                        <div class="col-8">
+                            <span id="view-category-status" class="badge bg-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '关闭' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除分类确认模态框 -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCategoryModalLabel">{% trans '确认删除' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="delete-category-form">
+                {% csrf_token %}
+                <input type="hidden" id="delete-category-id" name="id">
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% trans '您确定要删除分类 ' %}<strong id="delete-category-name"></strong>{% trans ' 吗？此操作不可撤销。' %}
+                    </div>
+                    <p>{% trans '删除此分类前请确保：' %}</p>
+                    <ul>
+                        <li>{% trans '该分类下没有子分类' %}</li>
+                        <li>{% trans '该分类下没有关联的游戏' %}</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-danger">{% trans '确认删除' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 切换分类状态确认模态框 -->
+<div class="modal fade" id="toggleStatusModal" tabindex="-1" aria-labelledby="toggleStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toggleStatusModalLabel">{% trans '确认更改状态' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="toggle-category-id">
+                <div class="alert alert-info">
+                    <i class="fas fa-question-circle me-2"></i>
+                    <span id="toggle-status-message">{% trans '您确定要更改此分类的状态吗？' %}</span>
+                </div>
+                <div id="toggle-status-details" class="mt-3">
+                    <p><strong>{% trans '分类名称：' %}</strong> <span id="toggle-category-name"></span></p>
+                    <p><strong>{% trans '当前状态：' %}</strong> <span id="toggle-category-current-status"></span></p>
+                    <p><strong>{% trans '修改后状态：' %}</strong> <span id="toggle-category-new-status"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                <button type="button" id="confirm-toggle-status" class="btn btn-primary">{% trans '确认更改' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 图标选择器模态框 -->
+<div class="modal fade" id="iconPickerModal" tabindex="-1" aria-labelledby="iconPickerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="iconPickerModalLabel">{% trans '选择图标' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="icon-search" placeholder="{% trans '搜索图标...' %}">
+                    </div>
+                </div>
+                
+                <ul class="nav nav-tabs mb-3" id="iconTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="solid-tab" data-bs-toggle="tab" data-bs-target="#solid-icons-tab" 
+                            type="button" role="tab" aria-controls="solid-icons-tab" aria-selected="true">
+                            <i class="fas fa-icons me-1"></i> {% trans '实心图标' %}
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="regular-tab" data-bs-toggle="tab" data-bs-target="#regular-icons-tab" 
+                            type="button" role="tab" aria-controls="regular-icons-tab" aria-selected="false">
+                            <i class="far fa-icons me-1"></i> {% trans '线条图标' %}
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="brand-tab" data-bs-toggle="tab" data-bs-target="#brand-icons-tab" 
+                            type="button" role="tab" aria-controls="brand-icons-tab" aria-selected="false">
+                            <i class="fab fa-font-awesome-flag me-1"></i> {% trans '品牌图标' %}
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="iconTabsContent">
+                    <!-- 实心图标 -->
+                    <div class="tab-pane fade show active" id="solid-icons-tab" role="tabpanel" aria-labelledby="solid-tab">
+                        <div class="text-center mb-3 loading-container">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">{% trans '加载中...' %}</span>
+                            </div>
+                            <p>{% trans '加载图标...' %}</p>
+                        </div>
+                        <div class="row row-cols-3 row-cols-md-6 row-cols-lg-8 g-3 solid-icons icon-grid"></div>
+                    </div>
+                    
+                    <!-- 线条图标 -->
+                    <div class="tab-pane fade" id="regular-icons-tab" role="tabpanel" aria-labelledby="regular-tab">
+                        <div class="row row-cols-3 row-cols-md-6 row-cols-lg-8 g-3 regular-icons icon-grid"></div>
+                    </div>
+                    
+                    <!-- 品牌图标 -->
+                    <div class="tab-pane fade" id="brand-icons-tab" role="tabpanel" aria-labelledby="brand-tab">
+                        <div class="row row-cols-3 row-cols-md-6 row-cols-lg-8 g-3 brand-icons icon-grid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加CSS样式 -->
+<style>
+  /* 图标选择器样式 */
+  .icon-grid .icon-item {
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+  
+  .icon-grid .icon-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .icon-grid .icon-item.selected {
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+  }
+  
+  .icon-grid .icon-item i {
+    font-size: 24px;
+    margin-bottom: 5px;
+  }
+  
+  .icon-grid .icon-name {
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .icon-preview-container {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 14px;
+    border: 1px solid #dee2e6;
+    margin-right: 5px;
+  }
+</style>
+
+<!-- Toast容器 -->
+<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100"></div> 

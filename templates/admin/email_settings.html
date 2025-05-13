@@ -1,0 +1,616 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}邮件配置 | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* 邮件配置页面专用样式 */
+  .settings-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+  }
+  
+  .settings-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .settings-form {
+    padding: 20px;
+  }
+  
+  .settings-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .settings-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #444;
+  }
+  
+  /* 表单元素定制 */
+  .form-control {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+  }
+  
+  .form-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .required-field .form-label:after {
+    content: " *";
+    color: #dc3545;
+  }
+  
+  /* 操作按钮区域 */
+  .form-actions {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    text-align: right;
+  }
+  
+  .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    padding: 0.5rem 1.5rem;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+  }
+  
+  .btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+    padding: 0.5rem 1.25rem;
+  }
+  
+  /* 辅助信息文本 */
+  .help-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* SMTP设置测试邮件区域 */
+  .test-email-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px solid #e9ecef;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 767.98px) {
+    .settings-container {
+      border-radius: 0;
+      box-shadow: none;
+    }
+    
+    .settings-form {
+      padding: 15px;
+    }
+    
+    .form-actions {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .form-actions .btn {
+      width: 100%;
+    }
+  }
+  
+  /* 开关样式 */
+  .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    margin-top: 0.25em;
+  }
+  
+  .form-switch .form-check-input {
+    margin-right: 10px;
+  }
+  
+  /* 确保图标在输入框中垂直居中 */
+  .input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem 0 0 0.25rem;
+  }
+  
+  /* Toast通知样式 */
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+  }
+  
+  .toast {
+    min-width: 250px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- 引入顶部导航 -->
+  {% include "admin/includes/top_navbar.html" with page_title="邮件配置" %}
+
+  <!-- 邮件设置内容区 -->
+  <div class="settings-container">
+    <h5 class="settings-header">
+      <i class="fas fa-envelope me-2"></i>{% trans '邮件服务配置' %}
+    </h5>
+    
+    <form method="post" action="{% url 'admin_panel:ajax_update_email_settings' %}" id="emailSettingsForm" class="settings-form" onsubmit="return false;">
+      {% csrf_token %}
+      
+      <!-- SMTP服务器设置部分 -->
+      <div class="settings-section">
+        <h6 class="section-title">{% trans 'SMTP服务器设置' %}</h6>
+        
+        <!-- 启用SMTP服务 -->
+        <div class="mb-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="enableSMTP" name="enable_smtp" {% if email_settings.enable_smtp %}checked{% endif %}>
+            <label class="form-check-label" for="enableSMTP">{% trans '启用SMTP邮件服务' %}</label>
+          </div>
+          <div class="help-text">{% trans '开启后系统将使用SMTP发送邮件，否则将使用本地邮件服务' %}</div>
+        </div>
+        
+        <!-- SMTP服务器 -->
+        <div class="mb-3 required-field">
+          <label for="smtpServer" class="form-label">{% trans 'SMTP服务器' %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-server"></i></span>
+            <input type="text" class="form-control" id="smtpServer" name="smtp_server" value="{{ email_settings.smtp_server }}" placeholder="例如: smtp.example.com" required>
+          </div>
+        </div>
+        
+        <!-- SMTP端口 -->
+        <div class="mb-3 required-field">
+          <label for="smtpPort" class="form-label">{% trans 'SMTP端口' %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-plug"></i></span>
+            <input type="number" class="form-control" id="smtpPort" name="smtp_port" value="{{ email_settings.smtp_port|default:'25' }}" placeholder="默认: 25, SSL: 465, TLS: 587" required>
+          </div>
+        </div>
+        
+        <!-- 安全连接类型 -->
+        <div class="mb-3">
+          <label for="securityType" class="form-label">{% trans '安全连接类型' %}</label>
+          <select class="form-select" id="securityType" name="security_type">
+            <option value="none" {% if email_settings.security_type == 'none' %}selected{% endif %}>{% trans '无加密' %}</option>
+            <option value="ssl" {% if email_settings.security_type == 'ssl' %}selected{% endif %}>SSL</option>
+            <option value="tls" {% if email_settings.security_type == 'tls' %}selected{% endif %}>TLS</option>
+          </select>
+        </div>
+        
+        <!-- 需要身份验证 -->
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="requireAuth" name="require_authentication" {% if email_settings.require_authentication %}checked{% endif %}>
+            <label class="form-check-label" for="requireAuth">{% trans '需要SMTP身份验证' %}</label>
+          </div>
+        </div>
+        
+        <!-- 认证用户名 -->
+        <div class="mb-3 smtp-auth-field">
+          <label for="smtpUsername" class="form-label">{% trans '认证用户名' %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-user"></i></span>
+            <input type="text" class="form-control" id="smtpUsername" name="smtp_username" value="{{ email_settings.smtp_username }}" placeholder="SMTP用户名">
+          </div>
+        </div>
+        
+        <!-- 认证密码 -->
+        <div class="mb-3 smtp-auth-field">
+          <label for="smtpPassword" class="form-label">{% trans '认证密码' %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+            <input type="password" class="form-control password-field" id="passwordInput" name="smtp_password" value="{{ email_settings.smtp_password }}" placeholder="SMTP密码" style="display: block;">
+            <input type="text" class="form-control password-field" id="textInput" name="smtp_password_text" value="{{ email_settings.smtp_password }}" placeholder="SMTP密码" style="display: none;">
+            <div class="input-group-text password-toggle" id="passwordToggle" style="cursor: pointer;">
+              <i class="fas fa-eye"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 邮件发送设置部分 -->
+      <div class="settings-section">
+        <h6 class="section-title">{% trans '邮件发送设置' %}</h6>
+        
+        <!-- 发送邮箱 -->
+        <div class="mb-3 required-field">
+          <label for="senderEmail" class="form-label">{% trans '发送邮箱' %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-at"></i></span>
+            <input type="email" class="form-control" id="senderEmail" name="sender_email" value="{{ email_settings.sender_email }}" placeholder="例如: service@yourdomain.com" required>
+          </div>
+        </div>
+        
+        <!-- 发送人名称 -->
+        <div class="mb-3">
+          <label for="senderName" class="form-label">{% trans '发送人名称' %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-user"></i></span>
+            <input type="text" class="form-control" id="senderName" name="sender_name" value="{{ email_settings.sender_name }}" placeholder="例如: GameHub服务团队">
+          </div>
+        </div>
+        
+        <!-- 发送超时时间 -->
+        <div class="mb-3">
+          <label for="sendTimeout" class="form-label">{% trans '发送超时时间(秒)' %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-clock"></i></span>
+            <input type="number" class="form-control" id="sendTimeout" name="send_timeout" value="{{ email_settings.send_timeout|default:30 }}" placeholder="默认: 30秒">
+          </div>
+        </div>
+        
+        <!-- 测试邮件发送 -->
+        <div class="test-email-container">
+          <h6 class="mb-3">{% trans '测试邮件配置' %}</h6>
+          <div class="mb-3">
+            <label for="testEmail" class="form-label">{% trans '测试接收邮箱' %}</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+              <input type="email" class="form-control" id="testEmail" name="test_email" placeholder="输入接收测试邮件的邮箱地址">
+              <button class="btn btn-outline-primary" type="button" id="sendTestEmail">
+                <i class="fas fa-paper-plane me-1"></i>{% trans '发送测试' %}
+              </button>
+            </div>
+          </div>
+          <div id="testEmailStatus" class="d-none mt-2">
+            <div class="d-flex align-items-center">
+              <div class="spinner-border spinner-border-sm text-primary me-2" role="status" id="testEmailSpinner">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <span id="testEmailMessage">{% trans '正在发送测试邮件...' %}</span>
+            </div>
+          </div>
+          <div id="testEmailError" class="d-none mt-2 alert alert-danger">
+            <h6>{% trans '发送失败' %}</h6>
+            <p id="testEmailErrorMessage"></p>
+            <div id="testEmailErrorSuggestion" class="mt-2">
+              <h6>{% trans '可能的解决方案:' %}</h6>
+              <ul>
+                <li>{% trans '检查SMTP服务器地址和端口是否正确' %}</li>
+                <li>{% trans '确认您的网络可以访问该SMTP服务器' %}</li>
+                <li>{% trans '验证SMTP账号和密码是否正确' %}</li>
+                <li>{% trans '检查服务器是否需要SSL/TLS加密' %}</li>
+              </ul>
+            </div>
+            <!-- 调试信息区域 -->
+            <div class="mt-3">
+              <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#debugInfo" aria-expanded="false" aria-controls="debugInfo">
+                <i class="fas fa-bug me-1"></i>{% trans '显示调试信息' %}
+              </button>
+              <div class="collapse mt-2" id="debugInfo">
+                <div class="card card-body">
+                  <h6>{% trans '调试日志:' %}</h6>
+                  <pre id="debugLog" class="bg-dark text-light p-2" style="max-height: 300px; overflow-y: auto; font-size: 0.8rem;"></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 提交按钮 -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline-secondary me-2">{% trans '取消' %}</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save me-1"></i>{% trans '保存设置' %}
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- 成功/错误提示Toast -->
+  <div class="toast-container">
+    <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" id="successToast">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="fas fa-check-circle me-2"></i>{% trans '设置已成功保存！' %}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+    
+    <div class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" id="errorToast">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="fas fa-exclamation-circle me-2"></i><span id="errorMessage">{% trans '保存设置时出现错误！' %}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+    
+    <div class="toast align-items-center text-white bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true" id="testEmailToast">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="fas fa-info-circle me-2"></i>{% trans '测试邮件已发送，请检查您的收件箱！' %}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+  // 密码显示/隐藏切换函数
+  function togglePasswordVisibility(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    const passwordInput = document.getElementById('passwordInput');
+    const textInput = document.getElementById('textInput');
+    const toggleBtn = document.getElementById('passwordToggle');
+    
+    // 如果密码框可见，则切换到文本框
+    if (passwordInput.style.display === 'block') {
+      // 将密码复制到文本框
+      textInput.value = passwordInput.value;
+      // 隐藏密码框，显示文本框
+      passwordInput.style.display = 'none';
+      textInput.style.display = 'block';
+      // 更改图标
+      toggleBtn.querySelector('i').classList.remove('fa-eye');
+      toggleBtn.querySelector('i').classList.add('fa-eye-slash');
+    } else {
+      // 将文本复制到密码框
+      passwordInput.value = textInput.value;
+      // 隐藏文本框，显示密码框
+      textInput.style.display = 'none';
+      passwordInput.style.display = 'block';
+      // 更改图标
+      toggleBtn.querySelector('i').classList.remove('fa-eye-slash');
+      toggleBtn.querySelector('i').classList.add('fa-eye');
+    }
+    
+    return false;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // 表单元素
+    const requireAuthCheckbox = document.getElementById('requireAuth');
+    const smtpAuthFields = document.querySelectorAll('.smtp-auth-field');
+    const togglePasswordBtn = document.getElementById('passwordToggle');
+    const passwordField = document.getElementById('passwordInput');
+    const textField = document.getElementById('textInput');
+    const sendTestEmailBtn = document.getElementById('sendTestEmail');
+    const testEmailField = document.getElementById('testEmail');
+    const form = document.getElementById('emailSettingsForm');
+    const cancelBtn = document.querySelector('.btn-outline-secondary');
+    const submitBtn = document.querySelector('.btn-primary');
+    
+    // Toast元素
+    const successToast = new bootstrap.Toast(document.getElementById('successToast'));
+    const errorToast = new bootstrap.Toast(document.getElementById('errorToast'));
+    const testEmailToast = new bootstrap.Toast(document.getElementById('testEmailToast'));
+    
+    // 切换身份验证字段显示
+    function toggleAuthFields() {
+      const isChecked = requireAuthCheckbox.checked;
+      smtpAuthFields.forEach(field => {
+        field.style.display = isChecked ? 'block' : 'none';
+      });
+    }
+    
+    // 页面加载时执行一次
+    toggleAuthFields();
+    
+    // 监听身份验证复选框变化
+    requireAuthCheckbox.addEventListener('change', toggleAuthFields);
+    
+    // 文本框和密码框的内容同步
+    textField.addEventListener('input', function() {
+      passwordField.value = textField.value;
+    });
+    
+    passwordField.addEventListener('input', function() {
+      textField.value = passwordField.value;
+    });
+    
+    // 密码显示/隐藏切换 - 使用点击事件
+    togglePasswordBtn.addEventListener('click', function(e) {
+      // 防止事件冒泡和默认行为
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      // 调用密码显示切换函数
+      togglePasswordVisibility(e);
+      
+      // 阻止事件进一步传播
+      return false;
+    });
+    
+    // 发送测试邮件
+    sendTestEmailBtn.addEventListener('click', function() {
+      const testEmail = testEmailField.value.trim();
+      if (!testEmail) {
+        document.getElementById('errorMessage').textContent = '请输入测试邮箱地址';
+        errorToast.show();
+        return;
+      }
+      
+      // 显示加载状态
+      const testEmailStatus = document.getElementById('testEmailStatus');
+      const testEmailError = document.getElementById('testEmailError');
+      const testEmailErrorMessage = document.getElementById('testEmailErrorMessage');
+      const debugLog = document.getElementById('debugLog');
+      
+      // 重置状态
+      testEmailStatus.classList.remove('d-none');
+      testEmailError.classList.add('d-none');
+      debugLog.textContent = '';
+      
+      // 禁用发送按钮
+      sendTestEmailBtn.disabled = true;
+      
+      // 确保使用正确的密码值
+      let password = passwordField.value;
+      if (textField.style.display === 'block') {
+        password = textField.value;
+      }
+      
+      // 发送测试邮件的AJAX请求
+      fetch('{% url "admin_panel:test_email" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          test_email: testEmail,
+          enable_smtp: true, // 强制启用SMTP
+          smtp_server: document.getElementById('smtpServer').value,
+          smtp_port: document.getElementById('smtpPort').value,
+          security_type: document.getElementById('securityType').value,
+          require_authentication: requireAuthCheckbox.checked,
+          smtp_username: document.getElementById('smtpUsername').value,
+          smtp_password: password,
+          sender_email: document.getElementById('senderEmail').value,
+          sender_name: document.getElementById('senderName').value
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        // 隐藏加载状态
+        testEmailStatus.classList.add('d-none');
+        
+        // 启用发送按钮
+        sendTestEmailBtn.disabled = false;
+        
+        if (data.success) {
+          testEmailToast.show();
+          
+          // 如果有调试日志，显示它
+          if (data.debug_log && data.debug_log.length > 0) {
+            debugLog.textContent = data.debug_log.join('\n');
+          }
+        } else {
+          // 显示错误信息
+          testEmailError.classList.remove('d-none');
+          
+          let errorText = data.error || '发送测试邮件失败';
+          
+          // 格式化常见错误信息
+          if (errorText.includes('Connection refused') || errorText.includes('Errno 61')) {
+            errorText = '连接被拒绝: 无法连接到SMTP服务器，服务器地址或端口可能不正确，或服务器未运行。';
+          } else if (errorText.includes('Authentication failed')) {
+            errorText = '认证失败: 用户名或密码不正确。';
+          } else if (errorText.includes('timed out')) {
+            errorText = '连接超时: 服务器响应时间过长或无法访问。';
+          } else if (errorText.includes('SSL')) {
+            errorText = 'SSL错误: 安全连接失败，请检查是否选择了正确的安全连接类型。';
+          }
+          
+          testEmailErrorMessage.textContent = errorText;
+          
+          // 如果有调试日志，显示它
+          if (data.debug_log && data.debug_log.length > 0) {
+            debugLog.textContent = data.debug_log.join('\n');
+          }
+        }
+      })
+      .catch(error => {
+        // 隐藏加载状态
+        testEmailStatus.classList.add('d-none');
+        
+        // 启用发送按钮
+        sendTestEmailBtn.disabled = false;
+        
+        // 显示错误信息
+        testEmailError.classList.remove('d-none');
+        testEmailErrorMessage.textContent = '发送请求时出错: ' + error.message;
+      });
+    });
+    
+    // 表单提交处理
+    submitBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          successToast.show();
+        } else {
+          document.getElementById('errorMessage').textContent = data.error || '保存设置失败';
+          errorToast.show();
+        }
+      })
+      .catch(error => {
+        document.getElementById('errorMessage').textContent = '保存设置时出错';
+        errorToast.show();
+        console.error('Error:', error);
+      });
+    });
+
+    // 取消按钮点击处理
+    cancelBtn.addEventListener('click', function() {
+      // 返回上一页
+      window.history.back();
+    });
+  });
+</script>
+{% endblock %} 

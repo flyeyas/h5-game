@@ -1,0 +1,570 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ role.name }} {% trans '权限管理' %} | {{ site_title|default:_('GameHub管理系统') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .permission-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+  }
+  
+  .permission-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+  }
+  
+  .permission-section {
+    margin-bottom: 25px;
+  }
+  
+  .section-title {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #343a40;
+  }
+  
+  .permission-group {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .permission-group:last-child {
+    border-bottom: none;
+  }
+  
+  .permission-group-header {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  .form-check {
+    margin-bottom: 8px;
+  }
+  
+  .role-badge {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-left: 10px;
+  }
+  
+  .badge-system {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+  }
+  
+  .badge-custom {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+  }
+  
+  .select-all-label {
+    font-weight: normal;
+    font-size: 0.9rem;
+  }
+  
+  .info-tooltip {
+    color: #6c757d;
+    cursor: pointer;
+  }
+  
+  .back-button {
+    margin-right: 15px;
+  }
+  
+  .action-bar {
+    position: sticky;
+    bottom: 0;
+    background-color: #fff;
+    padding: 15px 0;
+    margin-top: 30px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 100;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <!-- 顶部导航 -->
+  <nav class="navbar">
+    <div class="d-flex align-items-center">
+      <a href="{% url 'admin_panel:roles_list' %}" class="btn btn-sm btn-outline-secondary back-button">
+        <i class="fas fa-arrow-left me-1"></i> {% trans '返回角色列表' %}
+      </a>
+      <span class="navbar-brand mb-0 h1">
+        {{ role.name }} {% trans '权限管理' %}
+        <span class="role-badge {% if role.is_system %}badge-system{% else %}badge-custom{% endif %}">
+          {% if role.is_system %}{% trans '系统角色' %}{% else %}{% trans '自定义角色' %}{% endif %}
+        </span>
+      </span>
+    </div>
+    <div class="d-flex align-items-center">
+      <div class="dropdown">
+        <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="{% trans '管理员头像' %}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+          <span>{{ request.user.username }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>{% trans '个人资料' %}</a></li>
+          <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>{% trans '账号设置' %}</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{% url 'admin_panel:admin_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans '退出登录' %}</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <form method="post" action="{% url 'admin_panel:save_role_permissions' role.id %}">
+    {% csrf_token %}
+    
+    <div class="role-description mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h6>{% trans '角色描述' %}</h6>
+          <p class="mb-0">{{ role.description }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alert alert-info d-flex align-items-start mb-4">
+      <div>
+        <i class="fas fa-info-circle me-2"></i>
+      </div>
+      <div>
+        {% trans '为此角色分配权限。选择每个权限部分的"全选"可以快速选择该部分的所有权限。已分配的权限会立即应用到拥有此角色的所有用户。' %}
+      </div>
+    </div>
+    
+    <!-- 权限设置部分 -->
+    <div class="row">
+      <!-- 左侧列 -->
+      <div class="col-lg-6">
+        <!-- 内容管理权限 -->
+        <div class="permission-section">
+          <h5 class="section-title">
+            <i class="fas fa-file-alt me-2"></i>{% trans '内容管理权限' %}
+          </h5>
+          
+          <div class="permission-group">
+            <div class="permission-group-header d-flex justify-content-between align-items-center">
+              <span>{% trans '文章管理' %}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input select-all" type="checkbox" id="articlePermissionAll" data-group="article">
+                <label class="form-check-label select-all-label" for="articlePermissionAll">{% trans '全选' %}</label>
+              </div>
+            </div>
+            <div class="permission-group-body">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="article_view" name="permissions[]" value="article_view" data-group="article" {% if 'article_view' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="article_view">
+                      {% trans '查看文章' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="article_add" name="permissions[]" value="article_add" data-group="article" {% if 'article_add' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="article_add">
+                      {% trans '添加文章' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="article_edit" name="permissions[]" value="article_edit" data-group="article" {% if 'article_edit' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="article_edit">
+                      {% trans '编辑文章' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="article_delete" name="permissions[]" value="article_delete" data-group="article" {% if 'article_delete' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="article_delete">
+                      {% trans '删除文章' %}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="permission-group">
+            <div class="permission-group-header d-flex justify-content-between align-items-center">
+              <span>{% trans '分类管理' %}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input select-all" type="checkbox" id="categoryPermissionAll" data-group="category">
+                <label class="form-check-label select-all-label" for="categoryPermissionAll">{% trans '全选' %}</label>
+              </div>
+            </div>
+            <div class="permission-group-body">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="category_view" name="permissions[]" value="category_view" data-group="category" {% if 'category_view' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="category_view">
+                      {% trans '查看分类' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="category_add" name="permissions[]" value="category_add" data-group="category" {% if 'category_add' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="category_add">
+                      {% trans '添加分类' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="category_edit" name="permissions[]" value="category_edit" data-group="category" {% if 'category_edit' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="category_edit">
+                      {% trans '编辑分类' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="category_delete" name="permissions[]" value="category_delete" data-group="category" {% if 'category_delete' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="category_delete">
+                      {% trans '删除分类' %}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 游戏管理权限 -->
+        <div class="permission-section">
+          <h5 class="section-title">
+            <i class="fas fa-gamepad me-2"></i>{% trans '游戏管理权限' %}
+          </h5>
+          
+          <div class="permission-group">
+            <div class="permission-group-header d-flex justify-content-between align-items-center">
+              <span>{% trans '游戏管理' %}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input select-all" type="checkbox" id="gamePermissionAll" data-group="game">
+                <label class="form-check-label select-all-label" for="gamePermissionAll">{% trans '全选' %}</label>
+              </div>
+            </div>
+            <div class="permission-group-body">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="game_view" name="permissions[]" value="game_view" data-group="game" {% if 'game_view' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="game_view">
+                      {% trans '查看游戏' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="game_add" name="permissions[]" value="game_add" data-group="game" {% if 'game_add' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="game_add">
+                      {% trans '添加游戏' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="game_edit" name="permissions[]" value="game_edit" data-group="game" {% if 'game_edit' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="game_edit">
+                      {% trans '编辑游戏' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="game_delete" name="permissions[]" value="game_delete" data-group="game" {% if 'game_delete' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="game_delete">
+                      {% trans '删除游戏' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="game_publish" name="permissions[]" value="game_publish" data-group="game" {% if 'game_publish' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="game_publish">
+                      {% trans '发布游戏' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="game_unpublish" name="permissions[]" value="game_unpublish" data-group="game" {% if 'game_unpublish' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="game_unpublish">
+                      {% trans '下线游戏' %}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧列 -->
+      <div class="col-lg-6">
+        <!-- 用户管理权限 -->
+        <div class="permission-section">
+          <h5 class="section-title">
+            <i class="fas fa-users me-2"></i>{% trans '用户管理权限' %}
+          </h5>
+          
+          <div class="permission-group">
+            <div class="permission-group-header d-flex justify-content-between align-items-center">
+              <span>{% trans '用户管理' %}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input select-all" type="checkbox" id="userPermissionAll" data-group="user">
+                <label class="form-check-label select-all-label" for="userPermissionAll">{% trans '全选' %}</label>
+              </div>
+            </div>
+            <div class="permission-group-body">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="user_view" name="permissions[]" value="user_view" data-group="user" {% if 'user_view' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="user_view">
+                      {% trans '查看用户' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="user_add" name="permissions[]" value="user_add" data-group="user" {% if 'user_add' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="user_add">
+                      {% trans '添加用户' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="user_edit" name="permissions[]" value="user_edit" data-group="user" {% if 'user_edit' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="user_edit">
+                      {% trans '编辑用户' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="user_delete" name="permissions[]" value="user_delete" data-group="user" {% if 'user_delete' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="user_delete">
+                      {% trans '删除用户' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="user_block" name="permissions[]" value="user_block" data-group="user" {% if 'user_block' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="user_block">
+                      {% trans '封禁用户' %}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 系统设置权限 -->
+        <div class="permission-section">
+          <h5 class="section-title">
+            <i class="fas fa-cogs me-2"></i>{% trans '系统设置权限' %}
+          </h5>
+          
+          <div class="permission-group">
+            <div class="permission-group-header d-flex justify-content-between align-items-center">
+              <span>{% trans '网站设置' %}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input select-all" type="checkbox" id="settingPermissionAll" data-group="setting">
+                <label class="form-check-label select-all-label" for="settingPermissionAll">{% trans '全选' %}</label>
+              </div>
+            </div>
+            <div class="permission-group-body">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="setting_view" name="permissions[]" value="setting_view" data-group="setting" {% if 'setting_view' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="setting_view">
+                      {% trans '查看设置' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="setting_edit" name="permissions[]" value="setting_edit" data-group="setting" {% if 'setting_edit' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="setting_edit">
+                      {% trans '修改设置' %}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="permission-group">
+            <div class="permission-group-header d-flex justify-content-between align-items-center">
+              <span>{% trans '管理员管理' %}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input select-all" type="checkbox" id="adminPermissionAll" data-group="admin">
+                <label class="form-check-label select-all-label" for="adminPermissionAll">{% trans '全选' %}</label>
+              </div>
+            </div>
+            <div class="permission-group-body">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="admin_view" name="permissions[]" value="admin_view" data-group="admin" {% if 'admin_view' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="admin_view">
+                      {% trans '查看管理员' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="admin_add" name="permissions[]" value="admin_add" data-group="admin" {% if 'admin_add' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="admin_add">
+                      {% trans '添加管理员' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="admin_edit" name="permissions[]" value="admin_edit" data-group="admin" {% if 'admin_edit' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="admin_edit">
+                      {% trans '编辑管理员' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="admin_delete" name="permissions[]" value="admin_delete" data-group="admin" {% if 'admin_delete' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="admin_delete">
+                      {% trans '删除管理员' %}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="permission-group">
+            <div class="permission-group-header d-flex justify-content-between align-items-center">
+              <span>{% trans '角色和权限管理' %}</span>
+              <div class="form-check form-switch">
+                <input class="form-check-input select-all" type="checkbox" id="rolePermissionAll" data-group="role">
+                <label class="form-check-label select-all-label" for="rolePermissionAll">{% trans '全选' %}</label>
+              </div>
+            </div>
+            <div class="permission-group-body">
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="role_view" name="permissions[]" value="role_view" data-group="role" {% if 'role_view' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="role_view">
+                      {% trans '查看角色' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="role_add" name="permissions[]" value="role_add" data-group="role" {% if 'role_add' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="role_add">
+                      {% trans '添加角色' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="role_edit" name="permissions[]" value="role_edit" data-group="role" {% if 'role_edit' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="role_edit">
+                      {% trans '编辑角色' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="role_delete" name="permissions[]" value="role_delete" data-group="role" {% if 'role_delete' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="role_delete">
+                      {% trans '删除角色' %}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input permission-checkbox" type="checkbox" id="permission_manage" name="permissions[]" value="permission_manage" data-group="role" {% if 'permission_manage' in role_permissions %}checked{% endif %}>
+                    <label class="form-check-label" for="permission_manage">
+                      {% trans '管理权限' %}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 底部操作栏 -->
+    <div class="action-bar text-center">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save me-1"></i> {% trans '保存权限设置' %}
+      </button>
+      <a href="{% url 'admin_panel:roles_list' %}" class="btn btn-outline-secondary ms-2">
+        <i class="fas fa-times me-1"></i> {% trans '取消' %}
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- JavaScript 处理 -->
+<script>
+  $(document).ready(function() {
+    // 初始化全选状态
+    updateSelectAllStatus();
+    
+    // 权限复选框点击事件
+    $('.permission-checkbox').on('change', function() {
+      const group = $(this).data('group');
+      updateSelectAllStatus(group);
+    });
+    
+    // 全选复选框点击事件
+    $('.select-all').on('change', function() {
+      const group = $(this).data('group');
+      const checked = $(this).prop('checked');
+      
+      // 选中/取消选中该组所有权限
+      $(`.permission-checkbox[data-group="${group}"]`).prop('checked', checked);
+    });
+    
+    // 更新全选复选框状态
+    function updateSelectAllStatus(specificGroup = null) {
+      const groups = specificGroup ? [specificGroup] : ['article', 'category', 'game', 'user', 'setting', 'admin', 'role'];
+      
+      groups.forEach(group => {
+        const totalPermissions = $(`.permission-checkbox[data-group="${group}"]`).length;
+        const checkedPermissions = $(`.permission-checkbox[data-group="${group}"]:checked`).length;
+        
+        $(`#${group}PermissionAll`).prop('checked', totalPermissions === checkedPermissions && totalPermissions > 0);
+      });
+    }
+  });
+</script>
+{% endblock %} 

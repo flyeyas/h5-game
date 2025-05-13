@@ -1,0 +1,40 @@
+{% load static %}
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h5>关于我们</h5>
+                <p>GameHub是一个提供高质量HTML5游戏的平台，致力于为玩家提供最好的游戏体验。</p>
+                <div class="social-links mt-3">
+                    <a href="#" class="me-2"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h5>快速链接</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'games:home' %}" class="text-white text-decoration-none">首页</a></li>
+                    <li><a href="{% url 'games:game_list' %}" class="text-white text-decoration-none">游戏分类</a></li>
+                    <li><a href="{% url 'games:hot_games' %}" class="text-white text-decoration-none">热门游戏</a></li>
+                    <li><a href="{% url 'games:game_list' %}?sort=newest" class="text-white text-decoration-none">最新上线</a></li>
+                    <!-- <li><a href="{% url 'games:subscription_plans' %}" class="text-white text-decoration-none">会员订阅</a></li> -->
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h5>帮助中心</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-white text-decoration-none">常见问题</a></li>
+                    <li><a href="#" class="text-white text-decoration-none">联系我们</a></li>
+                    <li><a href="{% url 'games:terms' %}" class="text-white text-decoration-none">用户协议</a></li>
+                    <li><a href="#" class="text-white text-decoration-none">隐私政策</a></li>
+                </ul>
+            </div>
+        </div>
+        <hr class="my-4">
+        <div class="text-center">
+            <p class="mb-0">&copy; {% now "Y" %} GameHub. 保留所有权利。</p>
+        </div>
+    </div>
+</footer> 

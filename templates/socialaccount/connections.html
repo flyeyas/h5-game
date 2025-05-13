@@ -1,0 +1,149 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}管理关联账号 - HTML5游戏平台{% endblock %}
+
+{% block extra_css %}
+    {% include "games/includes/profile_styles.html" %}
+    <style>
+        .social-connections-card {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.08);
+        }
+        
+        .social-connections-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .social-connections-body {
+            padding: 25px;
+        }
+        
+        .social-account-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            transition: all 0.2s;
+        }
+        
+        .social-account-item:hover {
+            background-color: #f0f2f5;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        
+        .social-account-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
+        .provider-google .social-account-icon {
+            color: #DB4437;
+        }
+        
+        .return-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #6c757d;
+            text-decoration: none;
+        }
+        
+        .return-link:hover {
+            color: #343a40;
+            text-decoration: underline;
+        }
+        
+        .no-accounts-message {
+            text-align: center;
+            padding: 30px 0;
+            color: #6c757d;
+        }
+        
+        .connect-button {
+            margin-top: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="social-connections-card">
+                    <div class="social-connections-header">
+                        <h4 class="mb-0">管理社交账号连接</h4>
+                    </div>
+                    <div class="social-connections-body">
+                        {% if form.accounts %}
+                            <p class="mb-4">您已连接以下社交账号，可以随时解除连接。</p>
+                            
+                            <form method="post" action="{% url 'socialaccount_connections' %}">
+                                {% csrf_token %}
+                                
+                                {% for base_account in form.accounts %}
+                                    {% with base_account.get_provider_account as account %}
+                                        <div class="social-account-item provider-{{ base_account.provider }}">
+                                            <div class="d-flex align-items-center">
+                                                {% if base_account.provider == 'google' %}
+                                                    <i class="fab fa-google social-account-icon"></i>
+                                                {% elif base_account.provider == 'facebook' %}
+                                                    <i class="fab fa-facebook social-account-icon"></i>
+                                                {% elif base_account.provider == 'weixin' %}
+                                                    <i class="fab fa-weixin social-account-icon"></i>
+                                                {% else %}
+                                                    <i class="fas fa-user-circle social-account-icon"></i>
+                                                {% endif %}
+                                                
+                                                <div>
+                                                    <div class="account-name fw-bold">{{ account.get_brand.name }}</div>
+                                                    <div class="account-info small text-muted">{{ account }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="account-action">
+                                                <div class="form-check">
+                                                    <input id="id_account_{{ base_account.id }}" type="radio" name="account" value="{{ base_account.id }}" class="form-check-input">
+                                                    <label for="id_account_{{ base_account.id }}" class="form-check-label">
+                                                        解除连接
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endwith %}
+                                {% endfor %}
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                    <button type="submit" class="btn btn-danger">解除所选连接</button>
+                                    <a href="{% url 'games:profile_settings' %}" class="return-link">
+                                        <i class="fas fa-arrow-left me-1"></i> 返回设置
+                                    </a>
+                                </div>
+                            </form>
+                        {% else %}
+                            <div class="no-accounts-message">
+                                <p>您尚未连接任何社交账号。</p>
+                                
+                                <div class="d-flex flex-column align-items-center">
+                                    <a href="{% provider_login_url 'google' process='connect' %}" class="btn btn-outline-danger connect-button">
+                                        <i class="fab fa-google me-2"></i> 连接 Google 账号
+                                    </a>
+                                    
+                                    <a href="{% url 'games:profile_settings' %}" class="return-link mt-4">
+                                        <i class="fas fa-arrow-left me-1"></i> 返回设置
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

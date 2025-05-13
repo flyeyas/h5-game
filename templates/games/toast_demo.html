@@ -1,0 +1,392 @@
+{% extends 'games/base.html' %}
+{% load static %}
+
+{% block title %}提示消息演示 - GameHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .demo-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+    }
+    
+    .demo-section h3 {
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .btn-demo {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .code-block {
+        background-color: #f5f5f5;
+        padding: 1rem;
+        border-radius: 4px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        overflow-x: auto;
+    }
+    
+    .settings-panel {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-row {
+        margin-bottom: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Toast提示演示</h1>
+            <p class="lead mb-4">这个页面演示了不同类型的Toast提示，以及如何使用它们。</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 基本提示类型 -->
+            <div class="demo-section">
+                <h3>基本提示类型</h3>
+                <p>这些是基本的提示类型，用于不同场景下的用户反馈。</p>
+                
+                <button class="btn btn-success btn-demo" onclick="toast.success('操作成功完成！')">成功提示</button>
+                <button class="btn btn-danger btn-demo" onclick="toast.error('发生了错误，请稍后再试。')">错误提示</button>
+                <button class="btn btn-info btn-demo" onclick="toast.info('这是一条信息提示。')">信息提示</button>
+                <button class="btn btn-warning btn-demo" onclick="toast.warning('注意：此操作不可撤销。')">警告提示</button>
+                
+                <div class="code-block">
+                    <pre>// 成功提示
+toast.success('操作成功完成！');
+
+// 错误提示
+toast.error('发生了错误，请稍后再试。');
+
+// 信息提示
+toast.info('这是一条信息提示。');
+
+// 警告提示
+toast.warning('注意：此操作不可撤销。');</pre>
+                </div>
+            </div>
+            
+            <!-- 提示位置 -->
+            <div class="demo-section">
+                <h3>提示位置</h3>
+                <p>Toast提示可以在屏幕的不同位置显示。</p>
+                
+                <button class="btn btn-primary btn-demo" onclick="showPositionToast('top-right')">右上角</button>
+                <button class="btn btn-primary btn-demo" onclick="showPositionToast('top-center')">顶部居中</button>
+                <button class="btn btn-primary btn-demo" onclick="showPositionToast('top-left')">左上角</button>
+                <button class="btn btn-primary btn-demo" onclick="showPositionToast('bottom-right')">右下角</button>
+                <button class="btn btn-primary btn-demo" onclick="showPositionToast('bottom-center')">底部居中</button>
+                <button class="btn btn-primary btn-demo" onclick="showPositionToast('bottom-left')">左下角</button>
+                
+                <div class="code-block">
+                    <pre>// 显示在右上角
+toast.info('右上角提示', { position: 'top-right' });
+
+// 显示在顶部居中
+toast.info('顶部居中提示', { position: 'top-center' });
+
+// 显示在左上角
+toast.info('左上角提示', { position: 'top-left' });
+
+// 其他位置: 'bottom-right', 'bottom-center', 'bottom-left'</pre>
+                </div>
+            </div>
+            
+            <!-- 提示持续时间 -->
+            <div class="demo-section">
+                <h3>提示持续时间</h3>
+                <p>可以自定义Toast提示的显示时间。</p>
+                
+                <button class="btn btn-primary btn-demo" onclick="toast.info('短暂提示（1.5秒）', { duration: 1500 })">短暂提示（1.5秒）</button>
+                <button class="btn btn-primary btn-demo" onclick="toast.info('标准提示（3秒）')">标准提示（3秒）</button>
+                <button class="btn btn-primary btn-demo" onclick="toast.info('较长提示（5秒）', { duration: 5000 })">较长提示（5秒）</button>
+                <button class="btn btn-primary btn-demo" onclick="toast.info('持久提示（不自动关闭）', { duration: 0 })">持久提示（不自动关闭）</button>
+                
+                <div class="code-block">
+                    <pre>// 短暂提示（1.5秒）
+toast.info('短暂提示', { duration: 1500 });
+
+// 标准提示（3秒，默认值）
+toast.info('标准提示');
+
+// 较长提示（5秒）
+toast.info('较长提示', { duration: 5000 });
+
+// 持久提示（不自动关闭，需要用户手动点击关闭按钮）
+toast.info('持久提示', { duration: 0 });</pre>
+                </div>
+            </div>
+            
+            <!-- 常见使用场景 -->
+            <div class="demo-section">
+                <h3>常见使用场景</h3>
+                <p>以下是一些在AJAX请求中使用Toast提示的常见场景。</p>
+                
+                <button class="btn btn-primary btn-demo" onclick="demoAjaxSuccess()">AJAX成功</button>
+                <button class="btn btn-primary btn-demo" onclick="demoAjaxError()">AJAX错误</button>
+                <button class="btn btn-primary btn-demo" onclick="demoAjaxLoading()">AJAX加载中</button>
+                <button class="btn btn-primary btn-demo" onclick="demoFormValidation()">表单验证错误</button>
+                <button class="btn btn-primary btn-demo" onclick="demoLoginRequired()">需要登录</button>
+                
+                <div class="code-block">
+                    <pre>// 使用API请求函数进行AJAX请求
+apiRequest({
+    url: '/ajax/example-endpoint/',
+    method: 'POST',
+    data: { key: 'value' },
+    showLoading: true,         // 显示加载提示
+    loadingMessage: '正在提交...',  // 自定义加载提示文字
+    onSuccess: function(data) {
+        // 处理成功响应，会自动显示data.message作为成功提示
+    },
+    onError: function(error) {
+        // 处理错误，会自动显示error.message作为错误提示
+    }
+});</pre>
+                </div>
+            </div>
+            
+            <!-- 全局配置 -->
+            <div class="demo-section">
+                <h3>全局配置</h3>
+                <p>你可以更改Toast提示的全局配置，影响所有后续的提示。</p>
+                
+                <button class="btn btn-primary btn-demo" onclick="setDarkTheme()">切换为暗色主题</button>
+                <button class="btn btn-primary btn-demo" onclick="setLightTheme()">切换为亮色主题</button>
+                <button class="btn btn-primary btn-demo" onclick="resetConfig()">重置为默认配置</button>
+                
+                <div class="code-block">
+                    <pre>// 设置全局配置
+toast.configure({
+    position: 'top-right',     // 默认位置
+    duration: 3000,            // 默认持续时间
+    showProgress: true,        // 显示进度条
+    pauseOnHover: true,        // 鼠标悬停暂停倒计时
+    darkMode: false            // 暗色主题
+});</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- 配置面板 -->
+            <div class="settings-panel sticky-top" style="top: 20px;">
+                <h4 class="mb-3">Toast配置</h4>
+                
+                <div class="form-row">
+                    <label for="position-select">默认位置:</label>
+                    <select id="position-select" class="form-control" onchange="updateConfig()">
+                        <option value="top-right">右上角</option>
+                        <option value="top-center">顶部居中</option>
+                        <option value="top-left">左上角</option>
+                        <option value="bottom-right" selected>右下角</option>
+                        <option value="bottom-center">底部居中</option>
+                        <option value="bottom-left">左下角</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <label for="duration-input">默认持续时间(毫秒):</label>
+                    <input type="number" id="duration-input" class="form-control" value="3000" min="0" step="500" onchange="updateConfig()">
+                </div>
+                
+                <div class="form-row">
+                    <label for="max-toasts-input">最大同时显示数量:</label>
+                    <input type="number" id="max-toasts-input" class="form-control" value="5" min="1" max="10" onchange="updateConfig()">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-check">
+                        <input type="checkbox" id="progress-checkbox" class="form-check-input" checked onchange="updateConfig()">
+                        <label for="progress-checkbox" class="form-check-label">显示进度条</label>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-check">
+                        <input type="checkbox" id="hover-checkbox" class="form-check-input" checked onchange="updateConfig()">
+                        <label for="hover-checkbox" class="form-check-label">鼠标悬停暂停</label>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-check">
+                        <input type="checkbox" id="close-btn-checkbox" class="form-check-input" checked onchange="updateConfig()">
+                        <label for="close-btn-checkbox" class="form-check-label">显示关闭按钮</label>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-check">
+                        <input type="checkbox" id="dark-mode-checkbox" class="form-check-input" onchange="updateConfig()">
+                        <label for="dark-mode-checkbox" class="form-check-label">暗色主题</label>
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary w-100 mt-3" onclick="testCurrentConfig()">测试当前配置</button>
+                <button class="btn btn-danger w-100 mt-2" onclick="toast.closeAll()">关闭所有提示</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/toast.js' %}"></script>
+<script>
+    // 位置演示
+    function showPositionToast(position) {
+        toast.info(`这是一个${getPositionName(position)}提示`, { position: position });
+    }
+    
+    function getPositionName(position) {
+        switch (position) {
+            case 'top-right': return '右上角';
+            case 'top-center': return '顶部居中';
+            case 'top-left': return '左上角';
+            case 'bottom-right': return '右下角';
+            case 'bottom-center': return '底部居中';
+            case 'bottom-left': return '左下角';
+            default: return position;
+        }
+    }
+    
+    // AJAX场景演示
+    function demoAjaxSuccess() {
+        // 成功的AJAX请求
+        const loadingToast = toast.info('正在提交数据...', { duration: 0, closeButton: false });
+        
+        setTimeout(() => {
+            loadingToast.close();
+            toast.success('数据已成功提交！');
+        }, 1500);
+    }
+    
+    function demoAjaxError() {
+        // 失败的AJAX请求
+        const loadingToast = toast.info('正在提交数据...', { duration: 0, closeButton: false });
+        
+        setTimeout(() => {
+            loadingToast.close();
+            toast.error('提交失败：服务器暂时无法连接，请稍后再试。');
+        }, 1500);
+    }
+    
+    function demoAjaxLoading() {
+        // 加载中的AJAX请求
+        const loadingToast = toast.info('正在加载数据，请稍候...', { 
+            duration: 0, 
+            closeButton: false,
+            position: 'top-center'
+        });
+        
+        // 3秒后模拟加载完成
+        setTimeout(() => {
+            loadingToast.close();
+            toast.success('数据加载完成！');
+        }, 3000);
+    }
+    
+    function demoFormValidation() {
+        // 表单验证错误
+        toast.error('表单验证失败：请检查输入内容。');
+        
+        // 显示多个错误
+        setTimeout(() => {
+            toast.error('用户名不能为空', { position: 'top-right' });
+        }, 300);
+        
+        setTimeout(() => {
+            toast.error('密码长度必须至少为8个字符', { position: 'top-right' });
+        }, 600);
+    }
+    
+    function demoLoginRequired() {
+        // 需要登录
+        toast.warning('此操作需要登录。即将跳转到登录页面...');
+        
+        // 模拟跳转（实际场景中不需要此行，因为apiRequest会自动处理跳转）
+        setTimeout(() => {
+            toast.info('这是一个演示，实际操作中会跳转到登录页面。');
+        }, 2000);
+    }
+    
+    // 主题切换
+    function setDarkTheme() {
+        toast.configure({ darkMode: true });
+        document.getElementById('dark-mode-checkbox').checked = true;
+        toast.info('已切换为暗色主题');
+    }
+    
+    function setLightTheme() {
+        toast.configure({ darkMode: false });
+        document.getElementById('dark-mode-checkbox').checked = false;
+        toast.info('已切换为亮色主题');
+    }
+    
+    // 更新配置
+    function updateConfig() {
+        const config = {
+            position: document.getElementById('position-select').value,
+            duration: parseInt(document.getElementById('duration-input').value),
+            maxToasts: parseInt(document.getElementById('max-toasts-input').value),
+            showProgress: document.getElementById('progress-checkbox').checked,
+            pauseOnHover: document.getElementById('hover-checkbox').checked,
+            closeButton: document.getElementById('close-btn-checkbox').checked,
+            darkMode: document.getElementById('dark-mode-checkbox').checked
+        };
+        
+        toast.configure(config);
+    }
+    
+    // 重置配置
+    function resetConfig() {
+        const defaultConfig = {
+            position: 'bottom-right',
+            duration: 3000,
+            maxToasts: 5,
+            showProgress: true,
+            pauseOnHover: true,
+            closeButton: true,
+            darkMode: false
+        };
+        
+        // 更新UI
+        document.getElementById('position-select').value = defaultConfig.position;
+        document.getElementById('duration-input').value = defaultConfig.duration;
+        document.getElementById('max-toasts-input').value = defaultConfig.maxToasts;
+        document.getElementById('progress-checkbox').checked = defaultConfig.showProgress;
+        document.getElementById('hover-checkbox').checked = defaultConfig.pauseOnHover;
+        document.getElementById('close-btn-checkbox').checked = defaultConfig.closeButton;
+        document.getElementById('dark-mode-checkbox').checked = defaultConfig.darkMode;
+        
+        // 应用配置
+        toast.configure(defaultConfig);
+        toast.info('配置已重置为默认值');
+    }
+    
+    // 测试当前配置
+    function testCurrentConfig() {
+        const position = document.getElementById('position-select').value;
+        toast.success(`使用当前配置的提示 (${getPositionName(position)})`);
+    }
+</script>
+{% endblock %} 

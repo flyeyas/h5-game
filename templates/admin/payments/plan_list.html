@@ -1,0 +1,293 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+{% load payment_tags %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('网站管理') }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb float-sm-right">
+    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">{% trans '首页' %}</a></li>
+    <li class="breadcrumb-item active">{% trans '订阅计划管理' %}</li>
+</ol>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* 订阅计划列表页面样式 */
+  .plan-table {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: visible;
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .plan-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 8px 5px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .plan-table td {
+    padding: 8px 5px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+  
+  .plan-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+  }
+  
+  /* 自定义状态标签样式 */
+  .status-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .status-active {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+  }
+  
+  .status-inactive {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+  }
+  
+  /* 操作按钮样式 */
+  .action-buttons .btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    margin-right: 2px !important;
+  }
+  
+  .action-buttons .btn-group {
+    display: inline-block;
+  }
+  
+  /* 价格标签样式 */
+  .price-tag {
+    font-weight: 600;
+    color: #4e73df;
+  }
+  
+  /* 空状态样式 */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  /* 统计卡片样式 */
+  .stats-card {
+    padding: 12px !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-align: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .stats-card .stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 auto 5px !important;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+  }
+  
+  .stats-card .stat-value {
+    font-size: 1.6rem !important;
+    margin-bottom: 2px !important;
+    font-weight: 600;
+    color: white;
+  }
+  
+  .stats-card .stat-label {
+    font-size: 0.85rem !important;
+    color: white;
+  }
+  
+  .bg-blue {
+    background-color: #4e73df;
+  }
+  
+  .bg-green {
+    background-color: #1cc88a;
+  }
+  
+  .bg-orange {
+    background-color: #f6c23e;
+  }
+  
+  .bg-purple {
+    background-color: #6f42c1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% include "admin/includes/top_navbar.html" with page_title=_('订阅计划管理') %}
+  
+  <div class="module">
+    <!-- 统计卡片 -->
+    <div class="row mb-3">
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-purple">
+          <div class="stat-icon">
+            <i class="fas fa-list"></i>
+          </div>
+          <div class="stat-value">{{ plans|length }}</div>
+          <div class="stat-label">{% trans '总计划数' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-blue">
+          <div class="stat-icon">
+            <i class="fas fa-toggle-on"></i>
+          </div>
+          <div class="stat-value">{{ active_plans }}</div>
+          <div class="stat-label">{% trans '已启用计划' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-green">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-value">{{ total_subscriptions }}</div>
+          <div class="stat-label">{% trans '总订阅数' %}</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card bg-orange">
+          <div class="stat-icon">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+          <div class="stat-value">{{ total_revenue|default:"0" }}</div>
+          <div class="stat-label">{% trans '总收入' %}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 计划列表卡片 -->
+    <div class="card card-outline card-primary">
+      <div class="card-header">
+        <h3 class="card-title">{% trans '订阅计划列表' %}</h3>
+        <div class="card-tools">
+          <a href="{% url 'admin_panel:subscription_plan_create' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> {% trans '添加计划' %}
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover plan-table">
+            <thead>
+              <tr>
+                <th width="5%">ID</th>
+                <th width="20%">{% trans '名称' %}</th>
+                <th width="15%">{% trans '价格' %}</th>
+                <th width="15%">{% trans '周期' %}</th>
+                <th width="10%">{% trans '状态' %}</th>
+                <th width="15%">{% trans '创建时间' %}</th>
+                <th width="20%">{% trans '操作' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for plan in plans %}
+              <tr>
+                <td>{{ plan.id }}</td>
+                <td><strong>{{ plan.name }}</strong></td>
+                <td><span class="price-tag">{{ plan.price|currency_format:'USD' }}</span></td>
+                <td>{{ plan.get_period_display }}</td>
+                <td>
+                  {% if plan.is_active %}
+                  <span class="status-tag status-active"><i class="fas fa-check-circle me-1"></i> {% trans '启用' %}</span>
+                  {% else %}
+                  <span class="status-tag status-inactive"><i class="fas fa-times-circle me-1"></i> {% trans '禁用' %}</span>
+                  {% endif %}
+                </td>
+                <td>{{ plan.created_at|date:"Y-m-d H:i" }}</td>
+                <td class="action-buttons">
+                  <div class="btn-group">
+                    <a href="{% url 'admin_panel:subscription_plan_edit' pk=plan.id %}" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="{% trans '编辑' %}">
+                      <i class="fas fa-edit"></i> {% trans '编辑' %}
+                    </a>
+                    <a href="{% url 'admin_panel:subscription_plan_delete' pk=plan.id %}" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" title="{% trans '删除' %}">
+                      <i class="fas fa-trash"></i> {% trans '删除' %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center py-5">
+                  <div class="empty-state">
+                    <i class="fas fa-list-alt fa-3x text-muted mb-3"></i>
+                    <p class="lead">{% trans '暂无订阅计划' %}</p>
+                    <a href="{% url 'admin_panel:subscription_plan_create' %}" class="btn btn-primary">
+                      <i class="fas fa-plus"></i> {% trans '添加第一个计划' %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+  $(function() {
+    $('.table').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "language": {
+        "url": "{% static 'admin/plugins/datatables/Chinese.json' %}"
+      },
+      "order": [[0, 'asc']],
+      "columnDefs": [
+        { "orderable": false, "targets": 6 }
+      ]
+    });
+    
+    // 为操作按钮添加tooltip
+    $('[data-bs-toggle="tooltip"]').tooltip();
+  });
+</script>
+{% endblock %} 

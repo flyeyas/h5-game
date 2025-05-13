@@ -1,0 +1,283 @@
+{% load i18n %}
+
+<!-- 添加角色模态框 -->
+<div class="modal fade" id="addRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-tag me-1"></i>{% trans '添加角色' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addRoleForm" method="post" action="{% url 'admin_panel:add_role' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label"><i class="fas fa-tag me-1"></i>{% trans '角色名称' %}</label>
+                        <input type="text" class="form-control" id="id_name" name="name" placeholder="{% trans '输入角色名称' %}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label"><i class="fas fa-info-circle me-1"></i>{% trans '角色描述' %}</label>
+                        <textarea class="form-control" id="id_description" name="description" rows="3" placeholder="{% trans '输入角色描述' %}"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="id_is_system" name="is_system">
+                            <label class="form-check-label" for="id_is_system">
+                                {% trans '系统角色' %}
+                            </label>
+                            <small class="form-text text-muted d-block">{% trans '系统角色是预定义的角色，不能被删除，并且可能有系统预设的权限。' %}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-section mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">{% trans '基础权限设置' %}</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="id_can_access_admin" name="can_access_admin" checked>
+                                    <label class="form-check-label" for="id_can_access_admin">
+                                        {% trans '允许访问后台' %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="id_can_view_reports" name="can_view_reports">
+                                    <label class="form-check-label" for="id_can_view_reports">
+                                        {% trans '允许查看报表' %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small">{% trans '创建角色后，您可以在角色详情页面进一步配置详细权限。' %}</p>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>{% trans '取消' %}
+                </button>
+                <button type="button" class="btn btn-primary" id="submitAddRole">
+                    <i class="fas fa-save me-1"></i>{% trans '添加角色' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑角色模态框 -->
+<div class="modal fade" id="editRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-1"></i>{% trans '编辑角色' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editRoleForm" method="post" action="">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_role_id" name="role_id" value="">
+                    <div class="mb-3">
+                        <label for="edit_name" class="form-label"><i class="fas fa-tag me-1"></i>{% trans '角色名称' %}</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" placeholder="{% trans '输入角色名称' %}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label"><i class="fas fa-info-circle me-1"></i>{% trans '角色描述' %}</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="3" placeholder="{% trans '输入角色描述' %}"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="edit_is_system" name="is_system">
+                            <label class="form-check-label" for="edit_is_system">
+                                {% trans '系统角色' %}
+                            </label>
+                            <small class="form-text text-muted d-block">{% trans '系统角色是预定义的角色，不能被删除，并且可能有系统预设的权限。' %}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-section mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">{% trans '基础权限设置' %}</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="edit_can_access_admin" name="can_access_admin">
+                                    <label class="form-check-label" for="edit_can_access_admin">
+                                        {% trans '允许访问后台' %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="edit_can_view_reports" name="can_view_reports">
+                                    <label class="form-check-label" for="edit_can_view_reports">
+                                        {% trans '允许查看报表' %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small">{% trans '若要管理此角色的详细权限，请使用角色列表中的"管理权限"按钮。' %}</p>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>{% trans '取消' %}
+                </button>
+                <button type="button" class="btn btn-primary" id="submitEditRole">
+                    <i class="fas fa-save me-1"></i>{% trans '保存修改' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除角色确认模态框 -->
+<div class="modal fade" id="deleteRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans '确认删除' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="delete-role-error" class="alert alert-danger d-none mb-3">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="delete-error-message">{% trans '删除失败，请重试' %}</span>
+                </div>
+                <p class="mb-3">{% trans '您确定要删除角色' %} <span id="delete_role_name" class="fw-bold"></span> {% trans '吗？' %} {% trans '此操作不可逆。' %}</p>
+                <div class="alert alert-warning d-flex">
+                    <div class="text-warning me-2">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        {% trans '警告：删除角色将同时清除所有关联用户的该角色权限。如果用户没有其他角色，可能无法访问某些功能。' %}
+                    </div>
+                </div>
+                <input type="hidden" id="delete_role_id" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    {% trans '取消' %}
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteRole">
+                    {% trans '确认删除' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript 处理 -->
+<script>
+  $(document).ready(function() {
+    initRoleFunctions();
+    
+    // 监听内容加载事件，确保AJAX加载后重新初始化
+    $(document).on('content:loaded', function() {
+      console.log('Content loaded, reinitializing role functions');
+      initRoleFunctions();
+    });
+    
+    // 初始化所有角色功能
+    function initRoleFunctions() {
+      // 点击删除按钮时显示确认模态框
+      $(document).off('click', '.delete-role').on('click', '.delete-role', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var roleId = $(this).data('id');
+        var roleName = $(this).data('name');
+        
+        // 设置模态框内容
+        $('#delete_role_id').val(roleId);
+        $('#delete_role_name').text(roleName);
+        
+        // 隐藏错误信息
+        $('#delete-role-error').addClass('d-none');
+        
+        // 显示模态框
+        var deleteModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteRoleModal'));
+        deleteModal.show();
+      });
+      
+      // 点击编辑按钮
+      $(document).off('click', '.edit-role-btn').on('click', '.edit-role-btn', function(e) {
+        e.preventDefault();
+        
+        var roleId = $(this).data('id');
+        var name = $(this).data('name');
+        var description = $(this).data('description');
+        var isSystem = $(this).data('is-system');
+        var canAccessAdmin = $(this).data('can-access-admin');
+        var canViewReports = $(this).data('can-view-reports');
+        
+        // 设置表单值
+        $('#edit_role_id').val(roleId);
+        $('#edit_name').val(name);
+        $('#edit_description').val(description);
+        $('#edit_is_system').prop('checked', isSystem === 1);
+        $('#edit_can_access_admin').prop('checked', canAccessAdmin === 1);
+        $('#edit_can_view_reports').prop('checked', canViewReports === 1);
+        
+        // 设置表单提交地址
+        $('#editRoleForm').attr('action', '{% url "admin_panel:edit_role" 0 %}'.replace('0', roleId));
+        
+        // 打开模态框
+        var editModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editRoleModal'));
+        editModal.show();
+      });
+      
+      // 模态框内的按钮初始化
+      initModalButtons();
+    }
+    
+    // 初始化模态框按钮事件
+    function initModalButtons() {
+      // 添加角色表单提交
+      $('#submitAddRole').off('click').on('click', function() {
+        $('#addRoleForm').submit();
+      });
+      
+      // 编辑角色表单提交
+      $('#submitEditRole').off('click').on('click', function() {
+        $('#editRoleForm').submit();
+      });
+      
+      // 确认删除角色
+      $('#confirmDeleteRole').off('click').on('click', function() {
+        var roleId = $('#delete_role_id').val();
+        
+        // 清除之前的错误信息
+        $('#delete-role-error').addClass('d-none');
+        
+        $.ajax({
+          url: '{% url "admin_panel:delete_role" 0 %}'.replace('0', roleId),
+          type: 'POST',
+          headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+          },
+          success: function(response) {
+            if (response.status === 'success') {
+              // 通过菜单刷新内容区域
+              var activeMenu = $('.menu-link.active');
+              if (activeMenu.length) {
+                activeMenu.click();
+              } else {
+                location.reload();
+              }
+            } else {
+              $('#delete-role-error').removeClass('d-none');
+              $('#delete-error-message').text(response.message);
+            }
+          },
+          error: function(xhr, status, error) {
+            $('#delete-role-error').removeClass('d-none');
+            $('#delete-error-message').text('{% trans "删除失败，请重试" %}');
+          }
+        });
+      });
+    }
+  });
+</script> 

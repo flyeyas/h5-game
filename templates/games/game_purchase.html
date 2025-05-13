@@ -1,0 +1,241 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}购买游戏 - {{ game.title }} - HTML5游戏平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .purchase-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .game-thumbnail {
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .game-thumbnail img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    .price-box {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .original-price {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+    .discount-badge {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+    .final-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6a11cb;
+    }
+    .payment-method {
+        margin-bottom: 30px;
+    }
+    .payment-option {
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .payment-option:hover {
+        border-color: #6a11cb;
+    }
+    .payment-option.selected {
+        border-color: #6a11cb;
+        background-color: rgba(106, 17, 203, 0.05);
+    }
+    .payment-option img {
+        height: 30px;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="purchase-container">
+        <h1 class="mb-4">购买游戏</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="game-thumbnail">
+                    <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}">
+                </div>
+                <h2>{{ game.title }}</h2>
+                <p>{{ game.summary }}</p>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <span>{{ game.rating }}</span>
+                    </div>
+                    <div class="me-3">
+                        <i class="fas fa-gamepad"></i>
+                        <span>{{ game.play_count }} 次游玩</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-tags"></i>
+                        <span>{{ game.categories.first.name }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="price-box">
+                    <h4>游戏价格</h4>
+                    
+                    {% if discount > 0 %}
+                    <div class="mb-2">
+                        <span class="original-price">¥{{ original_price }}</span>
+                        <span class="discount-badge">会员折扣 {{ discount }}%</span>
+                    </div>
+                    <div class="final-price mb-3">¥{{ discounted_price }}</div>
+                    {% else %}
+                    <div class="final-price mb-3">¥{{ original_price }}</div>
+                    {% endif %}
+                    
+                    <p class="text-muted small">购买后永久拥有此游戏，无限畅玩</p>
+                </div>
+                
+                <form id="purchaseForm" method="post" action="{% url 'games:game_purchase' game.id %}">
+                    {% csrf_token %}
+                    <h4>选择支付方式</h4>
+                    <div class="payment-method">
+                        <div class="payment-option selected" data-method="wechat">
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'images/wechat_pay.png' %}" alt="微信支付">
+                                <div>
+                                    <strong>微信支付</strong>
+                                    <p class="mb-0 text-muted small">使用微信扫码支付</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-option" data-method="alipay">
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'images/alipay.png' %}" alt="支付宝">
+                                <div>
+                                    <strong>支付宝</strong>
+                                    <p class="mb-0 text-muted small">使用支付宝扫码支付</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-option" data-method="creditcard">
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'images/credit_card.png' %}" alt="信用卡">
+                                <div>
+                                    <strong>信用卡支付</strong>
+                                    <p class="mb-0 text-muted small">支持 Visa、Mastercard 等</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="payment_method" id="paymentMethod" value="wechat">
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">立即购买</button>
+                        <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-outline-secondary">返回游戏详情</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 支付确认模态框 -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认支付</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>请扫描下方二维码完成支付</p>
+                <div id="qrCode" class="my-4">
+                    <img src="{% static 'images/qr_placeholder.png' %}" alt="支付二维码" class="img-fluid">
+                </div>
+                <p class="text-muted">完成支付后页面将自动跳转</p>
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">正在检查支付状态...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmPayment">我已完成支付</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // 支付方式选择
+        $('.payment-option').click(function() {
+            $('.payment-option').removeClass('selected');
+            $(this).addClass('selected');
+            $('#paymentMethod').val($(this).data('method'));
+        });
+        
+        // 表单提交处理
+        $('#purchaseForm').submit(function(e) {
+            e.preventDefault();
+            
+            // 显示支付模态框
+            var paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+            
+            // AJAX提交表单
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // 模拟支付成功后跳转
+                        setTimeout(function() {
+                            window.location.href = response.redirect_url;
+                        }, 2000);
+                    } else {
+                        alert(response.message);
+                        paymentModal.hide();
+                    }
+                },
+                error: function(xhr) {
+                    var response = xhr.responseJSON;
+                    alert(response.message || '支付处理出错，请稍后再试');
+                    paymentModal.hide();
+                }
+            });
+        });
+        
+        // 确认支付按钮
+        $('#confirmPayment').click(function() {
+            window.location.href = "{% url 'games:game_detail' game.slug %}";
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,1185 @@
+{% extends 'games/base.html' %}
+{% load static %}
+
+{% block title %}{{ game.title }} - GameHub{% endblock %}
+{% block meta_description %}{{ game.summary }}{% endblock %}
+{% block meta_keywords %}{{ game.title }},{{ game.meta_keywords|default:"HTML5游戏,在线游戏,免费游戏" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+    }
+    
+    /* 会员广告条样式 */
+    .premium-banner {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .premium-banner:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .premium-banner .btn-light:hover {
+        background-color: #FFC107 !important;
+        color: #212529 !important;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .premium-banner .fas.fa-crown {
+        animation: pulse 2s infinite;
+    }
+    
+    /* 游戏详情页其他样式 */
+    .game-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    .game-cover {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .game-cover img {
+        width: 100%;
+        height: auto;
+    }
+    .game-info h1 {
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    .game-info .rating {
+        color: #ffc107;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+    .game-info .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.9rem;
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin-right: 10px;
+        display: inline-block;
+    }
+    .game-description {
+        margin-top: 20px;
+        line-height: 1.7;
+    }
+    
+    /* Markdown内容样式 */
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4,
+    .markdown-content h5,
+    .markdown-content h6 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    .markdown-content p {
+        margin-bottom: 1rem;
+    }
+    .markdown-content ul,
+    .markdown-content ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+    .markdown-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+        margin: 1rem 0;
+    }
+    .markdown-content blockquote {
+        padding: 0.5rem 1rem;
+        margin: 1rem 0;
+        border-left: 4px solid #e9ecef;
+        background-color: #f8f9fa;
+        font-style: italic;
+    }
+    .markdown-content pre {
+        background-color: #f6f8fa;
+        padding: 1rem;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+    .markdown-content code {
+        background-color: #f6f8fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-size: 0.9em;
+        font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    .markdown-content pre code {
+        background-color: transparent;
+        padding: 0;
+    }
+    .markdown-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+    .markdown-content table th,
+    .markdown-content table td {
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+    }
+    .markdown-content table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    .markdown-content hr {
+        margin: 2rem 0;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* 游戏iframe样式 */
+    .game-iframe-container {
+        background-color: #343a40;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    .game-iframe {
+        width: 100%;
+        height: 500px;
+        border: none;
+        border-radius: 5px;
+        background-color: #000;
+    }
+    .ad-banner {
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .section-title {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    .game-card img {
+        height: 150px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .game-card .card-body {
+        padding: 15px;
+    }
+    .game-card .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .game-card .rating {
+        color: #ffc107;
+        font-size: 0.9rem;
+    }
+    .game-card .rating i {
+        color: #ffc107;
+        font-size: 0.8rem;
+        margin-right: 1px;
+    }
+    .game-card .game-description {
+        font-size: 0.85rem;
+        line-height: 1.3;
+        height: 2.6rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .game-card .game-tags {
+        min-height: 26px;
+    }
+    .game-card .game-tags .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.75rem;
+        padding: 3px 10px;
+        border-radius: 15px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    .comment-section {
+        margin-top: 40px;
+    }
+    .comment-item {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .comment-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 15px;
+    }
+    .comment-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .comment-content {
+        flex: 1;
+    }
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+    .comment-author {
+        font-weight: 600;
+    }
+    .comment-date {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .comment-rating {
+        color: #ffc107;
+        margin-bottom: 5px;
+    }
+    .comment-text {
+        line-height: 1.5;
+    }
+    .game-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .game-actions .btn {
+        flex: 1;
+    }
+    .fullscreen-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        font-size: 0.9rem;
+        z-index: 10;
+    }
+    .game-iframe-wrapper {
+        position: relative;
+    }
+    @media (max-width: 767.98px) {
+        .game-header {
+            padding: 30px 0;
+        }
+        .game-cover {
+            margin-bottom: 20px;
+        }
+        .game-iframe {
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block hero_section %}
+{% csrf_token %}
+{% include 'games/includes/game_header.html' %}
+{% endblock %}
+
+{% block main_content %}
+<div class="container">
+    {% if show_member_content and not user.is_authenticated or show_member_content and not user.is_member %}
+    <!-- 会员广告条 -->
+    {% include 'games/includes/premium_banner.html' %}
+    {% endif %}
+    
+    <!-- 游戏iframe区域 -->
+    {% include 'games/includes/game_iframe.html' %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- 游戏详情 -->
+            {% include 'games/includes/game_details.html' %}
+
+            <!-- 评论区 -->
+            {% include 'games/includes/game_comments.html' %}
+        </div>
+        
+        <div class="col-md-4">
+            <!-- 侧边栏广告 -->
+            {% include 'games/includes/sidebar_ad.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Marked.js用于解析Markdown内容 -->
+<script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+<script>
+    // Toast提示函数 - 提前定义确保全局可用
+    function showToast(message, type = 'success') {
+        console.log('显示Toast:', message, type);
+        
+        // 检查是否已存在toast容器
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // 创建toast元素
+        const toastEl = document.createElement('div');
+        const bgColor = type === 'error' ? 'bg-danger' : 'bg-success';
+        toastEl.className = `toast align-items-center ${bgColor} text-white`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        
+        // 设置样式确保可见
+        toastEl.style.minWidth = '250px';
+        toastEl.style.opacity = '1';
+        toastEl.style.display = 'block'; // 确保显示
+        toastEl.style.marginBottom = '10px';
+        toastEl.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
+        toastEl.style.borderRadius = '0.25rem';
+        
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toastEl);
+        
+        // 注册关闭按钮事件
+        const closeBtn = toastEl.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                toastEl.style.opacity = '0';
+                setTimeout(() => {
+                    toastEl.remove();
+                }, 200);
+            });
+        }
+        
+        // 尝试使用Bootstrap的Toast组件
+        try {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+                // Bootstrap已加载
+                const toast = new bootstrap.Toast(toastEl, {
+                    delay: 3000
+                });
+                toast.show();
+                
+                // 注册隐藏事件
+                toastEl.addEventListener('hidden.bs.toast', () => {
+                    toastEl.remove();
+                });
+            } else {
+                throw new Error('Bootstrap不可用');
+            }
+        } catch (e) {
+            console.log('使用自定义toast显示:', e.message);
+            
+            // 自动淡出并移除
+            setTimeout(() => {
+                toastEl.style.transition = 'opacity 0.5s ease';
+                toastEl.style.opacity = '0';
+                setTimeout(() => {
+                    toastEl.remove();
+                }, 500);
+            }, 3000);
+        }
+    }
+
+    /**
+     * 获取CSRF令牌，首先尝试从表单元素获取，如果不存在则从cookie中获取
+     */
+    function getCsrfToken() {
+        // 首先尝试从表单字段获取
+        const tokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (tokenInput && tokenInput.value) {
+            return tokenInput.value;
+        }
+        
+        // 如果表单字段不存在，从cookie中获取
+        const name = 'csrftoken=';
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const cookieArray = decodedCookie.split(';');
+        
+        for (let i = 0; i < cookieArray.length; i++) {
+            let cookie = cookieArray[i].trim();
+            if (cookie.indexOf(name) === 0) {
+                return cookie.substring(name.length, cookie.length);
+            }
+        }
+        
+        return '';
+    }
+
+    // 通用API请求函数
+    function apiRequest(options) {
+        console.log('API请求:', options.url, options.method, options.data);
+        
+        // 默认配置
+        const defaults = {
+            method: 'GET',
+            showMessage: true,
+            useFormData: false,
+            onSuccess: function() {},
+            onError: function() {},
+            onComplete: function() {}
+        };
+        
+        // 合并选项
+        const settings = {...defaults, ...options};
+        
+        // 获取CSRF Token
+        const csrftoken = getCsrfToken();
+        
+        console.log('CSRF令牌:', csrftoken ? '已获取' : '未找到', 
+                   csrftoken ? (csrftoken.length > 5 ? csrftoken.substring(0, 5) + '...' : csrftoken) : '');
+        
+        if (!csrftoken && settings.method !== 'GET') {
+            console.error('CSRF令牌未找到，无法发送非GET请求');
+            if (settings.onError) {
+                settings.onError({ 
+                    success: false, 
+                    code: 'csrf_missing', 
+                    message: 'CSRF令牌缺失，请刷新页面后重试' 
+                });
+            }
+            return;
+        }
+        
+        // 准备请求配置
+        const requestConfig = {
+            method: settings.method,
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            credentials: 'same-origin' // 确保包含cookie
+        };
+        
+        // 处理请求数据
+        let url = settings.url;
+        if (settings.data) {
+            if (settings.useFormData) {
+                // 使用FormData对象直接传递
+                requestConfig.body = settings.data;
+                console.log('FormData内容:', Array.from(settings.data.entries()).map(e => `${e[0]}=${e[1]}`).join(', '));
+                
+                // 使用FormData时不要手动设置Content-Type，浏览器会自动添加正确的boundary
+                // 确保CSRF令牌在FormData对象中也存在（双保险）
+                if (settings.method === 'POST' && settings.data instanceof FormData && csrftoken) {
+                    if (!settings.data.has('csrfmiddlewaretoken')) {
+                        settings.data.append('csrfmiddlewaretoken', csrftoken);
+                        console.log('已添加CSRF令牌到FormData');
+                    }
+                }
+            } else if (settings.method === 'GET') {
+                // GET请求将参数附加到URL
+                const params = new URLSearchParams();
+                for (const key in settings.data) {
+                    params.append(key, settings.data[key]);
+                }
+                url = `${url}?${params.toString()}`;
+            } else {
+                // POST等请求使用JSON格式
+                requestConfig.headers['Content-Type'] = 'application/json';
+                requestConfig.body = JSON.stringify(settings.data);
+            }
+        }
+        
+        // 发送请求
+        fetch(url, requestConfig)
+            .then(response => response.json())
+            .then(data => {
+                console.log('API响应:', data);
+                
+                // 处理响应
+                if (data.success) {
+                    // 成功回调
+                    settings.onSuccess(data);
+                    
+                    // 显示成功消息（如果需要）
+                    if (settings.showMessage && data.message) {
+                        showToast(data.message, 'success');
+                    }
+                } else {
+                    // 错误回调
+                    settings.onError(data);
+                    
+                    // 显示错误消息（如果需要）
+                    if (settings.showMessage && data.message) {
+                        showToast(data.message, 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('API请求失败:', error);
+                // 错误回调
+                settings.onError({
+                    message: '网络错误，请稍后再试',
+                    code: 'network_error'
+                });
+                
+                // 显示错误消息
+                if (settings.showMessage) {
+                    showToast('网络错误，请稍后再试', 'error');
+                }
+            })
+            .finally(() => {
+                // 完成回调
+                settings.onComplete();
+            });
+    }
+    
+    // 全局声明这些DOM元素和函数
+    let commentList, commentTemplate, loadMoreBtn, loadingSpinner, noCommentsMessage;
+    
+    // 刷新评论列表
+    function refreshComments(gameId) {
+        console.log('刷新评论列表:', gameId);
+        
+        // 确保必要的DOM元素已初始化
+        if (!commentList) {
+            commentList = document.getElementById('comment-list');
+            commentTemplate = document.getElementById('comment-template');
+            loadMoreBtn = document.getElementById('load-more-btn');
+            loadingSpinner = document.getElementById('loading-spinner');
+            noCommentsMessage = document.getElementById('no-comments-message');
+            
+            if (!commentList) {
+                console.error('评论列表元素不存在');
+                return;
+            }
+            
+            console.log('DOM元素初始化完成', {
+                commentList: !!commentList,
+                commentTemplate: !!commentTemplate,
+                loadMoreBtn: !!loadMoreBtn,
+                loadingSpinner: !!loadingSpinner,
+                noCommentsMessage: !!noCommentsMessage
+            });
+        }
+        
+        showToast('正在刷新评论列表...', 'success');
+        
+        apiRequest({
+            url: `/api/game/${gameId}/comments/`,
+            method: 'GET',
+            data: { page: 1, per_page: 10 },
+            showMessage: false,
+            onSuccess: function(response) {
+                console.log('获取评论列表成功:', response);
+                
+                const data = response.data;
+                
+                // 清空现有评论列表
+                commentList.innerHTML = '';
+                
+                // 检查无评论提示
+                if (noCommentsMessage) {
+                    if (data.comments && data.comments.length > 0) {
+                        noCommentsMessage.classList.add('d-none');
+                    } else {
+                        noCommentsMessage.classList.remove('d-none');
+                        commentList.appendChild(noCommentsMessage);
+                    }
+                }
+                
+                // 添加评论到列表
+                if (data.comments && data.comments.length > 0) {
+                    data.comments.forEach(comment => {
+                        console.log('添加评论:', comment.id, comment.content);
+                        const commentElement = createCommentElement(comment);
+                        commentList.appendChild(commentElement);
+                    });
+                    
+                    showToast('评论列表已更新', 'success');
+                }
+                
+                // 更新加载更多按钮状态
+                if (loadMoreBtn) {
+                    const loadMoreContainer = document.getElementById('load-more-container');
+                    
+                    if (data.has_next) {
+                        loadMoreBtn.setAttribute('data-next-page', data.next_page);
+                        loadMoreBtn.classList.remove('d-none');
+                        
+                        // 确保加载更多容器存在
+                        if (loadMoreContainer) {
+                            loadMoreContainer.classList.remove('d-none');
+                        }
+                    } else {
+                        // 没有更多评论，隐藏加载更多按钮
+                        if (loadMoreContainer) {
+                            loadMoreContainer.classList.add('d-none');
+                        }
+                    }
+                }
+                
+                // 更新评论数量显示
+                const commentCountElem = document.querySelector('.comment-section .section-title');
+                if (commentCountElem) {
+                    commentCountElem.textContent = `玩家评论 (${data.total_comments || 0})`;
+                }
+            },
+            onError: function(error) {
+                console.error('刷新评论失败:', error);
+                showToast('加载评论失败，请刷新页面重试', 'error');
+            }
+        });
+    }
+    
+    // 创建评论元素
+    function createCommentElement(comment) {
+        if (!commentTemplate) {
+            commentTemplate = document.getElementById('comment-template');
+            if (!commentTemplate) {
+                console.error('评论模板不存在');
+                return document.createElement('div');
+            }
+        }
+        
+        const clone = commentTemplate.content.cloneNode(true);
+        
+        // 设置评论数据
+        clone.querySelector('.template-avatar').src = comment.user.avatar_url || 'https://randomuser.me/api/portraits/men/1.jpg';
+        clone.querySelector('.template-avatar').alt = comment.user.username;
+        clone.querySelector('.template-author').textContent = comment.user.username;
+        clone.querySelector('.template-date').textContent = comment.created_at;
+        clone.querySelector('.template-content').textContent = comment.content;
+        
+        // 设置评分星星
+        const ratingDiv = clone.querySelector('.template-rating');
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('i');
+            star.className = i <= comment.rating ? 'fas fa-star' : 'far fa-star';
+            ratingDiv.appendChild(star);
+        }
+        
+        return clone;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Markdown内容渲染
+        if (typeof marked !== 'undefined') {
+            // 设置marked选项
+            marked.setOptions({
+                breaks: true,                 // 将换行符转换为<br>
+                gfm: true,                    // 启用GitHub风格的Markdown
+                headerIds: true,              // 为标题添加id
+                sanitize: false,              // 不过滤HTML标签
+                smartLists: true,             // 使用更智能的列表行为
+                xhtml: false                  // 不使用XHTML语法
+            });
+            
+            // 渲染游戏描述
+            const descriptionElements = document.querySelectorAll('.markdown-render');
+            descriptionElements.forEach(function(element) {
+                const markdownText = element.textContent || '';
+                if (markdownText.trim()) {
+                    element.innerHTML = marked.parse(markdownText);
+                }
+            });
+        }
+
+        // 全屏按钮功能
+        const fullscreenBtn = document.querySelector('.fullscreen-btn');
+        const gameIframe = document.querySelector('.game-iframe');
+        
+        if (fullscreenBtn && gameIframe) {
+            fullscreenBtn.addEventListener('click', function() {
+                if (gameIframe.requestFullscreen) {
+                    gameIframe.requestFullscreen();
+                } else if (gameIframe.webkitRequestFullscreen) { /* Safari */
+                    gameIframe.webkitRequestFullscreen();
+                } else if (gameIframe.msRequestFullscreen) { /* IE11 */
+                    gameIframe.msRequestFullscreen();
+                }
+            });
+        }
+        
+        // 开始游戏按钮功能 - 滚动到iframe位置
+        const startGameBtn = document.getElementById('start-game-btn');
+        if (startGameBtn) {
+            startGameBtn.addEventListener('click', function() {
+                const gameIframeSection = document.getElementById('game-iframe-section');
+                if (gameIframeSection) {
+                    // 平滑滚动到游戏iframe区域
+                    gameIframeSection.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // 记录游戏开始
+                    let gameId;
+                    // 尝试从收藏按钮获取游戏ID
+                    const favoriteBtn = document.getElementById('favorite-btn');
+                    if (favoriteBtn) {
+                        gameId = favoriteBtn.getAttribute('data-game-id');
+                    } 
+                    // 如果收藏按钮不存在，尝试从URL中获取游戏ID
+                    if (!gameId) {
+                        // 从URL路径中提取游戏ID
+                        const pathParts = window.location.pathname.split('/');
+                        for (let i = 0; i < pathParts.length; i++) {
+                            if (pathParts[i] === 'games' && i + 1 < pathParts.length) {
+                                const idOrSlug = pathParts[i + 1];
+                                // 检查是否是数字ID
+                                if (!isNaN(idOrSlug)) {
+                                    gameId = idOrSlug;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // 如果还是找不到，尝试从页面中的meta标签或其他数据属性获取
+                        if (!gameId) {
+                            const gameDataElem = document.querySelector('[data-game-id]');
+                            if (gameDataElem) {
+                                gameId = gameDataElem.getAttribute('data-game-id');
+                            }
+                        }
+                    }
+                    
+                    if (gameId) {
+                        try {
+                            apiRequest({
+                                url: '/api/game/' + gameId + '/play/',
+                                method: 'POST',
+                                data: { action: 'start' },
+                                showMessage: false,
+                                onError: function(error) {
+                                    if (error.code === 'unauthenticated') {
+                                        console.warn('用户需要登录才能记录游戏历史');
+                                    } else {
+                                        console.error('记录游戏开始失败:', error);
+                                    }
+                                }
+                            });
+                        } catch(e) {
+                            console.error('无法记录游戏开始:', e);
+                        }
+                    } else {
+                        console.warn('无法获取游戏ID，无法记录游戏开始');
+                    }
+                }
+            });
+        }
+        
+        // 评分星星交互
+        const ratingStars = document.querySelectorAll('.rating-star');
+        const ratingInput = document.getElementById('rating-input');
+        
+        if (ratingStars.length > 0 && ratingInput) {
+            ratingStars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    
+                    // 重置所有星星
+                    ratingStars.forEach(s => s.className = 'far fa-star text-warning fs-4 me-1 rating-star');
+                    
+                    // 设置当前星星及之前的星星为实心
+                    for (let i = 0; i < ratingStars.length; i++) {
+                        if (i < rating) {
+                            ratingStars[i].className = 'fas fa-star text-warning fs-4 me-1 rating-star';
+                        }
+                    }
+                    
+                    // 设置隐藏输入值
+                    ratingInput.value = rating;
+                });
+            });
+        }
+        
+        // 收藏按钮点击事件处理
+        const favoriteBtn = $('#favorite-btn');
+        if (favoriteBtn.length > 0) {
+            favoriteBtn.on('click', function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                $btn.prop('disabled', true); // 禁用按钮防止重复点击
+                
+                const gameId = $btn.data('game-id');
+                const gameTitle = $btn.data('game-title');
+                
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('game_id', gameId);
+                
+                // 使用新的API端点
+                fetch('/api/favorite/toggle/', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            // 授权问题，可能需要登录
+                            window.location.href = '/login/?next=' + window.location.pathname;
+                            return Promise.reject('需要登录');
+                        }
+                        return Promise.reject('请求失败: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('收藏响应:', data);
+                    $btn.prop('disabled', false); // 重新启用按钮
+                    
+                    if (data.success) {
+                        // 显示成功消息
+                        showToast(data.message, 'success');
+                        
+                        // 更新按钮状态
+                        if (data.data.is_favorite) {
+                            $btn.addClass('active favorited').removeClass('not-favorited');
+                            $btn.find('i').removeClass('far').addClass('fas');
+                        } else {
+                            $btn.removeClass('active favorited').addClass('not-favorited');
+                            $btn.find('i').removeClass('fas').addClass('far');
+                        }
+                    } else {
+                        // 显示错误消息
+                        showToast(data.message, 'danger');
+                        
+                        // 检查是否需要重定向
+                        if (data.redirect_url) {
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url;
+                            }, 1500);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('收藏请求错误:', error);
+                    $btn.prop('disabled', false); // 重新启用按钮
+                    showToast('操作失败，请稍后再试', 'danger');
+                });
+            });
+        }
+        
+        // 分享功能
+        const shareBtn = document.getElementById('share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: document.title,
+                        url: window.location.href
+                    })
+                    .catch(error => console.error('分享失败:', error));
+                } else {
+                    // 复制链接到剪贴板
+                    const tempInput = document.createElement('input');
+                    document.body.appendChild(tempInput);
+                    tempInput.value = window.location.href;
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    alert('链接已复制到剪贴板');
+                }
+            });
+        }
+        
+        // 获取评论表单引用
+        const commentForm = document.getElementById('comment-form');
+        
+        // 初始化DOM元素引用 - 这些元素应该始终存在
+        const commentList = document.getElementById('comment-list');
+        const commentTemplate = document.getElementById('comment-template');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const noCommentsMessage = document.getElementById('no-comments-message');
+        
+        // 将控制台日志改为有条件输出，减少未登录用户的错误提示
+        if (commentForm || commentList) {
+            console.log('评论DOM元素:', {
+                commentForm: !!commentForm,
+                commentList: !!commentList,
+                commentTemplate: !!commentTemplate,
+                loadMoreBtn: !!loadMoreBtn, 
+                loadingSpinner: !!loadingSpinner,
+                noCommentsMessage: !!noCommentsMessage
+            });
+        }
+        
+        // 评论表单AJAX提交 - 仅当表单存在时才添加事件监听
+        if (commentForm) {
+            commentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 以下代码只有在表单存在时才会执行
+                const gameId = this.getAttribute('data-game-id');
+                const contentInput = this.querySelector('[name="content"]');
+                const ratingInput = this.querySelector('[name="rating"]');
+                const errorAlert = document.getElementById('comment-error');
+                const successAlert = document.getElementById('comment-success');
+                
+                // 确保其他引用元素存在
+                if (!contentInput || !ratingInput || !errorAlert || !successAlert) {
+                    console.error('评论表单缺少必要的子元素');
+                    return;
+                }
+                
+                console.log('准备提交评论:', {
+                    gameId: gameId,
+                    content: contentInput.value,
+                    rating: ratingInput.value
+                });
+                
+                // 隐藏之前的提示信息
+                errorAlert.classList.add('d-none');
+                successAlert.classList.add('d-none');
+                
+                // 验证表单
+                if (!contentInput.value.trim()) {
+                    errorAlert.textContent = '评论内容不能为空';
+                    errorAlert.classList.remove('d-none');
+                    return;
+                }
+                
+                if (!ratingInput.value || ratingInput.value === '0') {
+                    errorAlert.textContent = '请选择评分';
+                    errorAlert.classList.remove('d-none');
+                    return;
+                }
+                
+                // 准备表单数据
+                const formData = new FormData();
+                formData.append('content', contentInput.value);
+                formData.append('rating', ratingInput.value);
+                formData.append('game_id', gameId);
+                
+                // 提交按钮状态
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (!submitBtn) {
+                    console.error('无法找到提交按钮');
+                    return;
+                }
+                
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...';
+                
+                // 发送AJAX请求
+                apiRequest({
+                    url: '/api/comment/submit/',
+                    method: 'POST',
+                    data: formData,
+                    useFormData: true,
+                    showMessage: false,
+                    onSuccess: function(data) {
+                        console.log('评论提交成功:', data);
+                        
+                        // 显示成功信息
+                        successAlert.textContent = data.message || '评论已成功提交';
+                        successAlert.classList.remove('d-none');
+                        
+                        // 清空表单
+                        contentInput.value = '';
+                        ratingInput.value = '0';
+                        
+                        // 重置星星
+                        const stars = commentForm.querySelectorAll('.rating-star');
+                        stars.forEach(star => {
+                            star.className = 'far fa-star text-warning fs-4 me-1 rating-star';
+                        });
+                        
+                        // 局部刷新获取最新评论
+                        if (typeof refreshComments === 'function') {
+                            console.log('调用refreshComments函数');
+                            refreshComments(gameId);
+                        } else {
+                            console.error('refreshComments函数不存在');
+                            showToast('刷新评论列表失败，请刷新页面', 'error');
+                        }
+                        
+                        // 平滑滚动到评论列表顶部
+                        if (commentList) {
+                            commentList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    },
+                    onError: function(data) {
+                        console.error('评论提交失败:', data);
+                        
+                        // 处理登录重定向
+                        if (data.code === 'login_required' && data.redirect_url) {
+                            errorAlert.innerHTML = `${data.message} <a href="${data.redirect_url}" class="alert-link">点击登录</a>`;
+                            errorAlert.classList.remove('d-none');
+                        } else {
+                            // 显示一般错误信息
+                            errorAlert.textContent = data.message || '提交评论失败，请稍后再试';
+                            errorAlert.classList.remove('d-none');
+                        }
+                    },
+                    onComplete: function() {
+                        // 恢复提交按钮状态
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+                });
+            });
+        } else {
+            // 当表单不存在时，静默处理，不记录控制台错误
+            // console.log('评论表单不存在，可能用户未登录');
+        }
+        
+        // 评论瀑布流加载功能 - 即使用户未登录，评论列表加载功能仍应正常工作
+        if (loadMoreBtn && commentList && commentTemplate) {
+            // 点击加载更多按钮
+            loadMoreBtn.addEventListener('click', function() {
+                loadMoreComments();
+            });
+            
+            // 移除滚动加载功能，避免重复请求
+            let isLoading = false;
+            
+            // 加载更多评论函数
+            function loadMoreComments() {
+                if (isLoading) return;
+                
+                isLoading = true;
+                const gameId = loadMoreBtn.getAttribute('data-game-id');
+                const nextPage = loadMoreBtn.getAttribute('data-next-page');
+                
+                if (!gameId || !nextPage) {
+                    console.error('缺少必要的属性：gameId或nextPage');
+                    isLoading = false;
+                    return;
+                }
+                
+                // 显示加载中状态
+                loadMoreBtn.classList.add('d-none');
+                if (loadingSpinner) {
+                    loadingSpinner.classList.remove('d-none');
+                }
+                
+                // 发送AJAX请求获取更多评论
+                apiRequest({
+                    url: `/api/game/${gameId}/comments/`,
+                    method: 'GET',
+                    data: { page: nextPage, per_page: 10 },
+                    showMessage: false,
+                    onSuccess: function(response) {
+                        const data = response.data;
+                        
+                        // 隐藏无评论提示
+                        if (noCommentsMessage) {
+                            noCommentsMessage.classList.add('d-none');
+                        }
+                        
+                        // 添加新评论到列表
+                        data.comments.forEach(comment => {
+                            // 在game_comments.html中已经定义了加载评论的逻辑
+                            // 这里我们使用较简单的方式创建评论元素
+                            const commentItem = document.createElement('div');
+                            commentItem.className = 'comment-item';
+                            commentItem.innerHTML = `
+                                <div class="comment-avatar">
+                                    <img src="${comment.user.avatar_url || '/static/images/default-avatar.png'}" alt="${comment.user.username}的头像">
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-header">
+                                        <span class="comment-author">${comment.user.username}</span>
+                                        <span class="comment-date">${comment.created_at}</span>
+                                    </div>
+                                    <div class="comment-rating">
+                                        ${Array(5).fill(0).map((_, i) => 
+                                            `<i class="${i < comment.rating ? 'fas' : 'far'} fa-star text-warning"></i>`
+                                        ).join('')}
+                                    </div>
+                                    <p class="comment-text">${comment.content}</p>
+                                </div>
+                            `;
+                            commentList.appendChild(commentItem);
+                        });
+                        
+                        // 更新加载更多按钮状态
+                        if (data.has_next) {
+                            loadMoreBtn.setAttribute('data-next-page', data.next_page);
+                            loadMoreBtn.classList.remove('d-none');
+                        } else {
+                            // 已加载所有评论
+                            const loadMoreContainer = document.getElementById('load-more-container');
+                            if (loadMoreContainer) {
+                                loadMoreContainer.remove();
+                            }
+                        }
+                    },
+                    onError: function(error) {
+                        console.error('加载评论失败:', error.message);
+                    },
+                    onComplete: function() {
+                        // 隐藏加载中状态
+                        if (loadingSpinner) {
+                            loadingSpinner.classList.add('d-none');
+                        }
+                        isLoading = false;
+                        
+                        // 重新显示加载按钮
+                        if (loadMoreBtn) {
+                            loadMoreBtn.classList.remove('d-none');
+                        }
+                    }
+                });
+            }
+            
+            // 初始加载评论
+            // 不再需要在这里调用，因为game_comments.html已经会自动加载评论
+        }
+        
+        // 创建评论元素函数 - 仅作为备用，game_comments.html已有自己的实现
+        
+        // 定义refreshComments函数，使用game_comments.html中的loadComments函数
+        window.refreshComments = function(gameId) {
+            console.log('刷新评论列表，游戏ID:', gameId);
+            
+            // 尝试使用game_comments.html中定义的函数
+            if (typeof loadComments === 'function') {
+                // 清空评论容器
+                const commentsContainer = document.getElementById('comments-container');
+                if (commentsContainer) {
+                    commentsContainer.innerHTML = '';
+                }
+                
+                // 重新加载第一页评论
+                loadComments(1, gameId);
+            } else {
+                console.error('loadComments函数未定义，无法刷新评论');
+                showToast('无法刷新评论列表，请刷新页面', 'warning');
+            }
+        };
+    });
+</script>
+{% endblock %}

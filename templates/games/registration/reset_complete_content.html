@@ -1,0 +1,231 @@
+{% load static %}
+<style>
+    /* 内联样式确保背景覆盖 */
+    .sidebar-bg {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        border-radius: 10px 0 0 10px;
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    /* 覆盖.auth-card样式，移除max-width限制 */
+    .auth-card {
+        max-width: none !important;
+    }
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        max-width: 120px;
+    }
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 2;
+    }
+    .step.active .step-number {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+    }
+    .step.completed .step-number {
+        background: #28a745;
+        color: white;
+    }
+    .step-text {
+        font-size: 14px;
+        color: #6c757d;
+        text-align: center;
+    }
+    .step.active .step-text {
+        color: #6a11cb;
+        font-weight: 600;
+    }
+    .step.completed .step-text {
+        color: #28a745;
+        font-weight: 600;
+    }
+    /* 修改步骤连接线的样式 */
+    .step-indicator::before {
+        content: "";
+        position: absolute;
+        top: 20px;
+        height: 2px;
+        background-color: #e9ecef;
+        width: 70%;
+        left: 15%;
+        z-index: 0;
+    }
+    
+    /* 已完成步骤之间的连接线 */
+    .step.completed + .step.completed::before,
+    .step.completed + .step.active::before {
+        content: "";
+        position: absolute;
+        top: 20px;
+        height: 2px;
+        background-color: #28a745;
+        width: calc(100% - 40px);
+        left: calc(-50% + 20px);
+        z-index: 0;
+    }
+    
+    /* 普通步骤之间的连接线 */
+    .step + .step::before {
+        content: "";
+        position: absolute;
+        top: 20px;
+        height: 2px;
+        background-color: #e9ecef;
+        width: calc(100% - 40px);
+        left: calc(-50% + 20px);
+        z-index: 0;
+    }
+    
+    /* 成功图标样式 - 匹配原型图 */
+    .success-icon {
+        width: 70px;
+        height: 70px;
+        background-color: #28a745;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+    }
+    
+    .success-icon i {
+        color: white;
+        font-size: 36px;
+    }
+    
+    @keyframes fadeInScale {
+        0% {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    .back-to-login {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    .back-to-login:hover {
+        color: #6a11cb;
+    }
+    .success-message {
+        text-align: center;
+        animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    .unsplash-img {
+        width: 100%;
+        border-radius: 8px;
+        margin-top: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .alert {
+        display: none;
+    }
+</style>
+
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="auth-card">
+                    <div class="row g-0" style="min-height: 600px;">
+                        <!-- 左侧信息栏 -->
+                        <div class="col-md-5 position-relative">
+                            <div class="sidebar-bg"></div>
+                            <div class="position-relative" style="z-index: 1; padding: 40px;">
+                                {% include 'games/registration/auth_sidebar.html' %}
+                                
+                                <!-- 添加Unsplash图片 -->
+                                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
+                                     alt="游戏图片" class="unsplash-img">
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧内容区域 -->
+                        <div class="col-md-7 auth-content">
+                            <h4 class="mb-4 text-center">密码重置成功</h4>
+                            
+                            <!-- 步骤指示器 -->
+                            <div class="step-indicator">
+                                <div class="step completed" id="step1">
+                                    <div class="step-number"><i class="fas fa-check"></i></div>
+                                    <div class="step-text">验证邮箱</div>
+                                </div>
+                                <div class="step completed" id="step2">
+                                    <div class="step-number"><i class="fas fa-check"></i></div>
+                                    <div class="step-text">重置密码</div>
+                                </div>
+                                <div class="step active" id="step3">
+                                    <div class="step-number">3</div>
+                                    <div class="step-text">完成</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 成功消息 -->
+                            <div class="success-message" id="step3-container">
+                                <div class="success-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <h5 class="mb-3">您的密码已成功重置</h5>
+                                <p class="text-muted mb-4">您现在可以使用新密码登录您的账户。</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'games:login' %}" class="btn btn-primary btn-auth">
+                                        登录您的账户
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <a href="{% url 'games:login' %}" class="back-to-login">
+                                <i class="fas fa-arrow-left me-1"></i>返回登录页面
+                            </a>
+                            
+                            <div class="text-center mt-4">
+                                <p class="text-muted">需要帮助？ <a href="{% url 'games:home' %}" class="text-decoration-none">返回首页</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

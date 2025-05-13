@@ -1,0 +1,284 @@
+{% load i18n %}
+
+<!-- 添加游戏模态框 -->
+<div class="modal fade" id="addGameModal" tabindex="-1" aria-labelledby="addGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addGameModalLabel">{% trans '添加新游戏' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="add-game-form" method="post" enctype="multipart/form-data" autocomplete="off">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add-game-name" class="form-label">{% trans '游戏名称' %} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add-game-name" name="title" required placeholder="{% trans '输入游戏名称' %}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add-game-category" class="form-label">{% trans '游戏分类' %} <span class="text-danger">*</span></label>
+                            <select class="form-select" id="add-game-category" name="category" required>
+                                <option value="">{% trans '选择分类' %}</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text text-warning">{% trans '每个游戏只能选择一个分类' %}</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="add-game-summary" class="form-label">{% trans '简单介绍' %}</label>
+                        <input type="text" class="form-control" id="add-game-summary" name="summary" maxlength="200" placeholder="{% trans '简短介绍一下这款游戏（最多200字符）' %}">
+                        <div class="form-text">{% trans '一句话介绍，将显示在游戏列表和搜索结果中' %}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="add-game-description" class="form-label">{% trans '游戏描述' %}</label>
+                        <textarea class="form-control" id="add-game-description" name="description" rows="4" placeholder="{% trans '输入游戏描述' %}"></textarea>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add-game-thumbnail" class="form-label">{% trans '游戏缩略图' %}</label>
+                            <input type="file" class="form-control" id="add-game-thumbnail" name="thumbnail" accept="image/*">
+                            <div class="form-text">{% trans '推荐尺寸: 500x300 像素，最大文件大小: 2MB' %}</div>
+                            <div class="mt-2" id="thumbnail-preview-container" style="display: none;">
+                                <img id="thumbnail-preview" src="" alt="缩略图预览" class="img-thumbnail" style="max-height: 150px;">
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="remove-thumbnail">
+                                    <i class="fas fa-times"></i> {% trans '移除' %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add-game-status" class="form-label">{% trans '游戏状态' %}</label>
+                            <select class="form-select" id="add-game-status" name="status">
+                                <option value="online">{% trans '立即上线' %}</option>
+                                <option value="offline" selected>{% trans '下线' %}</option>
+                                <option value="pending">{% trans '等待审核' %}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="add-game-iframe-url" class="form-label">{% trans '游戏iframe链接' %} <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control" id="add-game-iframe-url" name="iframe_url" required placeholder="{% trans '输入完整的iframe URL，例如: https://example.com/games/game1.html' %}">
+                        <div class="form-text">{% trans '输入完整的iframe URL，包含https://前缀' %}</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add-game-iframe-width" class="form-label">{% trans 'iframe宽度' %}</label>
+                            <input type="text" class="form-control" id="add-game-iframe-width" name="iframe_width" value="100%" placeholder="{% trans '例如: 800 或 100%' %}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add-game-iframe-height" class="form-label">{% trans 'iframe高度' %}</label>
+                            <input type="text" class="form-control" id="add-game-iframe-height" name="iframe_height" value="600" placeholder="{% trans '例如: 600' %}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans '游戏标签' %}</label>
+                        <div class="d-flex flex-wrap gap-3" id="add-game-tags-container">
+                            <!-- 标签将通过Ajax动态加载 -->
+                            <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                <span class="visually-hidden">{% trans '加载中...' %}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SEO优化字段 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-search"></i> {% trans 'SEO优化设置' %}
+                                <small class="d-block mt-1 text-white-50">{% trans '这些设置将帮助您的游戏在Google等搜索引擎中获得更好的排名' %}</small>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="add-game-meta-title" class="form-label">{% trans 'Meta 标题' %}</label>
+                                <input type="text" class="form-control" id="add-game-meta-title" name="meta_title" 
+                                       placeholder="{% trans '例如: 最新3D赛车游戏 - 在线免费玩 | 游戏名称' %}">
+                                <div class="form-text">{% trans '建议长度: 50-60个字符。搜索结果中显示的标题，对SEO至关重要' %}</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="add-game-meta-description" class="form-label">{% trans 'Meta 描述' %}</label>
+                                <textarea class="form-control" id="add-game-meta-description" name="meta_description" rows="3" 
+                                          placeholder="{% trans '例如: 体验最新的3D赛车游戏，完全免费。包含多种赛车和赛道，挑战您的驾驶技能！' %}"></textarea>
+                                <div class="form-text">{% trans '建议长度: 120-160个字符。搜索结果中显示的描述，应包含关键词并吸引点击' %}</div>
+                            </div>
+                            
+                            <div class="mb-0">
+                                <label for="add-game-meta-keywords" class="form-label">{% trans 'Meta 关键词' %}</label>
+                                <input type="text" class="form-control" id="add-game-meta-keywords" name="meta_keywords" 
+                                       placeholder="{% trans '例如: 赛车游戏,3D游戏,免费游戏,在线游戏,多人游戏' %}">
+                                <div class="form-text">{% trans '用逗号分隔的关键词列表。虽然对现代SEO不如以前重要，但仍有一定参考价值' %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans '保存游戏' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑游戏模态框 -->
+<div class="modal fade" id="editGameModal" tabindex="-1" aria-labelledby="editGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editGameModalLabel">{% trans '编辑游戏' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-game-form" method="post" enctype="multipart/form-data" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" id="edit-game-id" name="id">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-game-name" class="form-label">{% trans '游戏名称' %} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit-game-name" name="title" required placeholder="{% trans '输入游戏名称' %}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit-game-category" class="form-label">{% trans '游戏分类' %} <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit-game-category" name="category" required>
+                                <option value="">{% trans '选择分类' %}</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text text-warning">{% trans '每个游戏只能选择一个分类' %}</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-game-summary" class="form-label">{% trans '简单介绍' %}</label>
+                        <input type="text" class="form-control" id="edit-game-summary" name="summary" maxlength="200" placeholder="{% trans '简短介绍一下这款游戏（最多200字符）' %}">
+                        <div class="form-text">{% trans '一句话介绍，将显示在游戏列表和搜索结果中' %}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-game-description" class="form-label">{% trans '游戏描述' %}</label>
+                        <textarea class="form-control" id="edit-game-description" name="description" rows="4" placeholder="{% trans '输入游戏描述' %}"></textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-game-thumbnail" class="form-label">{% trans '游戏缩略图' %}</label>
+                            <input type="file" class="form-control" id="edit-game-thumbnail" name="thumbnail" accept="image/*">
+                            <div class="form-text">{% trans '推荐尺寸: 500x300 像素，最大文件大小: 2MB' %}</div>
+                            <div class="mt-2" id="edit-thumbnail-preview-container">
+                                <img id="edit-thumbnail-preview" src="" alt="缩略图预览" class="img-thumbnail" style="max-height: 150px;">
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="edit-remove-thumbnail">
+                                    <i class="fas fa-times"></i> {% trans '移除' %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit-game-status" class="form-label">{% trans '游戏状态' %}</label>
+                            <select class="form-select" id="edit-game-status" name="status">
+                                <option value="online">{% trans '立即上线' %}</option>
+                                <option value="offline">{% trans '下线' %}</option>
+                                <option value="pending">{% trans '等待审核' %}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-game-iframe-url" class="form-label">{% trans '游戏iframe链接' %} <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control" id="edit-game-iframe-url" name="iframe_url" required placeholder="{% trans '输入完整的iframe URL，例如: https://example.com/games/game1.html' %}">
+                        <div class="form-text">{% trans '输入完整的iframe URL，包含https://前缀' %}</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-game-iframe-width" class="form-label">{% trans 'iframe宽度' %}</label>
+                            <input type="text" class="form-control" id="edit-game-iframe-width" name="iframe_width" placeholder="{% trans '例如: 800 或 100%' %}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit-game-iframe-height" class="form-label">{% trans 'iframe高度' %}</label>
+                            <input type="text" class="form-control" id="edit-game-iframe-height" name="iframe_height" placeholder="{% trans '例如: 600' %}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans '游戏标签' %}</label>
+                        <div class="d-flex flex-wrap gap-3" id="edit-game-tags-container">
+                            <!-- 标签将通过Ajax动态加载 -->
+                            <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                <span class="visually-hidden">{% trans '加载中...' %}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SEO优化字段 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-search"></i> {% trans 'SEO优化设置' %}
+                                <small class="d-block mt-1 text-white-50">{% trans '这些设置将帮助您的游戏在Google等搜索引擎中获得更好的排名' %}</small>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="edit-game-meta-title" class="form-label">{% trans 'Meta 标题' %}</label>
+                                <input type="text" class="form-control" id="edit-game-meta-title" name="meta_title" 
+                                       placeholder="{% trans '例如: 最新3D赛车游戏 - 在线免费玩 | 游戏名称' %}">
+                                <div class="form-text">{% trans '建议长度: 50-60个字符。搜索结果中显示的标题，对SEO至关重要' %}</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="edit-game-meta-description" class="form-label">{% trans 'Meta 描述' %}</label>
+                                <textarea class="form-control" id="edit-game-meta-description" name="meta_description" rows="3" 
+                                          placeholder="{% trans '例如: 体验最新的3D赛车游戏，完全免费。包含多种赛车和赛道，挑战您的驾驶技能！' %}"></textarea>
+                                <div class="form-text">{% trans '建议长度: 120-160个字符。搜索结果中显示的描述，应包含关键词并吸引点击' %}</div>
+                            </div>
+                            
+                            <div class="mb-0">
+                                <label for="edit-game-meta-keywords" class="form-label">{% trans 'Meta 关键词' %}</label>
+                                <input type="text" class="form-control" id="edit-game-meta-keywords" name="meta_keywords" 
+                                       placeholder="{% trans '例如: 赛车游戏,3D游戏,免费游戏,在线游戏,多人游戏' %}">
+                                <div class="form-text">{% trans '用逗号分隔的关键词列表。虽然对现代SEO不如以前重要，但仍有一定参考价值' %}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3" id="game-stats-container">
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-info"><i class="fas fa-gamepad"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">{% trans '游玩次数' %}</span>
+                                    <span class="info-box-number" id="edit-game-player-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-warning"><i class="fas fa-star"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">{% trans '评分' %}</span>
+                                    <span class="info-box-number" id="edit-game-rating">0.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans '取消' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans '保存更改' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast容器 -->
+<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100"></div> 

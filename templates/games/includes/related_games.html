@@ -1,0 +1,57 @@
+<section>
+    <h2 class="section-title">相关游戏</h2>
+    
+    {% for related_game in related_games %}
+    <div class="game-card">
+        <img src="{{ related_game.thumbnail.url }}" class="card-img-top" alt="{{ related_game.title }}">
+        <div class="card-body">
+            <h5 class="card-title">{{ related_game.title }}</h5>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="rating">
+                    {% with rating_int=related_game.rating|floatformat:0|add:"0" %}
+                    {% with rating_decimal=related_game.rating|floatformat:1|slice:"-1:" %}
+                        {% for i in '12345'|make_list %}
+                            {% if forloop.counter <= rating_int|add:"0" %}
+                                <i class="fas fa-star"></i>
+                            {% elif forloop.counter == rating_int|add:"1" and rating_decimal > "0" %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                    {% endwith %}
+                    <small class="text-muted ms-1">{{ related_game.rating|floatformat:1 }}</small>
+                </span>
+                {% if related_game.categories.first %}
+                <span class="category-badge">{{ related_game.categories.first.name }}</span>
+                {% endif %}
+            </div>
+            
+            <!-- 游戏简介 -->
+            <p class="game-description small text-muted mb-2 text-truncate" title="{{ related_game.summary }}">
+                {{ related_game.summary|default:"暂无介绍" }}
+            </p>
+            
+            <!-- 游戏标签 -->
+            <div class="game-tags mb-2">
+                {% if related_game.tags.all %}
+                    {% for tag in related_game.tags.all|slice:":3" %}
+                        <span class="category-badge">{{ tag.name }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <a href="{% url 'games:game_detail' related_game.slug %}" class="btn btn-sm btn-primary w-100">开始游戏</a>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">暂无相关游戏推荐</p>
+    {% endfor %}
+    
+    <!-- 广告 -->
+    <div class="ad-banner mt-4">
+        <h5>赞助广告</h5>
+        <img src="{% if sidebar_ad %}{{ sidebar_ad.image.url }}{% else %}https://via.placeholder.com/300x250/e9ecef/495057?text=Advertisement{% endif %}" class="img-fluid mt-2" alt="广告">
+    </div>
+</section>

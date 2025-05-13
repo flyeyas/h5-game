@@ -1,0 +1,622 @@
+<script>
+    /**
+     * 初始化变量
+     */
+    let isLoading = false;
+    let currentPage = 1;
+    let hasMoreGames = true;
+    let lastFilterParams = {};
+    
+    /**
+     * 创建游戏卡片元素
+     */
+    function createGameCard(game) {
+        // 获取游戏卡片模板
+        const template = document.getElementById('game-card-template');
+        if (!template) {
+            console.error('找不到游戏卡片模板');
+            return document.createElement('div');
+        }
+        
+        // 复制模板
+        const gameCard = template.content.cloneNode(true).firstElementChild;
+        
+        // 设置游戏数据
+        // 封面图片
+        const thumbnail = gameCard.querySelector('.game-thumbnail');
+        if (thumbnail) {
+            thumbnail.src = game.thumbnail || '';
+            thumbnail.alt = game.title || '';
+        }
+        
+        // 标题
+        const title = gameCard.querySelector('.game-title');
+        if (title) {
+            title.textContent = game.title || '';
+        }
+        
+        // 评分星星
+        const ratingStars = gameCard.querySelector('.game-rating-stars');
+        if (ratingStars) {
+            const rating = parseFloat(game.rating) || 0;
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    starsHtml += '<i class="fas fa-star"></i>';
+                } else if (i - 0.5 <= rating) {
+                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
+        } else {
+                    starsHtml += '<i class="far fa-star"></i>';
+                }
+            }
+            ratingStars.innerHTML = starsHtml;
+        }
+        
+        // 评分数值
+        const ratingValue = gameCard.querySelector('.game-rating-value');
+        if (ratingValue) {
+            const rating = parseFloat(game.rating) || 0;
+            ratingValue.textContent = rating.toFixed(1);
+        }
+        
+        // 游戏分类
+        const categoryBadge = gameCard.querySelector('.game-category');
+        if (categoryBadge) {
+            let categoryName = '';
+            if (game.categories && game.categories.length > 0) {
+                categoryName = game.categories[0].name;
+            }
+            categoryBadge.textContent = categoryName;
+        }
+        
+        // 游戏简介
+        const intro = gameCard.querySelector('.game-intro');
+        if (intro) {
+            intro.textContent = game.short_description || '';
+        }
+        
+        // 收藏日期
+        const favoriteDate = gameCard.querySelector('.game-favorite-date');
+        if (favoriteDate) {
+            const createdAt = game.created_at || '';
+            favoriteDate.textContent = createdAt ? createdAt.substring(0, 10) : '';
+        }
+        
+        // 游戏链接
+        const gameLink = gameCard.querySelector('.game-link');
+        if (gameLink) {
+            gameLink.href = `/games/${game.slug}/`;
+        }
+        
+        // 删除收藏按钮
+        const removeBtn = gameCard.querySelector('.favorite-btn');
+        if (removeBtn) {
+            removeBtn.setAttribute('data-game-id', game.id);
+            removeBtn.setAttribute('data-game-title', game.title);
+        }
+        
+        // 推荐标签
+        const gameBadge = gameCard.querySelector('.game-badge');
+        if (gameBadge && game.is_featured) {
+            gameBadge.textContent = '推荐';
+            gameBadge.style.display = 'inline-block';
+        }
+        
+        return gameCard;
+    }
+    
+    // 渲染游戏列表到容器
+    function renderGames(games, container) {
+        if (!container || !games || !games.length) return;
+        
+        // 为每个游戏创建卡片并添加到容器
+        games.forEach(game => {
+            const gameCard = createGameCard(game);
+            container.appendChild(gameCard);
+        });
+    }
+    
+    // 更新筛选标签显示
+    function updateFilterTags(params) {
+        const filterTagsContainer = document.getElementById('filter-tags');
+        if (!filterTagsContainer) return;
+        
+        // 清空现有标签
+        filterTagsContainer.innerHTML = '';
+        
+        // 跟踪是否有活跃筛选条件
+        let hasFilters = false;
+        let onlyCategoryFilter = false;
+        
+        // 添加标签文本前缀
+        const filterLabel = document.createElement('span');
+        filterLabel.className = 'me-2';
+        filterLabel.textContent = '筛选条件：';
+        filterTagsContainer.appendChild(filterLabel);
+        
+        // 添加搜索标签
+        if (params.search) {
+            hasFilters = true;
+            const searchTag = document.createElement('span');
+            searchTag.className = 'badge mb-2';
+            searchTag.innerHTML = `<i class="fas fa-search me-1"></i> ${params.search} <i class="fas fa-times ms-1 text-muted" data-filter="search"></i>`;
+            filterTagsContainer.appendChild(searchTag);
+            
+            // 点击删除标签事件
+            searchTag.querySelector('i[data-filter="search"]').addEventListener('click', function() {
+                document.getElementById('search-input').value = '';
+                const newParams = {...params};
+                delete newParams.search;
+                
+                // 重新加载数据
+                loadGames(newParams);
+                
+                // 更新筛选标签
+                updateFilterTags(newParams);
+            });
+        }
+        
+        // 添加分类标签
+        if (params.category) {
+            hasFilters = true;
+            const categorySelect = document.getElementById('category-select');
+            let categoryName = '未知分类';
+            
+            // 从分类下拉菜单获取分类名称
+            if (categorySelect) {
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                if (selectedOption) {
+                    categoryName = selectedOption.textContent;
+                }
+            }
+            
+            const categoryTag = document.createElement('span');
+            categoryTag.className = 'badge mb-2';
+            categoryTag.innerHTML = `<i class="fas fa-tag me-1"></i> ${categoryName} <i class="fas fa-times ms-1 text-muted" data-filter="category"></i>`;
+            filterTagsContainer.appendChild(categoryTag);
+            
+            // 点击删除标签事件
+            categoryTag.querySelector('i[data-filter="category"]').addEventListener('click', function() {
+                document.getElementById('category-select').value = '';
+                const newParams = {...params};
+                delete newParams.category;
+                
+                // 重新加载数据
+                loadGames(newParams);
+                
+                // 更新筛选标签
+                updateFilterTags(newParams);
+            });
+            
+            // 检查是否只有分类筛选
+            if (!params.search) {
+                onlyCategoryFilter = true;
+            }
+        }
+        
+        // 如果有筛选条件且不是只有分类筛选时，添加清空按钮
+        if (hasFilters && !onlyCategoryFilter) {
+            const clearAllBtn = document.createElement('button');
+            clearAllBtn.className = 'btn btn-outline-secondary btn-sm mb-2 ms-3';
+            clearAllBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i>清空筛选';
+            clearAllBtn.addEventListener('click', function() {
+                // 重置表单
+                document.getElementById('search-input').value = '';
+                document.getElementById('category-select').value = '';
+                
+                // 保留排序设置
+                const sortValue = document.getElementById('sort-input').value;
+                
+                // 重新加载数据
+                loadGames({sort: sortValue});
+                
+                // 隐藏筛选标签容器
+                filterTagsContainer.style.display = 'none';
+            });
+            
+            filterTagsContainer.appendChild(clearAllBtn);
+        }
+        
+        // 显示或隐藏筛选标签容器
+        if (hasFilters) {
+            filterTagsContainer.style.display = 'block';
+        } else {
+            filterTagsContainer.style.display = 'none';
+        }
+    }
+    
+    // 更新排序下拉框显示
+    function updateSortDropdown(sortValue) {
+        const sortDropdown = document.getElementById('sortDropdown');
+        if (!sortDropdown) return;
+        
+        let sortText = '最近收藏';
+        if (sortValue === 'name') sortText = '名称';
+        else if (sortValue === 'rating') sortText = '评分';
+        
+        sortDropdown.textContent = sortText;
+        
+        // 更新排序选项状态
+        document.querySelectorAll('.sort-option').forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.sort === sortValue);
+        });
+    }
+    
+    // 异步加载游戏列表
+    function loadGames(params = {}, isLoadMore = false) {
+        // 如果已经在加载中，则不再发起新请求
+        if (isLoading) return;
+        isLoading = true;
+        
+        // 隐藏错误提示
+        const errorContainer = document.getElementById('error-container');
+        if (errorContainer) {
+            errorContainer.style.display = 'none';
+        }
+        
+        // 显示加载指示器
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator && !isLoadMore) {
+            loadingIndicator.style.display = 'block';
+        }
+        
+        // 更新加载更多按钮状态
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn && isLoadMore) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 加载中...';
+        }
+        
+        // 保存筛选参数，用于后续加载更多
+        if (!isLoadMore) {
+            lastFilterParams = {...params};
+            currentPage = 1;
+            // 如果是新的搜索或筛选，清空当前内容
+            const gamesContainer = document.getElementById('games-container');
+            if (gamesContainer) {
+                gamesContainer.innerHTML = '';
+            }
+            // 重置状态
+            hasMoreGames = true;
+            
+            // 更新筛选标签
+            updateFilterTags(params);
+        } else {
+            // 如果是加载更多，使用之前的筛选参数，只更新页码
+            params = {...lastFilterParams};
+            params.page = currentPage;
+        }
+        
+        // 构建查询字符串
+        const searchParams = new URLSearchParams();
+        for (const key in params) {
+            if (params[key]) {
+                searchParams.append(key, params[key]);
+            }
+        }
+        
+        // 添加当前加载的页码
+        searchParams.append('page', currentPage);
+        
+        // 更新表单值（确保表单与URL参数同步）
+        if (document.getElementById('search-input')) {
+            document.getElementById('search-input').value = params.search || '';
+        }
+        if (document.getElementById('category-select')) {
+            document.getElementById('category-select').value = params.category || '';
+        }
+        if (document.getElementById('sort-input')) {
+            document.getElementById('sort-input').value = params.sort || 'recent';
+        }
+        
+        // 更新排序下拉框显示
+        updateSortDropdown(params.sort || 'recent');
+        
+        // 如果不是加载更多，则更新浏览器历史记录（但不修改URL中的API路径）
+        if (!isLoadMore) {
+            const historyParams = new URLSearchParams(searchParams);
+            const newUrl = window.location.pathname + (historyParams.toString() ? '?' + historyParams.toString() : '');
+            window.history.pushState({ path: newUrl }, '', newUrl);
+        }
+        
+        // 使用新的apiRequest函数发送请求
+        apiRequest({
+            url: '/api/favorites/',
+            method: 'GET',
+            data: Object.fromEntries(searchParams),
+            showToast: false,
+            success: function(data) {
+                // 添加调试信息
+                console.log('API成功返回数据:', data);
+            
+            // 隐藏加载指示器
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+            
+            // 更新加载更多按钮状态
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> 加载更多';
+            }
+            
+                // 处理响应数据
+                const gamesContainer = document.getElementById('games-container');
+                const emptyState = document.getElementById('empty-favorites');
+                
+                if (data.favorites && data.favorites.length > 0) {
+                    // 渲染游戏列表
+                    renderGames(data.favorites, gamesContainer);
+                    
+                    // 隐藏空状态提示
+                        if (emptyState) {
+                            emptyState.style.display = 'none';
+                        }
+                    
+                    // 更新分页信息
+                    hasMoreGames = data.pagination && data.pagination.has_next;
+                    if (loadMoreBtn) {
+                        loadMoreBtn.style.display = hasMoreGames ? 'block' : 'none';
+                    }
+                    
+                    // 如果成功加载，增加页码（用于下次加载更多）
+                    currentPage++;
+                    
+                    // 初始化游戏删除功能
+                    initFavoriteGameActions();
+                } else if (currentPage === 1) {
+                    // 没有数据且是第一页
+                    if (emptyState) {
+                        emptyState.style.display = 'block';
+                    }
+                    
+                    if (loadMoreBtn) {
+                        loadMoreBtn.style.display = 'none';
+                    }
+                }
+            },
+            error: function(error) {
+            // 隐藏加载指示器
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+            
+                // 恢复加载更多按钮状态
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> 加载更多';
+            }
+            
+                // 显示错误信息
+                if (errorContainer) {
+            errorContainer.style.display = 'block';
+        }
+                
+                toast.error('加载收藏游戏失败，请稍后再试');
+            },
+            onComplete: function() {
+                isLoading = false;
+            }
+        });
+    }
+    
+    // 初始化收藏游戏的删除功能
+    function initFavoriteGameActions() {
+        document.querySelectorAll('.favorite-btn').forEach(button => {
+            // 防止重复绑定事件
+            if (button.getAttribute('data-event-bound') === 'true') return;
+                button.setAttribute('data-event-bound', 'true');
+            
+                button.addEventListener('click', function() {
+                const gameId = this.getAttribute('data-game-id');
+                const gameTitle = this.getAttribute('data-game-title') || '游戏';
+                const gameCard = this.closest('.col-md-6, .col-lg-4, .col-xl-3'); // 获取游戏卡片DOM元素
+                
+                if (!gameId || !gameCard) return;
+                
+                // 显示确认框
+                if (!confirm(`确定要移除收藏的《${gameTitle}》吗？`)) {
+                    return;
+                }
+                
+                // 显示loading状态
+                const originalContent = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                this.disabled = true;
+                gameCard.style.opacity = '0.7';
+                
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('game_id', gameId);
+                
+                // 使用新的API端点发送请求
+                fetch('/api/favorite/toggle/', {
+                        method: 'POST',
+                    body: formData,
+                        credentials: 'same-origin'
+                    })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+                            return Promise.reject('需要登录');
+                        }
+                        return Promise.reject('请求失败: ' + response.status);
+                    }
+                    return response.json();
+                })
+                    .then(data => {
+                    // 恢复按钮状态但保持禁用
+                    button.innerHTML = originalContent;
+                    
+                        if (data.success) {
+                        // 成功移除收藏
+                        if (!data.data.is_favorite) {
+                                    // 淡出动画后移除
+                            gameCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                            gameCard.style.opacity = '0';
+                            gameCard.style.transform = 'scale(0.9)';
+                                    
+                                    setTimeout(() => {
+                                gameCard.remove();
+                                        
+                                        // 检查是否为空
+                                if (document.querySelectorAll('#games-container .col-md-6, #games-container .col-lg-4, #games-container .col-xl-3').length === 0) {
+                                            const emptyState = document.getElementById('empty-favorites');
+                                            if (emptyState) {
+                                                emptyState.style.display = 'block';
+                                            }
+                                    
+                                    // 隐藏加载更多按钮
+                                    const loadMoreBtn = document.getElementById('load-more-btn');
+                                    if (loadMoreBtn) {
+                                        loadMoreBtn.style.display = 'none';
+                                        }
+                                }
+                            }, 300);
+                            }
+                        } else {
+                        // 恢复按钮状态
+                        button.disabled = false;
+                        gameCard.style.opacity = '1';
+                        
+                        // 显示错误信息
+                        toast.error(data.message || '移除收藏失败，请稍后再试');
+                        
+                        // 检查是否需要重定向
+                        if (data.redirect_url) {
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url;
+                            }, 1500);
+                        }
+                        }
+                    })
+                    .catch(error => {
+                    console.error('收藏请求错误:', error);
+                    
+                    // 恢复按钮状态
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                    gameCard.style.opacity = '1';
+                    
+                    // 显示错误信息
+                    toast.error('移除收藏失败，请稍后再试');
+                });
+            });
+        });
+    }
+    
+    // 添加页面加载完成后初始化游戏列表
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM加载完成，准备初始化游戏列表...');
+        console.log('搜索表单元素:', document.getElementById('search-form'));
+        
+        // 从URL获取初始筛选参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search') || '';
+        const categoryParam = urlParams.get('category') || '';
+        const sortParam = urlParams.get('sort') || 'recent';
+        
+        // 首次加载游戏列表
+        loadGames({
+            search: searchParam,
+            category: categoryParam,
+            sort: sortParam
+        });
+        
+        // 绑定加载游戏按钮点击事件
+        const loadGamesBtn = document.getElementById('load-games-btn');
+        if (loadGamesBtn) {
+            console.log('已找到加载游戏按钮，绑定点击事件');
+            loadGamesBtn.addEventListener('click', function() {
+                const searchInput = document.getElementById('search-input');
+                const categorySelect = document.getElementById('category-select');
+                const sortInput = document.getElementById('sort-input');
+                
+                loadGames({
+                    search: searchInput?.value || '',
+                    category: categorySelect?.value || '',
+                    sort: sortInput?.value || 'recent'
+                });
+            });
+        } else {
+            console.error('未找到加载游戏按钮');
+        }
+        
+        // 绑定加载更多按钮点击事件
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function() {
+                if (!isLoading && hasMoreGames) {
+                    loadGames(lastFilterParams, true);
+                }
+            });
+        }
+        
+        // 绑定重试按钮点击事件
+        const retryButton = document.querySelector('.retry-button');
+        if (retryButton) {
+            retryButton.addEventListener('click', function() {
+                loadGames(lastFilterParams);
+            });
+        }
+        
+        // 绑定搜索表单提交事件
+        const searchForm = document.getElementById('search-form');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const searchInput = document.getElementById('search-input');
+                const categorySelect = document.getElementById('category-select');
+                const sortInput = document.getElementById('sort-input');
+                
+                loadGames({
+                    search: searchInput?.value || '',
+                    category: categorySelect?.value || '',
+                    sort: sortInput?.value || 'recent'
+                });
+            });
+        }
+        
+        // 绑定分类选择变化事件
+        const categorySelect = document.getElementById('category-select');
+        if (categorySelect) {
+            categorySelect.addEventListener('change', function() {
+                const searchInput = document.getElementById('search-input');
+                const sortInput = document.getElementById('sort-input');
+                
+                loadGames({
+                    search: searchInput?.value || '',
+                    category: this.value,
+                    sort: sortInput?.value || 'recent'
+                });
+            });
+        }
+        
+        // 绑定排序选择变化事件
+        const sortOptions = document.querySelectorAll('.sort-option');
+        sortOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const sortValue = this.getAttribute('data-sort');
+                if (!sortValue) return;
+                
+                const sortInput = document.getElementById('sort-input');
+                if (sortInput) {
+                    sortInput.value = sortValue;
+                }
+                
+                const searchInput = document.getElementById('search-input');
+                const categorySelect = document.getElementById('category-select');
+                
+                loadGames({
+                    search: searchInput?.value || '',
+                    category: categorySelect?.value || '',
+                    sort: sortValue
+                });
+            });
+        });
+    });
+</script> 

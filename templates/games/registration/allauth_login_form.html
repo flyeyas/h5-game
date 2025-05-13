@@ -1,0 +1,269 @@
+{% load static %}
+{% load i18n %}
+{% load account socialaccount %}
+
+<style>
+    #login-messages {
+        margin-bottom: 15px;
+        min-height: 0; /* 初始高度为0，只在有内容时展开 */
+        transition: all 0.5s ease;
+        overflow: hidden;
+        display: none; /* 初始隐藏 */
+    }
+    
+    #login-messages .alert {
+        margin-bottom: 15px;
+        animation: fadeIn 0.4s ease-in;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-left-width: 4px;
+    }
+    
+    #login-messages .alert-success {
+        border-left-color: #28a745;
+    }
+    
+    #login-messages .alert-danger {
+        border-left-color: #dc3545;
+    }
+    
+    #login-messages .alert-info {
+        border-left-color: #17a2b8;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-10px); }
+    }
+    
+    .fade-out {
+        animation: fadeOut 0.5s ease-out forwards;
+    }
+</style>
+
+<!-- 错误提示容器 -->
+<div id="login-messages">
+    {% if form.errors %}
+    <div class="alert alert-danger mb-3">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <p class="mb-0">{{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <div class="messages mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<form id="allauth-login-form" method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_login" class="form-label">邮箱或用户名</label>
+        <input type="text" class="form-control" id="id_login" name="login" placeholder="请输入您的邮箱或用户名" {% if form.login.value %}value="{{ form.login.value }}"{% endif %}>
+        <div class="invalid-feedback">{{ form.login.errors }}</div>
+    </div>
+    <div class="mb-3">
+        <label for="id_password" class="form-label">密码</label>
+        <input type="password" class="form-control" id="id_password" name="password" placeholder="请输入密码">
+        <div class="invalid-feedback">{{ form.password.errors }}</div>
+    </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="id_remember" name="remember">
+        <label class="form-check-label" for="id_remember">记住我</label>
+        <a href="{% url 'games:forgot_password' %}" class="float-end">找回密码</a>
+    </div>
+    {% if redirect_field_value %}
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" id="next-url">
+    {% endif %}
+    <button type="submit" class="btn btn-primary btn-auth w-100" id="loginBtn">
+        <span class="button-text">登录</span>
+        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+    </button>
+</form>
+
+<div class="divider">
+    <span>或使用以下方式登录</span>
+</div>
+
+<div class="social-login">
+    <a href="{% provider_login_url 'google' %}{% if redirect_field_value %}?{{ redirect_field_name }}={{ redirect_field_value }}{% endif %}" class="social-btn google w-100">
+        <i class="fab fa-google"></i> 使用Google账号登录
+    </a>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('allauth-login-form');
+    const loginBtn = document.getElementById('loginBtn');
+    const buttonText = loginBtn.querySelector('.button-text');
+    const spinner = loginBtn.querySelector('.spinner-border');
+    const messagesContainer = document.getElementById('login-messages');
+    
+    // 显示消息函数
+    function showMessage(type, message, autoDisappear = true) {
+        // 清空现有消息
+        messagesContainer.innerHTML = '';
+        
+        // 创建新消息
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        // 显示消息容器和添加消息
+        messagesContainer.style.display = 'block';
+        messagesContainer.appendChild(alertDiv);
+        
+        // 如果设置自动消失
+        if (autoDisappear) {
+            setTimeout(() => {
+                alertDiv.classList.add('fade-out');
+                
+                // 动画结束后隐藏容器
+                alertDiv.addEventListener('animationend', () => {
+                    messagesContainer.innerHTML = '';
+                    messagesContainer.style.display = 'none';
+                });
+            }, 5000); // 5秒后开始消失
+        }
+    }
+    
+    // 初始化时检查是否有已有消息
+    if (messagesContainer.innerHTML.trim()) {
+        messagesContainer.style.display = 'block';
+        
+        // 设置现有消息自动消失
+        setTimeout(() => {
+            const alerts = messagesContainer.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.classList.add('fade-out');
+            });
+            
+            // 最后一个元素添加监听，在动画结束后隐藏容器
+            if (alerts.length > 0) {
+                alerts[alerts.length - 1].addEventListener('animationend', () => {
+                    messagesContainer.innerHTML = '';
+                    messagesContainer.style.display = 'none';
+                });
+            }
+        }, 5000); // 5秒后开始消失
+    }
+    
+    // 表单提交处理
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // 阻止表单默认提交行为
+        
+        // 表单验证
+        const login = document.getElementById('id_login').value.trim();
+        const password = document.getElementById('id_password').value.trim();
+        const remember = document.getElementById('id_remember').checked;
+        const nextUrl = document.getElementById('next-url') ? document.getElementById('next-url').value : '';
+        
+        // 清除所有错误提示
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
+        if (!login || !password) {
+            if (!login) {
+                document.getElementById('id_login').classList.add('is-invalid');
+            }
+            if (!password) {
+                document.getElementById('id_password').classList.add('is-invalid');
+            }
+            showMessage('danger', '请填写所有必填项');
+            return;
+        }
+        
+        // 显示加载状态
+        buttonText.textContent = '登录中...';
+        spinner.classList.remove('d-none');
+        loginBtn.disabled = true;
+        
+        // 准备请求数据
+        const data = {
+            username: login,
+            password: password,
+            remember_me: remember,
+            next: nextUrl
+        };
+        
+        // 准备请求头
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        };
+        
+        // 发送AJAX登录请求
+        fetch('{% url "games:login_ajax" %}', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(data),
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 登录成功
+                showMessage('success', '登录成功，正在跳转...');
+                
+                // 延迟跳转，给用户时间看到成功消息
+                setTimeout(() => {
+                    window.location.href = data.redirect || '/';
+                }, 1500);
+            } else {
+                // 登录失败，恢复按钮状态
+                buttonText.textContent = '登录';
+                spinner.classList.add('d-none');
+                loginBtn.disabled = false;
+                
+                // 显示错误消息
+                if (data.errors) {
+                    if (data.errors.username) {
+                        document.getElementById('id_login').classList.add('is-invalid');
+                    }
+                    if (data.errors.password) {
+                        document.getElementById('id_password').classList.add('is-invalid');
+                    }
+                    // 显示通用错误信息
+                    if (data.errors.general) {
+                        showMessage('danger', data.errors.general);
+                    } else {
+                        showMessage('danger', '登录失败，请检查输入信息');
+                    }
+                } else {
+                    showMessage('danger', data.message || '登录失败，请检查输入信息');
+                }
+            }
+        })
+        .catch(error => {
+            // 网络错误等异常情况
+            buttonText.textContent = '登录';
+            spinner.classList.add('d-none');
+            loginBtn.disabled = false;
+            showMessage('danger', '网络错误，请稍后重试');
+            console.error('登录请求错误:', error);
+        });
+    });
+    
+    // 清除错误提示
+    document.getElementById('id_login').addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+    
+    document.getElementById('id_password').addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+</script> 

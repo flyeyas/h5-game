@@ -1,0 +1,1050 @@
+{% load i18n %}
+
+<!-- 添加管理员模态框 -->
+<div class="modal fade" id="addAdminModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-1"></i>{% trans '添加管理员' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAdminForm" method="post" action="{% url 'admin_panel:add_admin' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_username" class="form-label"><i class="fas fa-user me-1"></i>{% trans '用户名' %}</label>
+                            <input type="text" class="form-control" id="id_username" name="username" placeholder="{% trans '输入用户名' %}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_real_name" class="form-label"><i class="fas fa-id-card me-1"></i>{% trans '姓名' %}</label>
+                            <input type="text" class="form-control" id="id_real_name" name="real_name" placeholder="{% trans '输入姓名' %}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_password" class="form-label"><i class="fas fa-lock me-1"></i>{% trans '密码' %}</label>
+                            <input type="password" class="form-control" id="id_password" name="password" placeholder="{% trans '输入密码' %}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_confirm_password" class="form-label"><i class="fas fa-check-circle me-1"></i>{% trans '确认密码' %}</label>
+                            <input type="password" class="form-control" id="id_confirm_password" name="confirm_password" placeholder="{% trans '再次输入密码' %}" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_email" class="form-label"><i class="fas fa-envelope me-1"></i>{% trans '邮箱' %}</label>
+                            <input type="email" class="form-control" id="id_email" name="email" placeholder="{% trans '输入邮箱地址' %}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_mobile" class="form-label"><i class="fas fa-mobile-alt me-1"></i>{% trans '手机号' %}</label>
+                            <input type="text" class="form-control" id="id_mobile" name="mobile" placeholder="{% trans '输入手机号' %}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_role" class="form-label"><i class="fas fa-user-tag me-1"></i>{% trans '角色' %}</label>
+                            <select class="form-select" id="id_role" name="role">
+                                <option value="10">{% trans '超级管理员' %}</option>
+                                <option value="20">{% trans '管理员' %}</option>
+                                <option value="30">{% trans '内容编辑' %}</option>
+                                <option value="40" selected>{% trans '客服' %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_status" class="form-label"><i class="fas fa-toggle-on me-1"></i>{% trans '状态' %}</label>
+                            <select class="form-select" id="id_status" name="is_active">
+                                <option value="true" selected>{% trans '活跃' %}</option>
+                                <option value="false">{% trans '禁用' %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-image me-1"></i>{% trans '头像' %}</label>
+                        <div class="row mb-2">
+                            <div class="col-md-4">
+                                <select class="form-select mb-2" id="avatar_gender_type">
+                                    <option value="male">{% trans '男性头像' %}</option>
+                                    <option value="female">{% trans '女性头像' %}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <button type="button" class="btn btn-outline-primary w-100" id="generateRandomAvatars">
+                                    <i class="fas fa-random me-1"></i>{% trans '获取随机头像' %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="avatar-grid mt-3" id="avatars_container" style="display: none;">
+                            <div class="row">
+                                <!-- 头像将被动态添加到这里 -->
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mt-3" id="selected_avatar_preview" style="display: none !important;">
+                            <img id="selected_avatar_img" src="" alt="{% trans '已选头像' %}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                            <span class="ms-2 text-muted"><i class="fas fa-portrait me-1"></i>{% trans '已选头像' %}</span>
+                            <input type="hidden" id="random_avatar_url" name="random_avatar_url">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label"><i class="fas fa-sticky-note me-1"></i>{% trans '备注' %}</label>
+                        <textarea class="form-control" id="id_notes" name="notes" rows="3" placeholder="{% trans '输入备注信息' %}"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>{% trans '取消' %}
+                </button>
+                <button type="button" class="btn btn-primary" id="submitAddAdmin">
+                    <i class="fas fa-save me-1"></i>{% trans '添加管理员' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑管理员模态框 -->
+<div class="modal fade" id="editAdminModal" tabindex="-1" aria-labelledby="editAdminModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAdminModalLabel">{% trans "编辑管理员" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 加载指示器 -->
+                <div id="editModalLoading" style="display: none; text-align: center; padding: 20px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">{% trans "加载中..." %}</span>
+                    </div>
+                    <p class="mt-2">{% trans "正在加载管理员信息..." %}</p>
+                </div>
+                
+                <!-- 模态框内容 -->
+                <div id="editModalContent">
+                    <form id="editAdminForm" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" id="edit_admin_id" name="admin_id" value="">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_username" class="form-label"><i class="fas fa-user me-1"></i>{% trans '用户名' %}</label>
+                                <input type="text" class="form-control" id="edit_username" name="username_display" placeholder="{% trans '输入用户名' %}" readonly disabled>
+                                <input type="hidden" id="edit_username_hidden" name="username">
+                                <div class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>{% trans '用户名不可修改' %}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_real_name" class="form-label"><i class="fas fa-id-card me-1"></i>{% trans '姓名' %}</label>
+                                <input type="text" class="form-control" id="edit_real_name" name="real_name" placeholder="{% trans '输入姓名' %}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_password" class="form-label"><i class="fas fa-lock me-1"></i>{% trans '密码' %}</label>
+                                <input type="password" class="form-control" id="edit_password" name="password" placeholder="{% trans '输入新密码（留空则不修改）' %}">
+                                <div class="form-text">{% trans '如不修改密码，请留空' %}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_confirm_password" class="form-label"><i class="fas fa-check-circle me-1"></i>{% trans '确认密码' %}</label>
+                                <input type="password" class="form-control" id="edit_confirm_password" name="confirm_password" placeholder="{% trans '再次输入新密码' %}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_email" class="form-label"><i class="fas fa-envelope me-1"></i>{% trans '邮箱' %}</label>
+                                <input type="email" class="form-control" id="edit_email" name="email" placeholder="{% trans '输入邮箱地址' %}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_mobile" class="form-label"><i class="fas fa-mobile-alt me-1"></i>{% trans '手机号' %}</label>
+                                <input type="text" class="form-control" id="edit_mobile" name="mobile" placeholder="{% trans '输入手机号' %}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_role" class="form-label"><i class="fas fa-user-tag me-1"></i>{% trans '角色' %}</label>
+                                <select class="form-select" id="edit_role" name="role">
+                                    <option value="10">{% trans '超级管理员' %}</option>
+                                    <option value="20">{% trans '管理员' %}</option>
+                                    <option value="30">{% trans '内容编辑' %}</option>
+                                    <option value="40">{% trans '客服' %}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_status" class="form-label"><i class="fas fa-toggle-on me-1"></i>{% trans '状态' %}</label>
+                                <select class="form-select" id="edit_status" name="is_active">
+                                    <option value="true">{% trans '活跃' %}</option>
+                                    <option value="false">{% trans '禁用' %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-image me-1"></i>{% trans '头像' %}</label>
+                            <div class="row mb-2">
+                                <div class="col-md-4">
+                                    <select class="form-select mb-2" id="edit_avatar_gender_type">
+                                        <option value="male">{% trans '男性头像' %}</option>
+                                        <option value="female">{% trans '女性头像' %}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <button type="button" class="btn btn-outline-primary w-100" id="generateEditRandomAvatars">
+                                        <i class="fas fa-random me-1"></i>{% trans '获取随机头像' %}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="avatar-grid mt-3" id="edit_avatars_container" style="display: none;">
+                                <div class="row">
+                                    <!-- 头像将被动态添加到这里 -->
+                                </div>
+                            </div>
+                            <div class="mt-3" id="current_avatar_container">
+                                <img id="current_avatar" src="" alt="{% trans '当前头像' %}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                                <span class="ms-2 text-muted"><i class="fas fa-portrait me-1"></i>{% trans '当前头像' %}</span>
+                            </div>
+                            <div class="d-flex align-items-center mt-3" id="edit_selected_avatar_preview" style="display: none !important;">
+                                <img id="edit_selected_avatar_img" src="" alt="{% trans '已选头像' %}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                                <span class="ms-2 text-muted"><i class="fas fa-portrait me-1"></i>{% trans '已选头像' %}</span>
+                                <input type="hidden" id="edit_random_avatar_url" name="random_avatar_url">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_notes" class="form-label"><i class="fas fa-sticky-note me-1"></i>{% trans '备注' %}</label>
+                            <textarea class="form-control" id="edit_notes" name="notes" rows="3" placeholder="{% trans '输入备注信息' %}"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>{% trans '取消' %}
+                </button>
+                <button type="button" class="btn btn-primary" id="submitEditAdmin">
+                    <i class="fas fa-save me-1"></i>{% trans '保存修改' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除管理员确认模态框 -->
+<div class="modal fade" id="deleteAdminModal" tabindex="-1" aria-labelledby="deleteAdminModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAdminModalLabel">{% trans '确认删除' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="delete-admin-error" class="alert d-none mb-3">
+                    <i class="fas fa-exclamation-circle me-2" id="delete-error-icon"></i>
+                    <span id="delete-error-message">{% trans '删除失败，请重试' %}</span>
+                </div>
+                <div id="delete-admin-loading" class="text-center d-none my-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">{% trans "处理中..." %}</span>
+                    </div>
+                    <p class="mt-2 text-muted">{% trans "正在处理删除请求..." %}</p>
+                </div>
+                <div id="delete-admin-content">
+                    <p class="mb-3">{% trans '您确定要删除管理员' %} <span id="delete_admin_name" class="fw-bold"></span> {% trans '吗？' %} {% trans '此操作不可逆。' %}</p>
+                    <div class="alert alert-danger d-flex">
+                        <div class="text-danger me-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            {% trans '警告：删除管理员将同时删除该管理员的所有操作记录和权限设置。' %}
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="delete_admin_id" value="">
+                <form id="deleteAdminForm" method="post">
+                    {% csrf_token %}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="cancelDeleteAdmin" data-bs-dismiss="modal">
+                    {% trans '取消' %}
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteAdmin">
+                    <i class="fas fa-trash-alt me-1"></i>{% trans '确认删除' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 状态切换确认模态框 -->
+<div class="modal fade" id="toggleStatusModal" tabindex="-1" aria-labelledby="toggleStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toggleStatusModalLabel">{% trans '确认操作' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="toggle-status-error" class="alert alert-danger d-none mb-3">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="toggle-error-message">{% trans '操作失败，请重试' %}</span>
+                </div>
+                <p class="mb-3" id="toggle_status_message"></p>
+                <input type="hidden" id="toggle_admin_id" value="">
+                <input type="hidden" id="toggle_admin_status" value="">
+                <form id="toggleStatusForm" method="post">
+                    {% csrf_token %}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    {% trans '取消' %}
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmToggleStatus">
+                    {% trans '确认' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript 处理 -->
+<script>
+  // 使用IIFE确保代码独立
+  (function() {
+    // 检查jQuery是否可用
+    function initWithJQuery($) {
+      console.log('Admin list modals script loaded');
+      
+      // 获取CSRF令牌
+      var csrftoken = function() {
+        return $('[name=csrfmiddlewaretoken]').val() || $('meta[name="csrf-token"]').attr('content');
+      };
+      
+      // 添加CSS样式
+      var style = document.createElement('style');
+      style.innerHTML = `
+        .avatar-item {
+          cursor: pointer;
+          transition: all 0.2s;
+          border: 3px solid transparent;
+          border-radius: 50%;
+          padding: 2px;
+          margin-bottom: 15px;
+        }
+        .avatar-item:hover {
+          transform: scale(1.05);
+        }
+        .avatar-item.selected {
+          border-color: #4e73df;
+        }
+        .avatar-container {
+          width: 60px;
+          height: 60px;
+          margin: 0 auto;
+        }
+        .avatar-container img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      initAdminFunctions();
+      
+      // 监听内容加载事件，确保AJAX加载后重新初始化
+      $(document).on('content:loaded', function() {
+        console.log('Content loaded event received in admin_list_modals.html');
+        initAdminFunctions();
+      });
+      
+      // 初始化所有管理员功能
+      function initAdminFunctions() {
+        console.log('Initializing admin functions');
+        
+        // 验证编辑角色下拉菜单的选项
+        console.log('编辑角色下拉菜单的选项:');
+        $('#edit_role option').each(function() {
+          console.log('选项值:', $(this).val(), '文本:', $(this).text());
+        });
+        
+        // 确保所有模态框都被正确初始化
+        if (typeof bootstrap !== 'undefined') {
+          document.querySelectorAll('.modal').forEach(function(modalEl) {
+            console.log('Initializing modal:', modalEl.id);
+            try {
+              // 确保每个模态框仅初始化一次
+              if (!bootstrap.Modal.getInstance(modalEl)) {
+                new bootstrap.Modal(modalEl);
+              }
+            } catch (e) {
+              console.error('Modal initialization error for ' + modalEl.id + ':', e);
+            }
+          });
+        } else {
+          console.error('Bootstrap is not available');
+        }
+        
+        // 添加管理员表单 - 获取随机头像
+        $('#generateRandomAvatars').off('click').on('click', function() {
+          var gender = $('#avatar_gender_type').val();
+          fetchRandomAvatars(gender, 10, function(avatars) {
+            displayAvatars(avatars, '#avatars_container');
+          });
+        });
+        
+        // 编辑管理员表单 - 获取随机头像
+        $('#generateEditRandomAvatars').off('click').on('click', function() {
+          var gender = $('#edit_avatar_gender_type').val();
+          fetchRandomAvatars(gender, 10, function(avatars) {
+            displayAvatars(avatars, '#edit_avatars_container');
+          });
+        });
+        
+        // 从randomuser.me获取随机头像
+        function fetchRandomAvatars(gender, count, callback) {
+          // 显示加载中状态
+          var loadingHtml = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">正在获取头像...</p></div>';
+          $('#avatars_container .row').html(loadingHtml);
+          $('#avatars_container').show();
+          
+          $('#edit_avatars_container .row').html(loadingHtml);
+          $('#edit_avatars_container').show();
+          
+          // 使用randomuser.me API获取头像
+          $.ajax({
+            url: 'https://randomuser.me/api/',
+            dataType: 'json',
+            data: {
+              results: count,
+              gender: gender,
+              inc: 'picture,name,login'
+            },
+            success: function(data) {
+              console.log('获取到随机用户数据:', data);
+              if (data && data.results && data.results.length > 0) {
+                var avatars = data.results.map(function(user) {
+                  return {
+                    large: user.picture.large,
+                    medium: user.picture.medium,
+                    thumbnail: user.picture.thumbnail,
+                    name: user.name.first + ' ' + user.name.last,
+                    username: user.login.username
+                  };
+                });
+                callback(avatars);
+              } else {
+                handleAvatarFetchError();
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('获取随机头像失败:', error);
+              handleAvatarFetchError();
+            }
+          });
+        }
+        
+        // 处理获取头像失败的情况
+        function handleAvatarFetchError() {
+          var errorHtml = '<div class="col-12 text-center text-danger py-3"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>获取头像失败，请重试</p></div>';
+          $('#avatars_container .row').html(errorHtml);
+          $('#edit_avatars_container .row').html(errorHtml);
+        }
+        
+        // 显示头像列表
+        function displayAvatars(avatars, containerId) {
+          var html = '';
+          
+          avatars.forEach(function(avatar, index) {
+            html += `
+              <div class="col-md-2 col-sm-3 col-4">
+                <div class="avatar-item" data-url="${avatar.large}" data-name="${avatar.name}">
+                  <div class="avatar-container">
+                    <img src="${avatar.large}" alt="${avatar.name}" title="${avatar.name}">
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          
+          $(containerId + ' .row').html(html);
+          
+          // 添加点击事件，选择头像
+          $(containerId + ' .avatar-item').on('click', function() {
+            var url = $(this).data('url');
+            var name = $(this).data('name');
+            
+            // 移除其他头像的选中状态
+            $(containerId + ' .avatar-item').removeClass('selected');
+            // 添加当前头像的选中状态
+            $(this).addClass('selected');
+            
+            // 根据容器ID确定是添加还是编辑模式
+            if (containerId === '#avatars_container') {
+              // 添加模式
+              $('#selected_avatar_img').attr('src', url);
+              $('#random_avatar_url').val(url);
+              $('#selected_avatar_preview').css('display', 'flex !important').show();
+            } else {
+              // 编辑模式
+              $('#edit_selected_avatar_img').attr('src', url);
+              $('#edit_random_avatar_url').val(url);
+              $('#edit_selected_avatar_preview').css('display', 'flex !important').show();
+              
+              // 隐藏当前头像显示
+              $('#current_avatar_container').hide();
+            }
+            
+            console.log('已选择头像:', url, name);
+          });
+        }
+        
+        // 生成默认头像的函数(备用)
+        function generateDefaultAvatar(username) {
+          // 使用用户名的首字母和随机颜色生成头像URL
+          var name = username || 'User';
+          return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=random&color=fff';
+        }
+        
+        // 添加管理员表单提交
+        $('#submitAddAdmin').off('click').on('click', function() {
+          // 表单验证
+          var password = $('#id_password').val();
+          var confirmPassword = $('#id_confirm_password').val();
+          
+          if (password !== confirmPassword) {
+            alert('{% trans "两次输入的密码不一致" %}');
+            return;
+          }
+          
+          // 确保有头像
+          if (!$('#random_avatar_url').val()) {
+            showToast('请选择一个头像', 'warning');
+            return;
+          }
+          
+          // 提交表单
+          var form = $('#addAdminForm')[0];
+          var formData = new FormData(form);
+          
+          // 显示提交中状态
+          $(this).prop('disabled', true);
+          $(this).html('<i class="fas fa-spinner fa-spin me-1"></i>' + '{% trans "添加中..." %}');
+          
+          $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+              'X-CSRFToken': csrftoken(),
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+              if (response.status === 'success') {
+                // 关闭模态框
+                var addModal = bootstrap.Modal.getInstance(document.getElementById('addAdminModal'));
+                if (addModal) {
+                  addModal.hide();
+                }
+                
+                // 显示成功消息
+                showToast(response.message || '管理员已成功添加', 'success');
+                
+                // 延迟刷新页面
+                setTimeout(function() {
+                  location.reload();
+                }, 1000);
+              } else {
+                // 显示错误消息
+                showToast(response.message || '添加失败，请检查表单数据后重试', 'error');
+              }
+            },
+            error: function(xhr, status, error) {
+              showToast('添加失败，服务器错误', 'error');
+            },
+            complete: function() {
+              // 启用提交按钮
+              $('#submitAddAdmin').prop('disabled', false);
+              $('#submitAddAdmin').html('<i class="fas fa-save me-1"></i>' + '{% trans "添加管理员" %}');
+            }
+          });
+        });
+        
+        // 提交编辑管理员表单
+        $('#submitEditAdmin').off('click').on('click', function() {
+          console.log('Edit admin submit button clicked');
+          
+          // 获取表单数据
+          var form = $('#editAdminForm')[0];
+          var formData = new FormData(form);
+          
+          // 获取原始用户名和显示名
+          var originalUsername = $('#edit_username').val();
+          
+          // 确保隐藏用户名字段与原始用户名一致，防止修改
+          formData.set('username', originalUsername);
+          
+          // 获取管理员ID和表单提交URL
+          var adminId = $('#edit_admin_id').val();
+          var actionUrl = form.getAttribute('action');
+          
+          // 简单校验密码
+          var password = $('#edit_password').val();
+          var confirmPassword = $('#edit_confirm_password').val();
+          
+          if (password && password !== confirmPassword) {
+            showToast('两次输入的密码不一致', 'error');
+            return;
+          }
+          
+          // 确保有头像，随机生成头像优先级高于当前头像
+          if ($('#edit_random_avatar_url').val()) {
+            // 使用新选择的头像
+            console.log('使用新选择的头像:', $('#edit_random_avatar_url').val());
+          } else if ($('#current_avatar').attr('src')) {
+            // 保留当前头像
+            console.log('保留当前头像:', $('#current_avatar').attr('src'));
+            // 不需要特殊处理，后端会保留当前头像
+          } else {
+            // 如果没有任何头像，提示选择
+            showToast('请选择一个头像', 'warning');
+            return;
+          }
+          
+          // 删除文件类型的头像字段，确保不会上传头像文件
+          formData.delete('avatar');
+          
+          // 检查并记录所有表单字段的值
+          console.log('===== 表单字段值检查 =====');
+          console.log('adminId:', adminId);
+          console.log('username:', formData.get('username'));
+          console.log('real_name:', formData.get('real_name'));
+          console.log('email:', formData.get('email'));
+          console.log('mobile:', formData.get('mobile'));
+          console.log('role:', formData.get('role'));
+          console.log('is_active:', formData.get('is_active'));
+          console.log('notes:', formData.get('notes'));
+          console.log('random_avatar_url:', formData.get('random_avatar_url'));
+          console.log('password:', password ? '已设置' : '未设置');
+          console.log('===== 检查结束 =====');
+          
+          // 手动确保关键字段被包含在FormData中
+          if ($('#edit_real_name').length && !formData.get('real_name')) {
+            var realName = $('#edit_real_name').val();
+            formData.set('real_name', realName);
+            console.log('手动添加real_name字段:', realName);
+          }
+          
+          if ($('#edit_mobile').length && !formData.get('mobile')) {
+            var mobile = $('#edit_mobile').val();
+            formData.set('mobile', mobile);
+            console.log('手动添加mobile字段:', mobile);
+          }
+          
+          if ($('#edit_notes').length && !formData.get('notes')) {
+            var notes = $('#edit_notes').val();
+            formData.set('notes', notes);
+            console.log('手动添加notes字段:', notes);
+          }
+          
+          if ($('#edit_role').length && !formData.get('role')) {
+            var role = $('#edit_role').val();
+            formData.set('role', role);
+            console.log('手动添加role字段:', role);
+          }
+          
+          // 记录最终要提交的数据
+          console.log('Submitting edit form to:', actionUrl);
+          console.log('FormData entries:');
+          for (var pair of formData.entries()) {
+            console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+          }
+          
+          // 禁用提交按钮，防止重复提交
+          $(this).prop('disabled', true);
+          $(this).html('<i class="fas fa-spinner fa-spin me-1"></i>' + '{% trans "保存中..." %}');
+          
+          // 发送AJAX请求
+          $.ajax({
+            url: actionUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+              'X-CSRFToken': csrftoken(),
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+              console.log('Edit response received:', response);
+              
+              if (response.status === 'success') {
+                // 关闭模态框
+                var editModal = bootstrap.Modal.getInstance(document.getElementById('editAdminModal'));
+                if (editModal) {
+                  editModal.hide();
+                }
+                
+                // 显示成功消息
+                showToast(response.message || '管理员信息已成功更新', 'success');
+                
+                // 延迟刷新页面
+                setTimeout(function() {
+                  location.reload();
+                }, 1000);
+              } else {
+                // 显示错误消息
+                showToast(response.message || '保存失败，请检查表单数据后重试', 'error');
+                
+                // 处理表单错误
+                if (response.errors) {
+                  $.each(response.errors, function(field, errors) {
+                    var errorMsg = errors.join(', ');
+                    showToast(field + ': ' + errorMsg, 'error');
+                  });
+                }
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Edit AJAX error:', xhr.responseText);
+              showToast('保存失败，服务器错误', 'error');
+            },
+            complete: function() {
+              // 启用提交按钮
+              $('#submitEditAdmin').prop('disabled', false);
+              $('#submitEditAdmin').html('<i class="fas fa-save me-1"></i>' + '{% trans "保存修改" %}');
+            }
+          });
+        });
+        
+        // 显示Toast消息
+        function showToast(message, type) {
+          // 检查是否存在全局showToast函数
+          if (typeof window.showToast === 'function') {
+            window.showToast(message, type);
+          } else {
+            // 如果不存在，创建一个简单的alert
+            alert(message);
+          }
+        }
+        
+        // 提供一个公共函数来显示编辑管理员模态框
+        window.displayEditAdminModal = function(adminId, username, realName, email, mobile, role, status, notes, avatarUrl) {
+          console.log("显示编辑管理员模态框，角色值:", role, "类型:", typeof role);
+          console.log("头像URL:", avatarUrl, "类型:", typeof avatarUrl);
+          
+          // 设置表单提交地址
+          var actionUrl = '{% url "admin_panel:edit_admin" 0 %}'.replace('0', adminId);
+          $('#editAdminForm').attr('action', actionUrl);
+          
+          // 先设置基本信息，防止加载延迟导致用户体验不佳
+          $('#edit_admin_id').val(adminId);
+          $('#edit_username').val(username);
+          $('#edit_username_hidden').val(username);
+          
+          // 清除之前选择的随机头像
+          $('#edit_random_avatar_url').val('');
+          $('#edit_selected_avatar_preview').hide();
+          $('#edit_avatars_container').hide();
+          
+          // 显示加载指示器
+          showLoading();
+          
+          // 使用新的API接口获取完整的管理员信息
+          $.ajax({
+            url: '{% url "admin_panel:get_admin_detail" 0 %}'.replace('0', adminId),
+            type: 'GET',
+            dataType: 'json',
+            headers: {
+              'Accept': 'application/json'
+            },
+            success: function(response) {
+              console.log("API返回的管理员数据:", response);
+              
+              if (response && response.status === 'success' && response.admin) {
+                var admin = response.admin;
+                
+                // 更新表单字段
+                $('#edit_real_name').val(admin.real_name || realName);
+                $('#edit_email').val(admin.email || email);
+                $('#edit_mobile').val(admin.mobile || mobile);
+                
+                // 更新角色
+                var roleValue = admin.role || role;
+                setRoleValue(roleValue);
+                
+                // 更新状态
+                var isActive = admin.is_active !== undefined ? admin.is_active : (status === 'active');
+                $('#edit_status').val(isActive ? 'true' : 'false');
+                
+                // 更新备注
+                $('#edit_notes').val(admin.notes || notes);
+                
+                // 更新头像
+                var adminAvatarUrl = admin.avatar_url || avatarUrl;
+                if (adminAvatarUrl && adminAvatarUrl.trim() !== '') {
+                  console.log("设置服务器返回的头像URL:", adminAvatarUrl);
+                  $('#current_avatar').attr('src', adminAvatarUrl);
+                  $('#current_avatar_container').show();
+                } else {
+                  console.log("服务器没有返回头像URL,使用默认头像");
+                  var defaultAvatar = generateDefaultAvatar(username);
+                  $('#current_avatar').attr('src', defaultAvatar);
+                  $('#current_avatar_container').show();
+                }
+              } else {
+                console.error("API返回的数据格式不正确或发生错误:", response);
+                // 服务器没有返回数据，使用传入的默认值
+                fallbackToDefaultValues();
+              }
+            },
+            error: function(xhr, status, errorThrown) {
+              console.error('获取管理员详细信息失败:', status, errorThrown);
+              console.error('错误响应:', xhr.responseText);
+              // 发生错误时，使用传入的默认值
+              fallbackToDefaultValues();
+            },
+            complete: function() {
+              // 隐藏加载指示器
+              hideLoading();
+              
+              // 无论成功与否，都显示模态框
+              try {
+                var editModal = new bootstrap.Modal(document.getElementById('editAdminModal'));
+                editModal.show();
+              } catch (e) {
+                console.error('Error showing edit modal:', e);
+              }
+            }
+          });
+          
+          // 显示加载指示器的函数
+          function showLoading() {
+            // 如果页面上有加载指示器元素，可以在这里控制显示
+            $('#editModalLoading').show();
+            $('#editModalContent').hide();
+          }
+          
+          // 隐藏加载指示器的函数
+          function hideLoading() {
+            // 如果页面上有加载指示器元素，可以在这里控制隐藏
+            $('#editModalLoading').hide();
+            $('#editModalContent').show();
+          }
+          
+          // 设置角色下拉菜单的值
+          function setRoleValue(roleValue) {
+            try {
+              // 转换为字符串
+              var roleString = String(parseInt(roleValue));
+              console.log("转换为字符串的角色值:", roleString);
+              
+              // 方法1: 使用val方法设置字符串值
+              $('#edit_role').val(roleString);
+              console.log("方法1设置后的角色选择值:", $('#edit_role').val());
+              
+              // 方法2: 如果方法1失败，尝试直接设置选中状态
+              if ($('#edit_role').val() !== roleString) {
+                $('#edit_role option').prop('selected', false);
+                $('#edit_role option[value="' + roleString + '"]').prop('selected', true);
+                console.log("方法2设置后的角色选择值:", $('#edit_role').val());
+              }
+              
+              // 方法3: 使用原生JavaScript方法
+              if ($('#edit_role').val() !== roleString) {
+                document.getElementById('edit_role').value = roleString;
+                console.log("方法3设置后的角色选择值:", $('#edit_role').val());
+              }
+              
+              // 方法4: 强制手动设置所有选项的selected属性
+              if ($('#edit_role').val() !== roleString) {
+                $('#edit_role option').each(function() {
+                  if ($(this).val() === roleString) {
+                    $(this).prop('selected', true);
+                    console.log("方法4成功设置选项:", $(this).val());
+                  } else {
+                    $(this).prop('selected', false);
+                  }
+                });
+                console.log("方法4设置后的角色选择值:", $('#edit_role').val());
+              }
+              
+              // 最后验证选择结果
+              console.log("最终的角色选择值:", $('#edit_role').val());
+            } catch (e) {
+              console.error("设置角色选择值时出错:", e);
+            }
+          }
+          
+          // 使用传入的默认值填充表单
+          function fallbackToDefaultValues() {
+            $('#edit_real_name').val(realName);
+            $('#edit_email').val(email);
+            $('#edit_mobile').val(mobile);
+            setRoleValue(role);
+            $('#edit_status').val(status === 'active' ? 'true' : 'false');
+            $('#edit_notes').val(notes);
+            
+            // 设置头像
+            if (avatarUrl && avatarUrl.trim() !== '') {
+              console.log("使用传入的头像URL:", avatarUrl);
+              $('#current_avatar').attr('src', avatarUrl);
+              $('#current_avatar_container').show();
+            } else {
+              console.log("没有传入头像URL,使用默认头像");
+              var defaultAvatar = generateDefaultAvatar(username);
+              $('#current_avatar').attr('src', defaultAvatar);
+              $('#current_avatar_container').show();
+            }
+          }
+        };
+        
+        // 确认删除管理员
+        $('#confirmDeleteAdmin').off('click').on('click', function() {
+          console.log('Delete confirmation clicked');
+          var adminId = $('#delete_admin_id').val();
+          var adminName = $('#delete_admin_name').text();
+          
+          // 清除之前的错误信息
+          $('#delete-admin-error').addClass('d-none');
+          
+          // 显示加载状态
+          $('#confirmDeleteAdmin').prop('disabled', true);
+          $('#cancelDeleteAdmin').prop('disabled', true);
+          $('#delete-admin-content').hide();
+          $('#delete-admin-loading').removeClass('d-none');
+          
+          console.log('Sending delete request for admin ID:', adminId);
+          
+          $.ajax({
+            url: '/admin/users/delete/' + adminId + '/',
+            type: 'POST',
+            dataType: 'json',
+            headers: {
+              'X-CSRFToken': csrftoken(),
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+              console.log('Delete response received:', response);
+              
+              // 隐藏加载状态
+              $('#delete-admin-loading').addClass('d-none');
+              
+              if (response.success === true) {
+                console.log('Admin deleted successfully');
+                // 显示成功消息
+                $('#delete-error-icon').removeClass('fa-exclamation-circle').addClass('fa-check-circle');
+                $('#delete-admin-error').removeClass('d-none alert-danger').addClass('alert-success');
+                $('#delete-error-message').text('已成功删除管理员 "' + adminName + '"');
+                
+                // 更改按钮状态
+                $('#confirmDeleteAdmin').html('<i class="fas fa-check"></i> {% trans "删除成功" %}').removeClass('btn-danger').addClass('btn-success');
+                $('#cancelDeleteAdmin').prop('disabled', false).text('{% trans "关闭" %}');
+                
+                // 3秒后刷新页面
+                setTimeout(function() {
+                  location.reload();
+                }, 3000);
+              } else {
+                console.error('Delete error:', response.message);
+                // 恢复内容显示
+                $('#delete-admin-content').show();
+                
+                // 恢复按钮状态
+                $('#confirmDeleteAdmin').prop('disabled', false).html('<i class="fas fa-trash-alt me-1"></i>{% trans "确认删除" %}');
+                $('#cancelDeleteAdmin').prop('disabled', false);
+                
+                // 显示错误消息
+                $('#delete-admin-error').removeClass('d-none').addClass('alert-danger');
+                $('#delete-error-message').text(response.message || '{% trans "删除失败，请重试" %}');
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Delete AJAX error:', xhr.responseText);
+              
+              // 隐藏加载状态，恢复内容显示
+              $('#delete-admin-loading').addClass('d-none');
+              $('#delete-admin-content').show();
+              
+              // 恢复按钮状态
+              $('#confirmDeleteAdmin').prop('disabled', false).html('<i class="fas fa-trash-alt me-1"></i>{% trans "确认删除" %}');
+              $('#cancelDeleteAdmin').prop('disabled', false);
+              
+              // 显示错误消息
+              $('#delete-admin-error').removeClass('d-none').addClass('alert-danger');
+              try {
+                var response = JSON.parse(xhr.responseText);
+                $('#delete-error-message').text(response.message || '{% trans "删除失败，请重试" %}');
+              } catch (e) {
+                $('#delete-error-message').text('{% trans "删除失败，请重试" %}');
+              }
+            }
+          });
+        });
+        
+        // 确认切换管理员状态
+        $('#confirmToggleStatus').off('click').on('click', function() {
+          var adminId = $('#toggle_admin_id').val();
+          var newStatus = $('#toggle_admin_status').val();
+          
+          // 清除之前的错误信息
+          $('#toggle-status-error').addClass('d-none');
+          
+          console.log('Sending toggle status request for admin ID:', adminId, 'New status:', newStatus);
+          
+          $.ajax({
+            url: '{% url "admin_panel:toggle_admin_status" 0 %}'.replace('0', adminId),
+            type: 'POST',
+            headers: {
+              'X-CSRFToken': csrftoken()
+            },
+            data: { 'is_active': newStatus },
+            success: function(response) {
+              console.log('Toggle status response received:', response);
+              if (response.status === 'success') {
+                // 关闭模态框
+                var toggleStatusModal = bootstrap.Modal.getInstance(document.getElementById('toggleStatusModal'));
+                if (toggleStatusModal) {
+                  toggleStatusModal.hide();
+                }
+                // 刷新页面
+                location.reload();
+              } else {
+                $('#toggle-status-error').removeClass('d-none');
+                $('#toggle-error-message').text(response.message);
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Toggle status AJAX error:', xhr.responseText);
+              $('#toggle-status-error').removeClass('d-none');
+              $('#toggle-error-message').text('{% trans "操作失败，请重试" %}');
+            }
+          });
+        });
+      }
+    }
+
+    // 检查jQuery是否已加载
+    if (typeof jQuery !== 'undefined') {
+      // jQuery已加载，直接初始化
+      initWithJQuery(jQuery);
+    } else {
+      // jQuery未加载，监听DOMContentLoaded事件，检查jQuery
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof jQuery !== 'undefined') {
+          initWithJQuery(jQuery);
+        } else {
+          console.error('jQuery is not loaded. Admin modals functionality may not work properly.');
+          // 尝试动态加载jQuery
+          var script = document.createElement('script');
+          script.src = "https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js";
+          script.onload = function() {
+            console.log('jQuery dynamically loaded for modals');
+            initWithJQuery(jQuery);
+          };
+          document.head.appendChild(script);
+        }
+      });
+    }
+  })();
+</script>

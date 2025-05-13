@@ -1,0 +1,676 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block title %}搜索游戏 - GameHub{% endblock %}
+
+{% block meta_description %}在GameHub上搜索您喜欢的HTML5游戏，找到适合您的游戏体验，随时随地畅玩，无需下载。{% endblock %}
+
+{% block meta_keywords %}HTML5游戏,搜索游戏,在线游戏,免费游戏,手机游戏,休闲游戏{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 重设搜索页面的溢出行为，确保不会因为全宽元素导致水平滚动 */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* 重要：设置为全宽的元素样式 */
+    .full-width-element {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        box-sizing: border-box;
+        position: relative;
+    }
+    
+    /* 搜索页面样式 - 全宽实现 */
+    .search-header-wrapper {
+        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .search-header {
+        width: 100%;
+        padding: 40px 0;
+        color: white;
+        position: relative;
+    }
+    
+    /* 装饰性背景元素 */
+    .search-header::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        z-index: 1;
+    }
+    
+    .search-header::after {
+        content: '';
+        position: absolute;
+        bottom: -80px;
+        left: -80px;
+        width: 250px;
+        height: 250px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        z-index: 1;
+    }
+    
+    /* 内容相对于装饰元素应当位于上层 */
+    .search-header .container {
+        position: relative;
+        z-index: 5;
+        max-width: 1320px;
+        margin: 0 auto;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* 搜索头部内容居中样式 */
+    .search-header-content {
+        margin: 0 auto;
+    }
+    
+    /* 为较窄屏幕优化标题显示 */
+    @media (max-width: 576px) {
+        .search-header h1 {
+            font-size: 1.8rem;
+        }
+        .search-header .lead {
+            font-size: 1rem;
+        }
+    }
+    
+    /* 搜索框样式 */
+    .search-input-wrapper {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .search-input-wrapper .form-control {
+        border-radius: 50px;
+        padding-left: 45px;
+        height: 54px;
+        font-size: 1.1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        background-color: rgba(255,255,255,0.15);
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input-wrapper .form-control:focus {
+        background-color: rgba(255,255,255,0.25);
+        box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.5);
+        outline: none;
+    }
+    
+    .search-input-wrapper .form-control::placeholder {
+        color: rgba(255,255,255,0.8);
+    }
+    
+    .search-input-wrapper .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.9);
+        font-size: 1.2rem;
+        z-index: 5;
+    }
+    
+    .search-btn {
+        border-radius: 50px;
+        height: 54px;
+        padding: 0 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        width: 100%;
+        border: 2px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.9);
+        color: #6a11cb;
+    }
+    
+    .search-btn:hover {
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .game-card .card-body {
+        padding: 15px;
+    }
+    
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .game-card .rating {
+        color: #ffc107;
+    }
+    
+    /* 筛选栏评分星星颜色 */
+    .filter-group .form-check-label .fas.fa-star {
+        color: #ffc107;
+    }
+    
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    
+    .filter-sidebar {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .filter-sidebar.sticky-md-top {
+        top: 20px;
+        z-index: 999;
+    }
+    
+    .filter-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    
+    .filter-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-link {
+        color: #6a11cb;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    
+    .search-results-info {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .search-results-info h3 {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+        color: #6c757d;
+    }
+    
+    .search-results-info p {
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px 0;
+    }
+    
+    .no-results i {
+        font-size: 3rem;
+        color: #e9ecef;
+        margin-bottom: 20px;
+    }
+    
+    /* 新徽章样式 */
+    .new-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 767.98px) {
+        .search-header {
+            padding: 30px 0;
+        }
+        .full-width-element {
+            width: 100%;
+            margin-left: 0;
+        }
+        .game-card img {
+            height: 150px;
+        }
+        .filter-sidebar {
+            margin-bottom: 20px;
+        }
+        /* 移动设备上搜索表单样式优化 */
+        .search-header .container {
+            padding-left: 15px;
+            padding-right: 15px;
+            width: 100%;
+        }
+        .search-header .col-md-8 {
+            width: 100%;
+            padding: 0 15px;
+        }
+        .search-header .row.justify-content-center {
+            margin: 0;
+        }
+        .search-input-wrapper .form-control {
+            height: 45px;
+            font-size: 1rem;
+        }
+        .search-btn {
+            height: 45px;
+            font-size: 0.95rem;
+        }
+    }
+    
+    /* 加载中动画 */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        border-radius: 10px;
+    }
+    
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    /* 会员广告条间距调整 */
+    .premium-banner-wrapper {
+        margin-top: 30px !important;
+        margin-bottom: 10px !important; 
+    }
+    
+    /* 确保容器与搜索头部之间的间距合适 */
+    .container-after-header {
+        margin-top: 20px;
+        position: relative;
+        z-index: 5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 搜索头部 - 全宽布局 -->
+<div class="search-header-wrapper full-width-element">
+    <section class="search-header">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6 text-center">
+                    <h1>搜索游戏</h1>
+                    <p class="lead">在数千款精选HTML5游戏中找到您喜欢的游戏</p>
+                </div>
+                <div class="col-md-10 col-lg-8 mt-4">
+                    <form action="{% url 'games:game_search' %}" method="get">
+                        <div class="row justify-content-center">
+                            <div class="col-md-9 col-sm-8 mb-3 mb-md-0">
+                                <div class="search-input-wrapper">
+                                    <i class="fas fa-search search-icon"></i>
+                                    <input class="form-control form-control-lg" type="search" name="q" placeholder="输入游戏名称或关键词..." value="{{ search_query }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-4">
+                                <button class="btn btn-light search-btn" type="submit"><i class="fas fa-search me-2"></i> 搜索</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 会员广告条 -->
+{% if show_member_content and not user.is_authenticated or show_member_content and not user.is_member %}
+    {% include 'games/includes/premium_banner.html' %}
+{% endif %}
+
+<div class="container container-after-header">
+    <!-- 搜索结果信息 -->
+    <div class="search-results-info">
+        <h3>搜索结果: "{{ search_query }}"</h3>
+        <p>找到 {{ games|length }} 款游戏</p>
+    </div>
+    
+    <div class="row">
+        <!-- 左侧筛选栏 -->
+        <div class="col-md-3">
+            <div class="filter-sidebar sticky-md-top">
+                <h5 class="filter-title">筛选选项</h5>
+                <form id="filter-form" method="get" action="{% url 'games:game_search' %}">
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                    {% include 'games/includes/search_filter.html' %}
+                    <button type="reset" id="resetFilters" class="btn btn-outline-secondary w-100 mt-2">重置筛选</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 右侧游戏列表 -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>搜索结果</h4>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                        显示: {{ paginator.per_page|default:12 }}个游戏
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item" href="?q={{ search_query }}&per_page=12{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">显示: 12个游戏</a></li>
+                        <li><a class="dropdown-item" href="?q={{ search_query }}&per_page=24{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">显示: 24个游戏</a></li>
+                        <li><a class="dropdown-item" href="?q={{ search_query }}&per_page=36{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">显示: 36个游戏</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="row position-relative">
+                {% for game in games %}
+                <div class="col-sm-6 col-md-4">
+                    <div class="game-card position-relative">
+                        <span class="new-badge">
+                            {% if game.categories.first %}
+                                {{ game.categories.first.name }}
+                            {% else %}
+                                推荐游戏
+                            {% endif %}
+                        </span>
+                        <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}" onerror="this.src='https://via.placeholder.com/500x300?text=游戏图片'">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ game.title }}</h5>
+                            <div class="mb-2">
+                                <span class="rating">
+                                    {% with rating_int=game.rating|floatformat:0|add:"0" %}
+                                    {% with rating_decimal=game.rating|floatformat:1|slice:"-1:" %}
+                                        {% for i in '12345'|make_list %}
+                                            {% if forloop.counter <= rating_int|add:"0" %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter == rating_int|add:"1" and rating_decimal > "0" %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                    {% endwith %}
+                                    <small class="text-warning ms-1">{{ game.rating|floatformat:"1" }}</small>
+                                    <small class="ms-2"><i class="far fa-comment text-secondary"></i> {{ game.comments.count }}</small>
+                                </span>
+                            </div>
+                            <p class="card-text">{{ game.summary|default:game.description|truncatechars:60 }}</p>
+                            <div class="mb-2">
+                                {% for category in game.categories.all|slice:":2" %}
+                                <span class="category-badge">{{ category.name }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">游玩次数: {{ game.play_count }}</small>
+                                    <br>
+                                    <small class="text-muted">上线时间: {{ game.created_at|date:"Y-m-d" }}</small>
+                                </div>
+                                <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary">立即游玩</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i> 暂无符合条件的游戏，请调整搜索关键词或筛选条件后重试。
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- 分页 -->
+            <div class="pagination-container">
+                {% include 'games/includes/ajax_pagination.html' with is_paginated=is_paginated paginator=paginator page_obj=page_obj %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 加载状态标志
+    var isLoading = false;
+    
+    // 表单监听 - 筛选项和排序选项改变时自动提交
+    $('#filter-form input[type="checkbox"], #filter-form input[type="radio"]').on('change', function() {
+        loadSearchResults(1);
+    });
+
+    // 表单提交
+    $('#filter-form').on('submit', function(e) {
+        e.preventDefault();
+        loadSearchResults(1);
+    });
+
+    // 搜索表单
+    $('.search-header form').on('submit', function(e) {
+        e.preventDefault();
+        loadSearchResults(1);
+    });
+
+    // 分页链接
+    $(document).on('click', '.pagination .page-link', function(e) {
+        e.preventDefault();
+        if (isLoading) return;
+        
+        const page = $(this).data('page');
+        loadSearchResults(page);
+    });
+
+    // 每页显示数量选项
+    $('.dropdown-item').click(function(e) {
+        if ($(this).attr('href') && $(this).attr('href') !== '#') {
+            // 这是每页显示数量的链接，让它正常导航
+            return true;
+        }
+        e.preventDefault();
+    });
+
+    // 重置筛选按钮
+    $('#resetFilters').click(function(e) {
+        e.preventDefault();
+        // 取消选中所有复选框
+        $('#filter-form input[type="checkbox"]').prop('checked', false);
+        // 恢复排序选项默认值
+        $('#sortPopular').prop('checked', true);
+        // 重置隐藏字段
+        $('#filter-form input[type="hidden"]').not('[name="q"]').val('');
+        // 加载游戏
+        loadSearchResults(1);
+    });
+
+    // 游戏卡片悬停效果
+    $(document).on('mouseenter', '.game-card', function() {
+        $(this).addClass('shadow');
+    }).on('mouseleave', '.game-card', function() {
+        $(this).removeClass('shadow');
+    });
+    
+    // 初始化折叠按钮状态
+    initCollapseButton();
+    
+    // Bootstrap collapse事件监听
+    $('#moreCategoriesCollapse').on('show.bs.collapse', function() {
+        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+        $button.find('.more-text').addClass('d-none');
+        $button.find('.less-text').removeClass('d-none');
+        $button.find('.more-icon').addClass('d-none');
+        $button.find('.less-icon').removeClass('d-none');
+    });
+    
+    $('#moreCategoriesCollapse').on('hide.bs.collapse', function() {
+        const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+        $button.find('.more-text').removeClass('d-none');
+        $button.find('.less-text').addClass('d-none');
+        $button.find('.more-icon').removeClass('d-none');
+        $button.find('.less-icon').addClass('d-none');
+    });
+
+    // 加载搜索结果函数
+    function loadSearchResults(page) {
+        if (isLoading) return;
+        isLoading = true;
+        
+        // 显示加载中动画
+        showLoading();
+        
+        const filterData = $('#filter-form').serialize();
+        const searchData = $('.search-header form').serialize();
+        const url = `?${filterData}&${searchData}&page=${page}`;
+        
+        $.ajax({
+            url: url,
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                // 更新游戏结果
+                $('.col-md-9 .row').html(data.games_html);
+                
+                // 更新分页
+                $('.pagination-container').html(data.pagination_html);
+                
+                // 更新URL而不刷新页面
+                history.pushState({}, '', url);
+                
+                // 更新搜索结果信息
+                $('.search-results-info h3').text('搜索结果: "' + data.search_query + '"');
+                $('.search-results-info p').text('找到 ' + data.total_games + ' 款游戏');
+                
+                // 重新初始化折叠按钮状态
+                initCollapseButton();
+                
+                // 重新绑定Bootstrap collapse事件
+                $('#moreCategoriesCollapse').off('show.bs.collapse hide.bs.collapse');
+                $('#moreCategoriesCollapse').on('show.bs.collapse', function() {
+                    const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+                    $button.find('.more-text').addClass('d-none');
+                    $button.find('.less-text').removeClass('d-none');
+                    $button.find('.more-icon').addClass('d-none');
+                    $button.find('.less-icon').removeClass('d-none');
+                });
+                
+                $('#moreCategoriesCollapse').on('hide.bs.collapse', function() {
+                    const $button = $('[data-bs-toggle="collapse"][href="#moreCategoriesCollapse"]');
+                    $button.find('.more-text').removeClass('d-none');
+                    $button.find('.less-text').addClass('d-none');
+                    $button.find('.more-icon').removeClass('d-none');
+                    $button.find('.less-icon').addClass('d-none');
+                });
+            },
+            error: function() {
+                $('.col-md-9 .row').html('<div class="col-12"><div class="alert alert-danger">加载游戏数据失败，请刷新页面重试</div></div>');
+                console.error('加载游戏数据失败');
+            },
+            complete: function() {
+                // 隐藏加载中动画
+                hideLoading();
+                isLoading = false;
+            }
+        });
+    }
+    
+    // 显示加载中动画
+    function showLoading() {
+        if ($('#loading-overlay').length === 0) {
+            $('.col-md-9 .row').append(
+                '<div id="loading-overlay" class="loading-overlay">' +
+                '<div class="spinner-border text-primary" role="status">' +
+                '<span class="visually-hidden">加载中...</span>' +
+                '</div>' +
+                '</div>'
+            );
+        }
+    }
+    
+    // 隐藏加载中动画
+    function hideLoading() {
+        $('#loading-overlay').remove();
+    }
+    
+    // 初始化折叠按钮状态
+    function initCollapseButton() {
+        $('[data-bs-toggle="collapse"]').each(function() {
+            const $this = $(this);
+            const target = $this.attr('href') || $this.data('bs-target');
+            const isExpanded = $(target).hasClass('show');
+            
+            if (isExpanded) {
+                $this.find('.more-text').addClass('d-none');
+                $this.find('.less-text').removeClass('d-none');
+                $this.find('.more-icon').addClass('d-none');
+                $this.find('.less-icon').removeClass('d-none');
+            } else {
+                $this.find('.more-text').removeClass('d-none');
+                $this.find('.less-text').addClass('d-none');
+                $this.find('.more-icon').removeClass('d-none');
+                $this.find('.less-icon').addClass('d-none');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
