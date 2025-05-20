@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans 'Payment' %} - HTML5 Games{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 800px;
+        margin: 50px auto;
+    }
+    .payment-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    .payment-details {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    .payment-details .row {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .payment-details .row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .payment-methods {
+        margin-top: 30px;
+    }
+    .payment-method-item {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .payment-method-item:hover {
+        border-color: #6c757d;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .payment-method-item.selected {
+        border-color: #0d6efd;
+        box-shadow: 0 0 10px rgba(13,110,253,0.25);
+    }
+    .payment-method-logo {
+        height: 40px;
+        object-fit: contain;
+        margin-right: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container payment-container">
+    <div class="payment-header">
+        <h1>{% trans 'Complete Your Payment' %}</h1>
+        <p class="lead">{% trans 'Please select your preferred payment method to continue.' %}</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-7">
+            <div class="payment-details">
+                <h4 class="mb-3">{% trans 'Order Summary' %}</h4>
+                
+                <div class="row">
+                    <div class="col-6 text-muted">{% trans 'Membership' %}:</div>
+                    <div class="col-6 fw-bold">{{ membership.name }}</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6 text-muted">{% trans 'Duration' %}:</div>
+                    <div class="col-6">{{ membership.duration_days }} {% trans 'days' %}</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6 text-muted">{% trans 'Amount' %}:</div>
+                    <div class="col-6 fw-bold">{{ membership.price }} USD</div>
+                </div>
+            </div>
+            
+            <form method="post" action="{{ form_action }}" id="payment-form">
+                {% csrf_token %}
+                
+                <div class="payment-methods">
+                    <h5 class="mb-3">{% trans 'Select Payment Method' %}</h5>
+                    
+                    {% if payment_methods %}
+                        {% for method in payment_methods %}
+                        <div class="payment-method-item d-flex align-items-center" data-method="{{ method.code }}">
+                            <div class="form-check flex-grow-1">
+                                <input class="form-check-input" type="radio" name="payment_method" id="method_{{ method.code }}" value="{{ method.code }}" {% if forloop.first %}checked{% endif %}>
+                                <label class="form-check-label d-flex align-items-center" for="method_{{ method.code }}">
+                                    {% if method.icon %}
+                                    <img src="{{ method.icon.url }}" alt="{{ method.name }}" class="payment-method-logo">
+                                    {% else %}
+                                    <i class="fas fa-credit-card fa-2x me-3 text-primary"></i>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ method.name }}</strong>
+                                        {% if method.description %}
+                                        <p class="mb-0 text-muted small">{{ method.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                {{ form|crispy }}
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-lock me-1"></i> {% trans 'Continue to Payment' %}
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% trans 'Membership Benefits' %}</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% if membership.level == 'premium' %}
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% trans 'Ad-free experience' %}
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% trans 'Access to all premium games' %}
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% trans 'Priority customer support' %}
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% trans 'Early access to new games' %}
+                        </li>
+                        {% elif membership.level == 'basic' %}
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% trans 'Reduced ads' %}
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% trans 'Access to most games' %}
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% trans 'Standard customer support' %}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans 'Secure Payment' %}</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p>{% trans 'Your payment information is encrypted and secure.' %}</p>
+                    <div class="d-flex justify-content-center mt-3">
+                        <i class="fas fa-lock fa-2x me-3 text-secondary"></i>
+                        <i class="fas fa-shield-alt fa-2x text-secondary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 支付方式选择逻辑
+        const paymentMethodItems = document.querySelectorAll('.payment-method-item');
+        
+        paymentMethodItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // 获取关联的单选按钮
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+                
+                // 移除所有选中状态
+                paymentMethodItems.forEach(i => i.classList.remove('selected'));
+                // 添加当前选中状态
+                this.classList.add('selected');
+            });
+            
+            // 初始化选中状态
+            const radio = item.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                item.classList.add('selected');
+                }
+        });
+    });
+</script>
+{% endblock %}

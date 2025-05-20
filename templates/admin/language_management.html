@@ -1,0 +1,501 @@
+{% extends 'admin/base_admin.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans 'Language Management' %} - HTML5 Games{% endblock %}
+{% block page_title %}{% trans 'Language Management' %}{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{% trans 'Available Languages' %}</span>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addLanguageModal">
+            <i class="fas fa-plus me-1"></i> {% trans 'Add Language' %}
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Language' %}</th>
+                        <th>{% trans 'Code' %}</th>
+                        <th>{% trans 'Status' %}</th>
+                        <th>{% trans 'Default' %}</th>
+                        <th>{% trans 'Actions' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for language in languages %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if language.flag %}
+                                <img src="{{ language.flag.url }}" alt="{{ language.name }}" class="me-2" style="width: 24px; height: 16px; object-fit: cover;">
+                                {% else %}
+                                <span class="border me-2" style="width: 24px; height: 16px; display: inline-block"></span>
+                                {% endif %}
+                                <span>{{ language.name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ language.code }}</td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input language-status" type="checkbox" role="switch" id="status_{{ language.code }}" data-lang-code="{{ language.code }}" {% if language.is_active %}checked{% endif %}>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-check">
+                                <input class="form-check-input language-default" type="radio" name="defaultLanguage" id="default_{{ language.code }}" data-lang-code="{{ language.code }}" {% if language.is_default %}checked{% endif %}>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editLanguageModal" data-lang-code="{{ language.code }}" data-lang-name="{{ language.name }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            {% if not language.is_default %}
+                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteLanguageModal" data-lang-code="{{ language.code }}" data-lang-name="{{ language.name }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">{% trans 'No languages found. Add your first language.' %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <span>{% trans 'Language Settings' %}</span>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'games:admin_language_management' %}" id="languageSettingsForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_settings">
+            <div class="mb-3">
+                <label for="defaultLanguage" class="form-label">{% trans 'Default Language' %}</label>
+                <select class="form-select" id="defaultLanguage" name="default_language">
+                    {% for language in languages %}
+                    <option value="{{ language.code }}" {% if language.is_default %}selected{% endif %}>{{ language.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">{% trans 'The default language will be used when a user first visits the site.' %}</div>
+            </div>
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="languageSwitcher" name="enable_language_switcher" {% if enable_language_switcher %}checked{% endif %}>
+                    <label class="form-check-label" for="languageSwitcher">{% trans 'Enable Language Switcher' %}</label>
+                </div>
+                <div class="form-text">{% trans 'Allow users to switch between available languages.' %}</div>
+            </div>
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="autoDetect" name="auto_detect_language" {% if auto_detect_language %}checked{% endif %}>
+                    <label class="form-check-label" for="autoDetect">{% trans 'Auto-detect User Language' %}</label>
+                </div>
+                <div class="form-text">{% trans 'Automatically detect and use the user\'s browser language if available.' %}</div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i> {% trans 'Save Settings' %}
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Language Modal -->
+<div class="modal fade" id="addLanguageModal" tabindex="-1" aria-labelledby="addLanguageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addLanguageModalLabel">{% trans 'Add New Language' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addLanguageForm" method="post" action="{% url 'games:admin_language_management' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_language">
+                    <div class="mb-3">
+                        <label for="languageName" class="form-label">{% trans 'Language Name' %}</label>
+                        <input type="text" class="form-control" id="languageName" name="language_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="languageCode" class="form-label">{% trans 'Language Code' %}</label>
+                        <input type="text" class="form-control" id="languageCode" name="language_code" required pattern="^[a-z]{2}(-[A-Z]{2})?$">
+                        <div class="form-text">{% trans 'Format: ISO 639-1 code (e.g., en, fr, es, zh)' %}</div>
+                        <div class="invalid-feedback">{% trans 'Please enter a valid language code (e.g., en, fr, es, zh)' %}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="languageFlag" class="form-label">{% trans 'Language Flag' %}</label>
+                        <input type="file" class="form-control" id="languageFlag" name="language_flag" accept="image/png,image/jpeg">
+                        <div class="form-text">{% trans 'Recommended size: 24x16 pixels' %}</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="languageStatus" name="language_active" checked>
+                            <label class="form-check-label" for="languageStatus">{% trans 'Enable this language' %}</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="languageDefault" name="language_default">
+                            <label class="form-check-label" for="languageDefault">{% trans 'Set as default language' %}</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                <button type="submit" form="addLanguageForm" class="btn btn-primary">{% trans 'Add Language' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Language Modal -->
+<div class="modal fade" id="editLanguageModal" tabindex="-1" aria-labelledby="editLanguageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editLanguageModalLabel">{% trans 'Edit Language' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editLanguageForm" method="post" action="{% url 'games:admin_language_management' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit_language">
+                    <input type="hidden" name="original_language_code" id="originalLanguageCode">
+                    <div class="mb-3">
+                        <label for="editLanguageName" class="form-label">{% trans 'Language Name' %}</label>
+                        <input type="text" class="form-control" id="editLanguageName" name="language_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editLanguageCode" class="form-label">{% trans 'Language Code' %}</label>
+                        <input type="text" class="form-control" id="editLanguageCode" name="language_code" required pattern="^[a-z]{2}(-[A-Z]{2})?$">
+                        <div class="form-text">{% trans 'Format: ISO 639-1 code (e.g., en, fr, es, zh)' %}</div>
+                        <div class="invalid-feedback">{% trans 'Please enter a valid language code (e.g., en, fr, es, zh)' %}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editLanguageFlag" class="form-label">{% trans 'Language Flag' %}</label>
+                        <div class="d-flex align-items-center mb-2">
+                            <img id="currentFlag" src="" alt="" class="me-2" style="width: 24px; height: 16px; object-fit: cover;">
+                            <span id="currentFlagName"></span>
+                        </div>
+                        <input type="file" class="form-control" id="editLanguageFlag" name="language_flag" accept="image/png,image/jpeg">
+                        <div class="form-text">{% trans 'Leave empty to keep current flag' %}</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="editLanguageStatus" name="language_active">
+                            <label class="form-check-label" for="editLanguageStatus">{% trans 'Enable this language' %}</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="editLanguageDefault" name="language_default">
+                            <label class="form-check-label" for="editLanguageDefault">{% trans 'Set as default language' %}</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                <button type="submit" form="editLanguageForm" class="btn btn-primary">{% trans 'Save Changes' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Language Modal -->
+<div class="modal fade" id="deleteLanguageModal" tabindex="-1" aria-labelledby="deleteLanguageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteLanguageModalLabel">{% trans 'Confirm Deletion' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteLanguageForm" method="post" action="{% url 'games:admin_language_management' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_language">
+                    <input type="hidden" name="language_code" id="deleteLanguageCode">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% trans 'Are you sure you want to delete this language?' %} <span id="deleteLanguageName"></span>
+                    </div>
+                    <p>{% trans 'This action cannot be undone. All translations for this language will be lost.' %}</p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                <button type="submit" form="deleteLanguageForm" class="btn btn-danger">{% trans 'Delete Language' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const validateLanguageCode = (input) => {
+            const pattern = /^[a-z]{2}(-[A-Z]{2})?$/;
+            if (!pattern.test(input.value)) {
+                input.classList.add('is-invalid');
+                return false;
+            } else {
+                input.classList.remove('is-invalid');
+                return true;
+            }
+        };
+
+        // Add language form validation
+        const addLanguageForm = document.getElementById('addLanguageForm');
+        if (addLanguageForm) {
+            const languageCodeInput = document.getElementById('languageCode');
+            
+            languageCodeInput.addEventListener('input', function() {
+                validateLanguageCode(this);
+            });
+            
+            addLanguageForm.addEventListener('submit', function(event) {
+                if (!validateLanguageCode(languageCodeInput)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            });
+        }
+
+        // Edit language form validation
+        const editLanguageForm = document.getElementById('editLanguageForm');
+        if (editLanguageForm) {
+            const editLanguageCodeInput = document.getElementById('editLanguageCode');
+            
+            editLanguageCodeInput.addEventListener('input', function() {
+                validateLanguageCode(this);
+            });
+            
+            editLanguageForm.addEventListener('submit', function(event) {
+                if (!validateLanguageCode(editLanguageCodeInput)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            });
+        }
+
+        // Edit language modal
+        const editLanguageModal = document.getElementById('editLanguageModal');
+        if (editLanguageModal) {
+            editLanguageModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const langCode = button.getAttribute('data-lang-code');
+                const langName = button.getAttribute('data-lang-name');
+                
+                const modal = this;
+                modal.querySelector('#originalLanguageCode').value = langCode;
+                modal.querySelector('#editLanguageName').value = langName;
+                modal.querySelector('#editLanguageCode').value = langCode;
+                
+                const flagSrc = `{% static 'img/flags/' %}${langCode}.png`;
+                modal.querySelector('#currentFlag').src = flagSrc;
+                modal.querySelector('#currentFlagName').textContent = langName;
+                
+                // Set default checkbox
+                const isDefault = langCode === '{{ default_language }}';
+                modal.querySelector('#editLanguageDefault').checked = isDefault;
+                
+                // Set active checkbox
+                const isActive = document.getElementById(`status_${langCode}`).checked;
+                modal.querySelector('#editLanguageStatus').checked = isActive;
+            });
+        }
+        
+        // Delete language modal
+        const deleteLanguageModal = document.getElementById('deleteLanguageModal');
+        if (deleteLanguageModal) {
+            deleteLanguageModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const langCode = button.getAttribute('data-lang-code');
+                const langName = button.getAttribute('data-lang-name');
+                
+                const modal = this;
+                modal.querySelector('#deleteLanguageCode').value = langCode;
+                modal.querySelector('#deleteLanguageName').textContent = langName;
+            });
+        }
+
+        // Handle language status toggle
+        const languageStatusToggles = document.querySelectorAll('.language-status');
+        languageStatusToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const langCode = this.getAttribute('data-lang-code');
+                const isActive = this.checked;
+                
+                // Show loading indicator
+                const loadingToast = new bootstrap.Toast(document.getElementById('loadingToast'));
+                loadingToast.show();
+                
+                // Send AJAX request to update language status
+                fetch('{% url "games:admin_language_management" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: new URLSearchParams({
+                        'action': 'update_language_status',
+                        'language_code': langCode,
+                        'is_active': isActive
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingToast.hide();
+                    
+                    // Show success or error toast
+                    const toastElement = document.getElementById(data.success ? 'successToast' : 'errorToast');
+                    const toast = new bootstrap.Toast(toastElement);
+                    toastElement.querySelector('.toast-body').textContent = data.message;
+                    toast.show();
+                    
+                    // If error, revert the toggle
+                    if (!data.success) {
+                        this.checked = !isActive;
+                    }
+                })
+                .catch(error => {
+                    loadingToast.hide();
+                    
+                    // Show error toast
+                    const errorToast = new bootstrap.Toast(document.getElementById('errorToast'));
+                    document.getElementById('errorToast').querySelector('.toast-body').textContent = 
+                        '{% trans "An error occurred while updating language status." %}';
+                    errorToast.show();
+                    
+                    // Revert the toggle
+                    this.checked = !isActive;
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        // Handle default language radio buttons
+        const defaultLanguageRadios = document.querySelectorAll('.language-default');
+        defaultLanguageRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    const langCode = this.getAttribute('data-lang-code');
+                    
+                    // Show loading indicator
+                    const loadingToast = new bootstrap.Toast(document.getElementById('loadingToast'));
+                    loadingToast.show();
+                    
+                    // Send AJAX request to update default language
+                    fetch('{% url "games:admin_language_management" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: new URLSearchParams({
+                            'action': 'set_default_language',
+                            'language_code': langCode
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingToast.hide();
+                        
+                        // Show success or error toast
+                        const toastElement = document.getElementById(data.success ? 'successToast' : 'errorToast');
+                        const toast = new bootstrap.Toast(toastElement);
+                        toastElement.querySelector('.toast-body').textContent = data.message;
+                        toast.show();
+                        
+                        // If success, update the default language dropdown
+                        if (data.success) {
+                            document.getElementById('defaultLanguage').value = langCode;
+                            
+                            // Update delete buttons (can't delete default language)
+                            document.querySelectorAll('[data-bs-target="#deleteLanguageModal"]').forEach(btn => {
+                                const btnLangCode = btn.getAttribute('data-lang-code');
+                                if (btnLangCode === langCode) {
+                                    btn.style.display = 'none';
+                                } else {
+                                    btn.style.display = 'inline-block';
+                                }
+                            });
+                        } else {
+                            // If error, revert the radio selection
+                            this.checked = false;
+                            document.getElementById(`default_${data.current_default}`).checked = true;
+                        }
+                    })
+                    .catch(error => {
+                        loadingToast.hide();
+                        
+                        // Show error toast
+                        const errorToast = new bootstrap.Toast(document.getElementById('errorToast'));
+                        document.getElementById('errorToast').querySelector('.toast-body').textContent = 
+                            '{% trans "An error occurred while setting default language." %}';
+                        errorToast.show();
+                        
+                        console.error('Error:', error);
+                    });
+                }
+            });
+        });
+
+        // Sync default language dropdown with radio buttons
+        const defaultLanguageSelect = document.getElementById('defaultLanguage');
+        if (defaultLanguageSelect) {
+            defaultLanguageSelect.addEventListener('change', function() {
+                const langCode = this.value;
+                document.getElementById(`default_${langCode}`).checked = true;
+                
+                // Trigger the change event on the radio button
+                const event = new Event('change');
+                document.getElementById(`default_${langCode}`).dispatchEvent(event);
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                {% trans 'Operation completed successfully.' %}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                {% trans 'An error occurred.' %}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    
+    <div id="loadingToast" class="toast align-items-center text-dark bg-light border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                    <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                </div>
+                {% trans 'Processing...' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

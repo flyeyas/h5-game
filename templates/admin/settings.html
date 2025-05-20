@@ -1,0 +1,86 @@
+{% extends 'admin/base_admin.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans 'Settings' %} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'games:admin_dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Settings" %}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h5 class="mb-0">{% trans "System Settings" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{% trans "Manage all system settings from this central location." %}</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="icon-box bg-primary text-white rounded-circle p-3 me-3">
+                                            <i class="fas fa-globe"></i>
+                                        </div>
+                                        <h5 class="card-title mb-0">{% trans "Website Settings" %}</h5>
+                                    </div>
+                                    <p class="card-text">{% trans "Configure your website's basic information, logo, favicon, and SEO settings." %}</p>
+                                    <a href="{% url 'games:admin_website_settings' %}" class="btn btn-outline-primary mt-2">
+                                        <i class="fas fa-cog me-1"></i> {% trans "Manage" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="icon-box bg-info text-white rounded-circle p-3 me-3">
+                                            <i class="fas fa-language"></i>
+                                        </div>
+                                        <h5 class="card-title mb-0">{% trans "Language Settings" %}</h5>
+                                    </div>
+                                    <p class="card-text">{% trans "Manage available languages and default language settings." %}</p>
+                                    <a href="{% url 'games:admin_language_management' %}" class="btn btn-outline-info mt-2">
+                                        <i class="fas fa-cog me-1"></i> {% trans "Manage" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="icon-box bg-success text-white rounded-circle p-3 me-3">
+                                            <i class="fas fa-bars"></i>
+                                        </div>
+                                        <h5 class="card-title mb-0">{% trans "Menu Management" %}</h5>
+                                    </div>
+                                    <p class="card-text">{% trans "Manage navigation menus for your website." %}</p>
+                                    <a href="{% url 'games:admin_menu_list' %}" class="btn btn-outline-success mt-2">
+                                        <i class="fas fa-cog me-1"></i> {% trans "Manage" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

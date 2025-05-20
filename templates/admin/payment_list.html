@@ -1,0 +1,213 @@
+{% extends 'admin/base_admin.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans 'Payment Management' %} - Admin{% endblock %}
+
+{% block content %}
+{% trans 'Are you sure you want to confirm this payment?' as confirm_msg %}
+{% trans 'Are you sure you want to reject this payment?' as reject_msg %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans 'Payments' %}</h1>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{% trans 'Payment List' %}</h5>
+            <div class="d-flex">
+                <form method="get" class="d-flex">
+                    <select name="status" class="form-select form-select-sm me-2" onchange="this.form.submit()">
+                        <option value="">{% trans 'All Status' %}</option>
+                        <option value="waiting" {% if request.GET.status == 'waiting' %}selected{% endif %}>{% trans 'Waiting' %}</option>
+                        <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>{% trans 'Confirmed' %}</option>
+                        <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>{% trans 'Rejected' %}</option>
+                        <option value="error" {% if request.GET.status == 'error' %}selected{% endif %}>{% trans 'Error' %}</option>
+                    </select>
+                    <input type="text" name="q" class="form-control form-control-sm me-2" placeholder="{% trans 'Search...' %}" value="{{ request.GET.q }}">
+                    <button type="submit" class="btn btn-sm btn-primary">{% trans 'Search' %}</button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>{% trans 'ID' %}</th>
+                            <th>{% trans 'User' %}</th>
+                            <th>{% trans 'Membership' %}</th>
+                            <th>{% trans 'Amount' %}</th>
+                            <th>{% trans 'Status' %}</th>
+                            <th>{% trans 'Date' %}</th>
+                            <th>{% trans 'Actions' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>#{{ payment.id }}</td>
+                            <td>
+                                <a href="{% url 'games:admin_user_detail' user_id=payment.user.id %}">
+                                    {{ payment.user.username }}
+                                </a>
+                            </td>
+                            <td>{{ payment.membership.name }}</td>
+                            <td>{{ payment.total }} {{ payment.currency }}</td>
+                            <td>
+                                {% if payment.status == 'waiting' %}
+                                <span class="badge bg-warning">{% trans 'Waiting' %}</span>
+                                {% elif payment.status == 'confirmed' %}
+                                <span class="badge bg-success">{% trans 'Confirmed' %}</span>
+                                {% elif payment.status == 'rejected' %}
+                                <span class="badge bg-danger">{% trans 'Rejected' %}</span>
+                                {% elif payment.status == 'error' %}
+                                <span class="badge bg-danger">{% trans 'Error' %}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ payment.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ payment.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if payment.status == 'waiting' %}
+                                    <a href="{% url 'games:admin_payment_confirm' payment_id=payment.id %}" class="btn btn-outline-success" onclick="return confirm('{{ confirm_msg }}')">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{% url 'games:admin_payment_reject' payment_id=payment.id %}" class="btn btn-outline-danger" onclick="return confirm('{{ reject_msg }}')">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    {% else %}
+                                    <button type="button" class="btn btn-outline-secondary" disabled>
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" disabled>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">{% trans 'No payments found' %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">{% trans 'Payment Statistics' %}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-0">{% trans 'Total Payments' %}</h6>
+                                <h3 class="mb-0">{{ payments.count }}</h3>
+                            </div>
+                            <i class="fas fa-credit-card fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-0">{% trans 'Confirmed' %}</h6>
+                                <h3 class="mb-0">{{ payments.confirmed_count|default:0 }}</h3>
+                            </div>
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-0">{% trans 'Waiting' %}</h6>
+                                <h3 class="mb-0">{{ payments.waiting_count|default:0 }}</h3>
+                            </div>
+                            <i class="fas fa-clock fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-0">{% trans 'Rejected' %}</h6>
+                                <h3 class="mb-0">{{ payments.rejected_count|default:0 }}</h3>
+                            </div>
+                            <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">{% trans 'Total Revenue' %}</h6>
+                            <h3 class="mb-0">{{ payments.total_income|floatformat:2 }} USD</h3>
+                            <small class="text-white-50">{% trans 'From confirmed payments' %}</small>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

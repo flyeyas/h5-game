@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans 'Payment History' %} - HTML5 Games{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-history-container {
+        max-width: 1000px;
+        margin: 40px auto;
+    }
+    .payment-card {
+        margin-bottom: 20px;
+        border-left: 4px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    .payment-card.confirmed {
+        border-left-color: #28a745;
+    }
+    .payment-card.waiting {
+        border-left-color: #ffc107;
+    }
+    .payment-card.rejected {
+        border-left-color: #dc3545;
+    }
+    .payment-status {
+        font-weight: 500;
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+    .payment-status.confirmed {
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+    .payment-status.waiting {
+        background-color: rgba(255, 193, 7, 0.15);
+        color: #856404;
+    }
+    .payment-status.rejected {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+    .payment-date {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .payment-amount {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+    .payment-method {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.875rem;
+        color: #495057;
+    }
+    .payment-method img {
+        height: 20px;
+        margin-right: 6px;
+    }
+    .empty-history {
+        text-align: center;
+        padding: 50px 0;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container payment-history-container">
+    <h1 class="mb-4">{% trans 'Payment History' %}</h1>
+    
+    {% if payments %}
+        <div class="mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label for="statusFilter" class="col-form-label">{% trans 'Filter by status:' %}</label>
+                </div>
+                <div class="col-auto">
+                    <select id="statusFilter" class="form-select">
+                        <option value="all">{% trans 'All' %}</option>
+                        <option value="confirmed">{% trans 'Confirmed' %}</option>
+                        <option value="waiting">{% trans 'Pending' %}</option>
+                        <option value="rejected">{% trans 'Failed' %}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="payments-list">
+            {% for payment in payments %}
+                <div class="card payment-card {{ payment.status }}" data-status="{{ payment.status }}">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <h5 class="card-title mb-0">{{ payment.membership.name }}</h5>
+                                <div class="payment-date">{{ payment.created_at|date:"F d, Y H:i" }}</div>
+                            </div>
+                            
+                            <div class="col-md-2 text-md-center">
+                                <div class="payment-amount">{{ payment.total }} {{ payment.currency }}</div>
+                            </div>
+                            
+                            <div class="col-md-2 text-md-center">
+                                <div class="payment-method">
+                                    {% if payment.payment_method_code %}
+                                        {% if payment.payment_method_code == 'paypal' %}
+                                            <i class="fab fa-paypal me-1"></i> PayPal
+                                        {% elif payment.payment_method_code == 'stripe' %}
+                                            <i class="fab fa-cc-stripe me-1"></i> Stripe
+                                        {% else %}
+                                            {{ payment.payment_method_code }}
+                                        {% endif %}
+                                    {% else %}
+                                        {% trans 'Not selected' %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2 text-md-center">
+                                <span class="payment-status {{ payment.status }}">
+                                    {% if payment.status == 'confirmed' %}
+                                        {% trans 'Successful' %}
+                                    {% elif payment.status == 'waiting' %}
+                                        {% trans 'Pending' %}
+                                    {% elif payment.status == 'rejected' %}
+                                        {% trans 'Failed' %}
+                                    {% else %}
+                                        {{ payment.status|title }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="col-md-3 text-md-end">
+                                {% if payment.status == 'confirmed' %}
+                                    {% if payment.invoice %}
+                                        <a href="{% url 'games:payment_invoice_detail' invoice_id=payment.invoice.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-invoice me-1"></i> {% trans 'View Invoice' %}
+                                        </a>
+                                    {% endif %}
+                                {% elif payment.status == 'waiting' %}
+                                    <a href="{% url 'games:payment_process' payment_id=payment.id %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-sync-alt me-1"></i> {% trans 'Continue Payment' %}
+                                    </a>
+                                {% elif payment.status == 'rejected' and payment.fraud_status != 'rejected' %}
+                                    <a href="{% url 'games:retry_payment' payment_id=payment.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-redo me-1"></i> {% trans 'Retry' %}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if payment.failure_reason and payment.status == 'rejected' %}
+                            <div class="mt-3 small text-danger">
+                                <strong>{% trans 'Error:' %}</strong> {{ payment.failure_reason }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% include 'components/pagination.html' with page_obj=page_obj %}
+    {% else %}
+        <div class="empty-history">
+            <div class="mb-4">
+                <i class="fas fa-receipt fa-4x text-muted"></i>
+            </div>
+            <h4>{% trans 'No payment history found' %}</h4>
+            <p class="text-muted">{% trans 'You haven\'t made any payments yet.' %}</p>
+            <a href="{% url 'games:subscription' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-arrow-right me-1"></i> {% trans 'View Membership Plans' %}
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusFilter = document.getElementById('statusFilter');
+        const payments = document.querySelectorAll('.payment-card');
+        
+        if (statusFilter) {
+            statusFilter.addEventListener('change', function() {
+                const status = this.value;
+                
+                payments.forEach(payment => {
+                    if (status === 'all' || payment.getAttribute('data-status') === status) {
+                        payment.style.display = 'block';
+                    } else {
+                        payment.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %} 

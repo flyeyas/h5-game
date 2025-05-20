@@ -1,0 +1,88 @@
+{% extends 'admin/base_admin.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans 'Delete Category' %} - HTML5 Games{% endblock %}
+{% block page_title %}{% trans 'Delete Category' %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <i class="fas fa-exclamation-triangle me-2"></i> {% trans 'Confirm Deletion' %}
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <h5 class="alert-heading">{% trans 'Warning!' %}</h5>
+            <p>{% trans 'You are about to delete the following category. This action cannot be undone.' %}</p>
+            {% if category.games.count > 0 %}
+            <p class="mb-0"><strong>{% trans 'Note:' %}</strong> {% trans 'This category contains games. Deleting it will remove the category association from these games.' %}</p>
+            {% endif %}
+        </div>
+        
+        <div class="d-flex align-items-center mb-4">
+            {% if category.image %}
+            <img src="{{ category.image.url }}" alt="{{ category.name }}" class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
+            {% else %}
+            <div class="me-3" style="width: 80px; height: 80px; background-color: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-folder fa-2x text-secondary"></i>
+            </div>
+            {% endif %}
+            <div>
+                <h4 class="mb-1">{{ category.name }}</h4>
+                <p class="text-muted mb-0">{{ category.slug }}</p>
+                {% if category.parent %}
+                <div class="mt-1">
+                    <span class="badge bg-light text-dark">{% trans 'Parent:' %} {{ category.parent.name }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <h5>{% trans 'Category Details' %}:</h5>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{% trans 'Games Count' %}</span>
+                    <span class="badge bg-primary rounded-pill">{{ category.games.count }}</span>
+                </li>
+                {% if category.children.exists %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{% trans 'Subcategories' %}</span>
+                    <span class="badge bg-primary rounded-pill">{{ category.children.count }}</span>
+                </li>
+                {% endif %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{% trans 'Display Order' %}</span>
+                    <span>{{ category.order }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{% trans 'Date Added' %}</span>
+                    <span>{{ category.created_at|date:"M d, Y" }}</span>
+                </li>
+            </ul>
+        </div>
+        
+        {% if category.description %}
+        <div class="mb-4">
+            <h5>{% trans 'Description' %}:</h5>
+            <div class="card">
+                <div class="card-body bg-light">
+                    {{ category.description|linebreaks }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'games:admin_category_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> {% trans 'Cancel' %}
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i> {% trans 'Delete Category' %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans 'Game Categories' %} - HTML5 Games{% endblock %}
+
+{% block content %}
+<!-- 面包屑导航 -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'games:home' %}">{% trans 'Home' %}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{% trans 'Game Categories' %}</li>
+  </ol>
+</nav>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <h1 class="mb-0">{% trans 'Game Categories' %}</h1>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+        <div class="input-group">
+            <input type="text" id="categorySearch" class="form-control" placeholder="{% trans 'Search categories...' %}">
+            <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        <select class="form-select" id="categorySorting">
+            <option value="name">{% trans 'Name' %}</option>
+            <option value="games">{% trans 'Games Count' %}</option>
+            <option value="newest">{% trans 'Newest' %}</option>
+        </select>
+    </div>
+</div>
+
+{% if categories %}
+<!-- 搜索无结果提示 -->
+<div id="noSearchResults" class="alert alert-info" style="display: none;">
+    <i class="fas fa-search me-2"></i>{% trans 'No categories found matching your search.' %}
+    <button class="btn btn-sm btn-outline-secondary ms-3" onclick="document.getElementById('categorySearch').value=''; document.getElementById('searchButton').click();">
+        {% trans 'Clear Search' %}
+    </button>
+</div>
+
+<div class="category-container">
+<div class="row">
+    {% for category in categories %}
+    <div class="col-md-4 col-lg-3 mb-4">
+        <div class="card h-100 shadow-sm hover-effect">
+            <div class="position-relative">
+                {% if category.image %}
+                <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}">
+                {% else %}
+                <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ category.name }}">
+                {% endif %}
+                <div class="category-badge position-absolute top-0 end-0 m-2 badge bg-primary rounded-pill">
+                    {{ category.games.count }} {% trans 'games' %}
+                </div>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title fw-bold">{{ category.name }}</h5>
+                <p class="card-text">{{ category.description|truncatechars:100 }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0 d-flex gap-2">
+                <a href="{% url 'games:category_detail' category.slug %}" class="btn btn-outline-primary flex-grow-1">
+                    <i class="fas fa-info-circle me-2"></i>{% trans 'Details' %}
+                </a>
+                <a href="{% url 'games:category_games' category.slug %}" class="btn btn-primary flex-grow-1">
+                    <i class="fas fa-gamepad me-2"></i>{% trans 'Games' %}
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 子分类 -->
+{% for category in categories %}
+    {% if category.children.exists %}
+    <div class="mt-5 mb-4">
+        <div class="d-flex align-items-center mb-3">
+            <h2 class="mb-0">{{ category.name }} {% trans 'Subcategories' %}</h2>
+            <a href="{% url 'games:category_games' category.slug %}" class="ms-auto btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-up me-1"></i>{% trans 'Back to Parent' %}
+            </a>
+        </div>
+        <hr>
+        <div class="row">
+            {% for subcategory in category.children.all %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm hover-effect">
+                    <div class="position-relative">
+                        {% if subcategory.image %}
+                        <img src="{{ subcategory.image.url }}" class="card-img-top" alt="{{ subcategory.name }}">
+                        {% else %}
+                        <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ subcategory.name }}">
+                        {% endif %}
+                        <div class="category-badge position-absolute top-0 end-0 m-2 badge bg-primary rounded-pill">
+                            {{ subcategory.games.count }} {% trans 'games' %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">{{ subcategory.name }}</h5>
+                        <p class="card-text">{{ subcategory.description|truncatechars:100 }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 d-flex gap-2">
+                        <a href="{% url 'games:category_detail' subcategory.slug %}" class="btn btn-outline-primary flex-grow-1">
+                            <i class="fas fa-info-circle me-2"></i>{% trans 'Details' %}
+                        </a>
+                        <a href="{% url 'games:category_games' subcategory.slug %}" class="btn btn-primary flex-grow-1">
+                            <i class="fas fa-gamepad me-2"></i>{% trans 'Games' %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>{% trans 'No game categories available' %}
+    <p class="mt-2 mb-0">{% trans 'Please check back later as we continue to add new game categories.' %}</p>
+</div>
+{% endif %}
+
+<!-- 分类说明 -->
+<div class="card bg-light mt-5">
+    <div class="card-body">
+        <h4 class="card-title"><i class="fas fa-info-circle me-2"></i>{% trans 'About Game Categories' %}</h4>
+        <p class="card-text">{% trans 'Browse our extensive collection of HTML5 games organized by categories. Each category contains games with similar gameplay, themes, or mechanics.' %}</p>
+        <p class="card-text">{% trans 'Click on any category to explore the games within it. You can also navigate through subcategories for more specific game types.' %}</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 添加页面加载动画
+    window.addEventListener('load', function() {
+        document.body.classList.add('loaded');
+    });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // 分类搜索功能
+        const searchInput = document.getElementById('categorySearch');
+        const searchButton = document.getElementById('searchButton');
+        const sortSelect = document.getElementById('categorySorting');
+        const mainCategoryRow = document.querySelector('.row');
+        const categoryCards = mainCategoryRow.querySelectorAll('.col-md-4');
+        
+        // 搜索功能 - 同时搜索主分类和子分类
+        function searchCategories() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const allCards = document.querySelectorAll('.card.h-100.shadow-sm');
+            
+            // 如果搜索词为空，显示所有卡片和子分类标题
+            if (searchTerm === '') {
+                allCards.forEach(card => {
+                    card.closest('.col-md-4').style.display = '';
+                });
+                document.querySelectorAll('.mt-5.mb-4').forEach(section => {
+                    section.style.display = '';
+                });
+                return;
+            }
+            
+            // 搜索所有卡片
+            let hasVisibleCards = false;
+            allCards.forEach(card => {
+                const cardContainer = card.closest('.col-md-4');
+                const categoryName = card.querySelector('.card-title').textContent.toLowerCase();
+                const categoryDesc = card.querySelector('.card-text').textContent.toLowerCase();
+                
+                if (categoryName.includes(searchTerm) || categoryDesc.includes(searchTerm)) {
+                    cardContainer.style.display = '';
+                    hasVisibleCards = true;
+                    
+                    // 如果是子分类卡片，确保其父分类标题也可见
+                    const subcategorySection = cardContainer.closest('.mt-5.mb-4');
+                    if (subcategorySection) {
+                        subcategorySection.style.display = '';
+                    }
+                } else {
+                    cardContainer.style.display = 'none';
+                }
+            });
+            
+            // 隐藏没有可见子分类的分类标题
+            document.querySelectorAll('.mt-5.mb-4').forEach(section => {
+                const visibleSubcategories = section.querySelectorAll('.col-md-4[style="display: "]');
+                if (visibleSubcategories.length === 0) {
+                    section.style.display = 'none';
+                }
+            });
+            
+            // 显示无结果提示
+            const noResultsAlert = document.getElementById('noSearchResults');
+            if (noResultsAlert) {
+                noResultsAlert.style.display = hasVisibleCards ? 'none' : 'block';
+            }
+        }
+        
+        // 排序功能 - 只排序主分类
+        function sortCategories() {
+            const sortValue = sortSelect.value;
+            const cardsArray = Array.from(categoryCards);
+            
+            cardsArray.sort((a, b) => {
+                if (sortValue === 'name') {
+                    const nameA = a.querySelector('.card-title').textContent.toLowerCase();
+                    const nameB = b.querySelector('.card-title').textContent.toLowerCase();
+                    return nameA.localeCompare(nameB);
+                } else if (sortValue === 'games') {
+                    const countA = parseInt(a.querySelector('.category-badge').textContent);
+                    const countB = parseInt(b.querySelector('.category-badge').textContent);
+                    return countB - countA; // 降序排列
+                } else if (sortValue === 'newest') {
+                    // 这里假设最新的在前面，所以保持原有顺序
+                    return 0;
+                }
+                return 0;
+            });
+            
+            // 重新添加排序后的卡片
+            cardsArray.forEach(card => {
+                mainCategoryRow.appendChild(card);
+            });
+        }
+        
+        // 事件监听
+        searchButton.addEventListener('click', searchCategories);
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                searchCategories();
+            } else if (e.key === 'Escape') {
+                searchInput.value = '';
+                searchCategories();
+            } else {
+                // 实时搜索
+                searchCategories();
+            }
+        });
+        
+        sortSelect.addEventListener('change', sortCategories);
+        
+        // 添加卡片悬停动画效果
+        const cards = document.querySelectorAll('.hover-effect');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.classList.add('shadow');
+            });
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('shadow');
+            });
+        });
+    });
+</script>
+{% endblock %}

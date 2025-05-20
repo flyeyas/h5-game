@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% load static i18n cms_tags sekizai_tags menu_tags %}
+
+{% block title %}{% trans "HTML5 Games Platform" %} - {{ block.super }}{% endblock %}
+
+{% block meta_description %}{% trans 'Play the best HTML5 games online for free. No download required. Enjoy thousands of games across various categories.' %}{% endblock %}
+
+{% block meta_keywords %}{% trans 'HTML5 games, online games, free games, browser games, mobile games' %}{% endblock %}
+
+{% block main_class %}pb-4{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        overflow-x: hidden; /* 防止水平滚动条 */
+        margin: 0; /* 重置body边距 */
+        padding: 0; /* 重置body内边距 */
+        width: 100%; /* 确保body宽度为100% */
+        box-sizing: border-box;
+    }
+    .navbar-brand img {
+        height: 40px;
+    }
+    /* 全宽英雄区域样式 */
+    .fullwidth-hero {
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        margin-top: 0; /* 不需要负margin了 */
+        padding: 0;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        overflow: hidden;
+    }
+    .hero-inner {
+        padding: 80px 0;
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* 背景效果 */
+    .fullwidth-hero:before {
+        content: '';
+        position: absolute;
+        top: -150px;
+        right: -150px;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 0;
+    }
+    .fullwidth-hero:after {
+        content: '';
+        position: absolute;
+        bottom: -150px;
+        left: -150px;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 0;
+    }
+    .hero-section h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .hero-section .lead {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    .hero-section .btn-light {
+        padding: 10px 25px;
+        font-weight: 600;
+        border-radius: 30px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .hero-section .btn-light:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    .hero-section img {
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* 响应式样式 */
+    @media (max-width: 767.98px) {
+        .hero-inner {
+            padding: 60px 15px;
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-size: 2.2rem;
+        }
+        .hero-section .lead {
+            font-size: 1.1rem;
+        }
+    }
+    .hero-section img:hover {
+        transform: scale(1.02);
+    }
+    /* 搜索框和按钮样式 */
+    .search-input-wrapper {
+        position: relative;
+    }
+    .search-input-wrapper .form-control {
+        border-radius: 20px;
+        padding-left: 35px;
+        min-width: 200px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background-color: rgba(255,255,255,0.1);
+        color: white;
+        transition: all 0.3s ease;
+    }
+    .search-input-wrapper .form-control:focus {
+        background-color: rgba(255,255,255,0.2);
+        box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.3);
+    }
+    .search-input-wrapper .form-control::placeholder {
+        color: rgba(255,255,255,0.7);
+    }
+    .search-input-wrapper .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.7);
+        z-index: 5;
+    }
+    .nav-btn {
+        border-radius: 20px;
+        padding: 6px 15px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .game-card .card-body {
+        padding: 15px;
+    }
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .game-card .rating {
+        color: #ffc107;
+    }
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    .ad-banner {
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .section-title {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .footer {
+        background-color: #343a40;
+        color: white;
+        padding: 40px 0 20px;
+        margin-top: 50px;
+    }
+    .footer h5 {
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    .footer ul {
+        padding-left: 0;
+        list-style: none;
+    }
+    .footer ul li {
+        margin-bottom: 10px;
+    }
+    .footer ul li a {
+        color: #adb5bd;
+        text-decoration: none;
+    }
+    .footer ul li a:hover {
+        color: white;
+    }
+    .social-icons a {
+        color: white;
+        font-size: 1.2rem;
+        margin-right: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- 全宽英雄区域 - 移除顶部广告横幅 -->
+    <div class="fullwidth-hero">
+        <div class="hero-inner">
+            <div class="row align-items-center hero-section">
+                <div class="col-md-6">
+                    <h1>{% trans "Discover the Best HTML5 Games" %}</h1>
+                    <p class="lead">{% trans "Thousands of carefully selected games, play anytime, anywhere, no download required" %}</p>
+                    <a href="{% url 'games:category_list' %}" class="btn btn-light btn-lg">{% trans "Start Exploring" %}</a>
+                </div>
+                <div class="col-md-6 d-none d-md-block text-center">
+                    {% if placeholder_hero_image %}
+                        {% placeholder "hero_image" %}
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" class="img-fluid rounded" alt="{% trans 'Game showcase' %}">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 广告横幅移到这里 -->
+    {% if not user.is_premium and header_ads %}
+    <div class="ad-banner container mt-4">
+        <div class="row align-items-center">
+            <div class="col-md-9">
+                <h5 class="mb-0">{% trans "Upgrade to premium for an ad-free gaming experience!" %}</h5>
+            </div>
+            <div class="col-md-3 text-md-end mt-2 mt-md-0">
+                <a href="{% url 'games:subscription' %}" class="btn btn-warning">{% trans "Upgrade Now" %}</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container mt-4">
+        <!-- 热门游戏 -->
+        <section>
+            <h2 class="section-title">{% trans "Popular Games" %} <a href="{% url 'games:game_list' %}?sort=popular" class="btn btn-sm btn-outline-primary float-end">{% trans "View All" %}</a></h2>
+            <div class="row">
+                {% if placeholder_popular_games %}
+                    {% placeholder "popular_games" %}
+                {% else %}
+                    {% for game in popular_games|slice:":4" %}
+                    <div class="col-6 col-md-3">
+                        <div class="game-card">
+                            {% if game.thumbnail %}
+                                <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                            {% else %}
+                                <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ game.title }}</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= game.rating_int %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter == game.rating_int_plus_half %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <small class="text-muted ms-1">{{ game.rating|floatformat:1 }}</small>
+                                    </span>
+                                    <span class="category-badge">
+                                        {% for category in game.categories.all|slice:":1" %}
+                                            {{ category.name }}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                                <p class="card-text">{{ game.description|truncatechars:60 }}</p>
+                                <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary w-100">{% trans "Play Now" %}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            {% trans "No popular games available at the moment. Check back soon!" %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- 游戏分类 -->
+        <section class="mt-5">
+            <h2 class="section-title">{% trans "Game Categories" %}</h2>
+            <div class="row">
+                {% if placeholder_categories %}
+                    {% placeholder "categories" %}
+                {% else %}
+                    {% for category in categories|slice:":6" %}
+                    <div class="col-6 col-md-2 mb-3">
+                        <a href="{% url 'games:category_detail' category.slug %}" class="text-decoration-none">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="{{ category.icon_class|default:'fas fa-gamepad' }} fa-3x mb-3 {% cycle 'text-primary' 'text-success' 'text-info' 'text-warning' 'text-danger' 'text-secondary' %}"></i>
+                                    <h5 class="card-title">{{ category.name }}</h5>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            {% trans "No categories available at the moment. Check back soon!" %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- 最新上线 -->
+        <section class="mt-5">
+            <h2 class="section-title">{% trans "New Games" %} <a href="{% url 'games:game_list' %}?sort=newest" class="btn btn-sm btn-outline-primary float-end">{% trans "View All" %}</a></h2>
+            <div class="row">
+                {% if placeholder_new_games %}
+                    {% placeholder "new_games" %}
+                {% else %}
+                    {% for game in new_games|slice:":4" %}
+                    <div class="col-6 col-md-3">
+                        <div class="game-card">
+                            {% if game.thumbnail %}
+                                <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                            {% else %}
+                                <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ game.title }}</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="rating">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= game.rating_int %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter == game.rating_int_plus_half %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <small class="text-muted ms-1">{{ game.rating|floatformat:1 }}</small>
+                                    </span>
+                                    <span class="category-badge">
+                                        {% for category in game.categories.all|slice:":1" %}
+                                            {{ category.name }}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                                <p class="card-text">{{ game.description|truncatechars:60 }}</p>
+                                <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary w-100">{% trans "Play Now" %}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            {% trans "No new games available at the moment. Check back soon!" %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- 侧边广告 + 推荐游戏 -->
+        <section class="mt-5">
+            <div class="row">
+                <div class="col-md-8">
+                    <h2 class="section-title">{% trans "Recommended Games" %}</h2>
+                    <div class="row">
+                        {% if placeholder_recommended_games %}
+                            {% placeholder "recommended_games" %}
+                        {% else %}
+                            {% for game in recommended_games|slice:":2" %}
+                            <div class="col-6">
+                                <div class="game-card">
+                                    {% if game.thumbnail %}
+                                        <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                                    {% else %}
+                                        <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ game.title }}</h5>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="rating">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= game.rating_int %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% elif forloop.counter == game.rating_int_plus_half %}
+                                                        <i class="fas fa-star-half-alt"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <small class="text-muted ms-1">{{ game.rating|floatformat:1 }}</small>
+                                            </span>
+                                            <span class="category-badge">
+                                                {% for category in game.categories.all|slice:":1" %}
+                                                    {{ category.name }}
+                                                {% endfor %}
+                                            </span>
+                                        </div>
+                                        <p class="card-text">{{ game.description|truncatechars:60 }}</p>
+                                        <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary w-100">{% trans "Play Now" %}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    {% trans "No recommended games available at the moment. Check back soon!" %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    {% if not user.is_premium and sidebar_ads %}
+                    <div class="ad-banner h-100 d-flex flex-column justify-content-center align-items-center">
+                        <h4>{% trans "Sponsored Ad" %}</h4>
+                        <div class="bg-light p-4 mt-3 rounded" style="width: 300px; height: 250px; display: flex; align-items: center; justify-content: center;">
+                            <div class="text-muted text-center">
+                                <i class="fas fa-ad fa-3x mb-3"></i>
+                                <p>{% trans "Advertisement" %}</p>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0">{% trans "Become a member to remove all ads" %}</p>
+                        <a href="{% url 'games:subscription' %}" class="btn btn-warning mt-2">{% trans "Upgrade Now" %}</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

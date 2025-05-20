@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans 'Profile' %} - HTML5 Games{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 侧边栏 -->
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="{{ user.username }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                <img src="{% static 'img/avatar-placeholder.jpg' %}" alt="{{ user.username }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% endif %}
+                <h5>{{ user.username }}</h5>
+                <p class="text-muted mb-1">{{ user.email }}</p>
+                <p class="text-muted mb-4">
+                    {% if profile.membership %}
+                    <span class="badge bg-primary">{{ profile.membership.get_level_display }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{% trans 'Free Member' %}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <div class="list-group mb-4">
+            <a href="#profile-info" class="list-group-item list-group-item-action active" data-bs-toggle="list">{% trans 'Profile' %}</a>
+                <a href="#favorite-games" class="list-group-item list-group-item-action" data-bs-toggle="list">{% trans 'Favorite Games' %}</a>
+                <a href="#game-history" class="list-group-item list-group-item-action" data-bs-toggle="list">{% trans 'Game History' %}</a>
+        </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="col-md-9">
+        <div class="tab-content">
+            <!-- 个人资料 -->
+            <div class="tab-pane fade show active" id="profile-info">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{% trans 'Profile' %}</h5>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fas fa-edit me-1"></i> {% trans 'Edit' %}
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">{% trans 'Username' %}</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <p class="text-muted mb-0">{{ user.username }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">{% trans 'Email' %}</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <p class="text-muted mb-0">{{ user.email }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">{% trans 'Membership Level' %}</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <p class="text-muted mb-0">
+                                    {% if profile.membership %}
+                                    {{ profile.membership.name }}
+                                    {% else %}
+                                    {% trans 'Free Member' %}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">{% trans 'Membership Expiry' %}</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <p class="text-muted mb-0">
+                                    {% if profile.membership_expiry %}
+                                    {{ profile.membership_expiry|date:"Y-m-d" }}
+                                    {% else %}
+                                    {% trans 'None' %}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">{% trans 'Registration Date' %}</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <p class="text-muted mb-0">{{ profile.created_at|date:"Y-m-d" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 会员升级卡片 -->
+                {% if not profile.membership or profile.membership.level == 'free' %}
+                <div class="card mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">{% trans 'Upgrade Membership' %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{% trans 'Upgrade your membership to get more games and privileges!' %}</p>
+                        <a href="{% url 'games:subscription' %}" class="btn btn-primary">{% trans 'View Membership Plans' %}</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 收藏的游戏 -->
+            <div class="tab-pane fade" id="favorite-games">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{% trans 'Favorite Games' %}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if favorite_games %}
+                        <div class="row">
+                            {% for game in favorite_games %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    {% if game.thumbnail %}
+                                    <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                                    {% else %}
+                                    <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ game.title }}</h5>
+                                        <div class="small text-warning mb-2">
+                                            {% for i in '12345'|make_list %}
+                                            {% if forloop.counter <= game.rating %}
+                                            <i class="fas fa-star"></i>
+                                            {% else %}
+                                            <i class="far fa-star"></i>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between">
+                                        <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary">{% trans 'Play Game' %}</a>
+                                        <button class="btn btn-sm btn-outline-danger favorite-btn" data-game-id="{{ game.id }}">
+                                            <i class="fas fa-heart"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="far fa-heart fa-4x text-muted mb-3"></i>
+                            <p class="lead">{% trans 'You have not favorited any games yet' %}</p>
+                            <a href="{% url 'games:game_list' %}" class="btn btn-primary">{% trans 'Browse Games' %}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 游戏历史 -->
+            <div class="tab-pane fade" id="game-history">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{% trans 'Game History' %}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if game_history %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans 'Game' %}</th>
+                                        <th>{% trans 'Category' %}</th>
+                                        <th>{% trans 'Play Time' %}</th>
+                                        <th>{% trans 'Actions' %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for history in game_history %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if history.game.thumbnail %}
+                                                <img src="{{ history.game.thumbnail.url }}" alt="{{ history.game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                {% else %}
+                                                <img src="{% static 'img/game-placeholder.jpg' %}" alt="{{ history.game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                {% endif %}
+                                                {{ history.game.title }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% for category in history.game.categories.all|slice:":1" %}
+                                            <span class="badge bg-secondary">{{ category.name }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ history.played_at|date:"Y-m-d H:i" }}</td>
+                                        <td>
+                                            <a href="{% url 'games:game_detail' history.game.slug %}" class="btn btn-sm btn-primary">{% trans 'Play Again' %}</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="far fa-clock fa-4x text-muted mb-3"></i>
+                            <p class="lead">{% trans 'You have no game history yet' %}</p>
+                            <a href="{% url 'games:game_list' %}" class="btn btn-primary">{% trans 'Browse Games' %}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑个人资料模态框 -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">{% trans 'Edit Profile' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">{% trans 'Username' %}</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{% trans 'Email' %}</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="avatar" class="form-label">{% trans 'Avatar' %}</label>
+                        <input type="file" class="form-control" id="avatar" name="avatar">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans 'Save' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // 收藏按钮点击事件
+        $('.favorite-btn').click(function() {
+            const gameId = $(this).data('game-id');
+            const btn = $(this);
+            
+            $.ajax({
+                url: '{% url "games:toggle_favorite" 0 %}'.replace('0', gameId),
+                type: 'GET',
+                success: function(data) {
+                    if (!data.is_favorite) {
+                        // 从收藏列表中移除
+                        btn.closest('.col-md-4').fadeOut(function() {
+                            $(this).remove();
+                            
+                            // 检查是否还有收藏的游戏
+                            if ($('#favorite-games .col-md-4').length === 0) {
+                                $('#favorite-games .card-body').html(`
+                                    <div class="text-center py-5">
+                                        <i class="far fa-heart fa-4x text-muted mb-3"></i>
+                                        <p class="lead">{% trans 'You have not favorited any games yet' %}</p>
+                                        <a href="{% url 'games:game_list' %}" class="btn btn-primary">{% trans 'Browse Games' %}</a>
+                                    </div>
+                                `);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        
+        // 从URL哈希切换标签
+        const hash = window.location.hash;
+        if (hash) {
+            $('.list-group-item').removeClass('active');
+            $('.tab-pane').removeClass('show active');
+            
+            $(`.list-group-item[href="${hash}"]`).addClass('active');
+            $(hash).addClass('show active');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Preview Payment Template" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem;
+    }
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .preview-content {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .preview-section {
+        margin-bottom: 2rem;
+    }
+    .preview-section:last-child {
+        margin-bottom: 0;
+    }
+    .preview-section h2 {
+        font-size: 1.25rem;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+    .preview-section h3 {
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    .preview-section pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    .preview-section .variables {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-top: 1rem;
+    }
+    .preview-section .variables h4 {
+        font-size: 0.875rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    .preview-section .variables code {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #e9ecef;
+        border-radius: 4px;
+        margin: 0.25rem;
+        font-family: monospace;
+        font-size: 0.875rem;
+    }
+    .preview-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    .btn:hover {
+        opacity: 0.9;
+    }
+    .template-info {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+    }
+    .template-info dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem 1rem;
+        margin: 0;
+    }
+    .template-info dt {
+        font-weight: 500;
+        color: #666;
+    }
+    .template-info dd {
+        margin: 0;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="preview-container">
+    <div class="preview-header">
+        <h1>{% trans "Preview Payment Template" %}</h1>
+        <div class="preview-actions">
+            <a href="{% url 'games:admin_payment_template_edit' template.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> {% trans "Edit Template" %}
+            </a>
+            <a href="{% url 'games:admin_payment_template_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> {% trans "Back to List" %}
+            </a>
+        </div>
+    </div>
+    
+    <div class="template-info">
+        <dl>
+            <dt>{% trans "Template Name" %}:</dt>
+            <dd>{{ template.name }}</dd>
+            
+            <dt>{% trans "Template Code" %}:</dt>
+            <dd>{{ template.code }}</dd>
+            
+            <dt>{% trans "Template Type" %}:</dt>
+            <dd>{{ template.get_template_type_display }}</dd>
+            
+            <dt>{% trans "Status" %}:</dt>
+            <dd>
+                <span class="status-badge status-{{ template.status }}">
+                    {{ template.get_status_display }}
+                </span>
+            </dd>
+            
+            <dt>{% trans "Last Updated" %}:</dt>
+            <dd>{{ template.updated_at|date:"Y-m-d H:i" }}</dd>
+            
+            {% if template.description %}
+            <dt>{% trans "Description" %}:</dt>
+            <dd>{{ template.description }}</dd>
+            {% endif %}
+        </dl>
+    </div>
+    
+    <div class="preview-content">
+        {% if template.template_type == 'email' %}
+        <div class="preview-section">
+            <h2>{% trans "Email Preview" %}</h2>
+            
+            <h3>{% trans "Subject" %}</h3>
+            <pre>{{ rendered_subject }}</pre>
+            
+            <h3>{% trans "Content" %}</h3>
+            <pre>{{ rendered_content }}</pre>
+            
+            <div class="variables">
+                <h4>{% trans "Available Variables" %}</h4>
+                <code>{{ payment.order_number }}</code>
+                <code>{{ payment.amount }}</code>
+                <code>{{ payment.currency }}</code>
+                <code>{{ payment.status }}</code>
+                <code>{{ payment.created_at }}</code>
+                <code>{{ payment.updated_at }}</code>
+                <code>{{ payment.payment_method.name }}</code>
+                <code>{{ payment.user.username }}</code>
+                <code>{{ payment.user.email }}</code>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if template.template_type == 'webhook' %}
+        <div class="preview-section">
+            <h2>{% trans "Webhook Preview" %}</h2>
+            
+            <h3>{% trans "Request Body" %}</h3>
+            <pre>{{ rendered_content }}</pre>
+            
+            <div class="variables">
+                <h4>{% trans "Available Variables" %}</h4>
+                <code>{{ payment.order_number }}</code>
+                <code>{{ payment.amount }}</code>
+                <code>{{ payment.currency }}</code>
+                <code>{{ payment.status }}</code>
+                <code>{{ payment.created_at }}</code>
+                <code>{{ payment.updated_at }}</code>
+                <code>{{ payment.payment_method.name }}</code>
+                <code>{{ payment.user.username }}</code>
+                <code>{{ payment.user.email }}</code>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if template.template_type == 'sms' %}
+        <div class="preview-section">
+            <h2>{% trans "SMS Preview" %}</h2>
+            
+            <h3>{% trans "Message Content" %}</h3>
+            <pre>{{ rendered_content }}</pre>
+            
+            <div class="variables">
+                <h4>{% trans "Available Variables" %}</h4>
+                <code>{{ payment.order_number }}</code>
+                <code>{{ payment.amount }}</code>
+                <code>{{ payment.currency }}</code>
+                <code>{{ payment.status }}</code>
+                <code>{{ payment.created_at }}</code>
+                <code>{{ payment.updated_at }}</code>
+                <code>{{ payment.payment_method.name }}</code>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="preview-section">
+            <h2>{% trans "Template Variables" %}</h2>
+            {% if template.variables %}
+            <pre>{{ template.variables|pprint }}</pre>
+            {% else %}
+            <pre>{% trans "No custom variables defined" %}</pre>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

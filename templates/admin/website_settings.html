@@ -1,0 +1,298 @@
+{% extends 'admin/base_admin.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans 'Website Settings' %} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'games:admin_dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'games:admin_settings' %}">{% trans "Settings" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Website Settings" %}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h5 class="mb-0">{% trans "Basic Website Settings" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="settings-section mb-5">
+                            <h6 class="mb-3">{% trans 'General Information' %}</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.site_name.id_for_label }}" class="form-control-label">{% trans 'Site Name' %}</label>
+                                        {{ form.site_name }}
+                                        {% if form.site_name.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.site_name.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">{% trans 'The name of your website' %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.email.id_for_label }}" class="form-control-label">{% trans 'Contact Email' %}</label>
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.email.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.phone.id_for_label }}" class="form-control-label">{% trans 'Contact Phone' %}</label>
+                                        {{ form.phone }}
+                                        {% if form.phone.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.phone.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.address.id_for_label }}" class="form-control-label">{% trans 'Address' %}</label>
+                                        {{ form.address }}
+                                        {% if form.address.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.address.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section mb-5">
+                            <h6 class="mb-3">{% trans 'Website Content' %}</h6>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.site_description.id_for_label }}" class="form-control-label">{% trans 'Site Description' %}</label>
+                                        {{ form.site_description }}
+                                        {% if form.site_description.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.site_description.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.logo.id_for_label }}" class="form-control-label">{% trans 'Logo' %}</label>
+                                        {{ form.logo }}
+                                        {% if form.logo.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.logo.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if settings.logo %}
+                                        <div class="mt-2">
+                                            <img src="{{ settings.logo.url }}" alt="Logo" style="max-height: 50px;" class="img-thumbnail">
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.favicon.id_for_label }}" class="form-control-label">{% trans 'Favicon' %}</label>
+                                        {{ form.favicon }}
+                                        {% if form.favicon.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.favicon.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if settings.favicon %}
+                                        <div class="mt-2">
+                                            <img src="{{ settings.favicon.url }}" alt="Favicon" style="max-height: 32px;" class="img-thumbnail">
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.copyright_text.id_for_label }}" class="form-control-label">{% trans 'Copyright Text' %}</label>
+                                        {{ form.copyright_text }}
+                                        {% if form.copyright_text.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.copyright_text.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">{% trans 'Copyright text displayed in the footer' %}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section mb-5">
+                            <h6 class="mb-3">{% trans 'SEO Settings' %}</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.meta_keywords.id_for_label }}" class="form-control-label">{% trans 'Meta Keywords' %}</label>
+                                        {{ form.meta_keywords }}
+                                        {% if form.meta_keywords.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.meta_keywords.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">{% trans 'Keywords separated by commas' %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.meta_description.id_for_label }}" class="form-control-label">{% trans 'Meta Description' %}</label>
+                                        {{ form.meta_description }}
+                                        {% if form.meta_description.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.meta_description.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section mb-5">
+                            <h6 class="mb-3">{% trans 'Social Media Links' %}</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.facebook_url.id_for_label }}" class="form-control-label">{% trans 'Facebook URL' %}</label>
+                                        {{ form.facebook_url }}
+                                        {% if form.facebook_url.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.facebook_url.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.twitter_url.id_for_label }}" class="form-control-label">{% trans 'Twitter URL' %}</label>
+                                        {{ form.twitter_url }}
+                                        {% if form.twitter_url.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.twitter_url.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.instagram_url.id_for_label }}" class="form-control-label">{% trans 'Instagram URL' %}</label>
+                                        {{ form.instagram_url }}
+                                        {% if form.instagram_url.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.instagram_url.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.youtube_url.id_for_label }}" class="form-control-label">{% trans 'YouTube URL' %}</label>
+                                        {{ form.youtube_url }}
+                                        {% if form.youtube_url.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.youtube_url.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h6 class="mb-3">{% trans 'Analytics' %}</h6>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="{{ form.google_analytics_code.id_for_label }}" class="form-control-label">{% trans 'Google Analytics Code' %}</label>
+                                        {{ form.google_analytics_code }}
+                                        {% if form.google_analytics_code.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.google_analytics_code.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">{% trans 'Paste your Google Analytics tracking code here' %}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{% url 'games:admin_settings' %}" class="btn btn-light me-2">{% trans 'Cancel' %}</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> {% trans 'Save Settings' %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

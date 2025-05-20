@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{{ category.name }} - {% trans 'Category Details' %} - HTML5 Games{% endblock %}
+
+{% block content %}
+<!-- 面包屑导航 -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'games:home' %}">{% trans 'Home' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'games:category_list' %}">{% trans 'Game Categories' %}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+  </ol>
+</nav>
+
+<!-- 分类详情 -->
+<div class="card mb-5">
+  <div class="row g-0">
+    <div class="col-md-4">
+      {% if category.image %}
+      <img src="{{ category.image.url }}" class="img-fluid rounded-start" alt="{{ category.name }}">
+      {% else %}
+      <img src="{% static 'img/category-placeholder.jpg' %}" class="img-fluid rounded-start" alt="{{ category.name }}">
+      {% endif %}
+    </div>
+    <div class="col-md-8">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="card-title">{{ category.name }}</h1>
+          <span class="badge bg-primary rounded-pill fs-6">{{ games.count }} {% trans 'games' %}</span>
+        </div>
+        <p class="card-text">{{ category.description }}</p>
+        <div class="d-flex justify-content-between align-items-center">
+          <p class="card-text"><small class="text-muted">{% trans 'Last updated' %}: {{ category.updated_at|date:"F d, Y" }}</small></p>
+          <a href="{% url 'games:category_games' category.slug %}" class="btn btn-primary">
+            <i class="fas fa-gamepad me-2"></i>{% trans 'Browse Games' %}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 子分类 -->
+{% if category.children.exists %}
+<div class="mb-5">
+  <h2 class="mb-4">{% trans 'Subcategories' %}</h2>
+  <div class="row">
+    {% for subcategory in category.children.all %}
+    <div class="col-md-4 col-lg-3 mb-4">
+      <div class="card h-100 shadow-sm hover-effect">
+        <div class="position-relative">
+          {% if subcategory.image %}
+          <img src="{{ subcategory.image.url }}" class="card-img-top" alt="{{ subcategory.name }}">
+          {% else %}
+          <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ subcategory.name }}">
+          {% endif %}
+          <div class="category-badge position-absolute top-0 end-0 m-2 badge bg-primary rounded-pill">
+            {{ subcategory.games.count }} {% trans 'games' %}
+          </div>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title fw-bold">{{ subcategory.name }}</h5>
+          <p class="card-text">{{ subcategory.description|truncatechars:100 }}</p>
+        </div>
+        <div class="card-footer bg-transparent border-top-0">
+          <a href="{% url 'games:category_games' subcategory.slug %}" class="btn btn-primary w-100">
+            <i class="fas fa-gamepad me-2"></i>{% trans 'Browse Games' %}
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- 热门游戏 -->
+{% if popular_games %}
+<div class="mb-5">
+  <h2 class="mb-4">{% trans 'Popular Games in' %} {{ category.name }}</h2>
+  <div class="row">
+    {% for game in popular_games %}
+    <div class="col-md-4 col-lg-3 mb-4">
+      <div class="card h-100 shadow-sm hover-effect">
+        <div class="position-relative">
+          {% if game.thumbnail %}
+          <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+          {% else %}
+          <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}">
+          {% endif %}
+          <div class="position-absolute top-0 end-0 m-2">
+            <span class="badge bg-primary">{{ game.rating|floatformat:1 }} <i class="fas fa-star"></i></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title fw-bold">{{ game.title }}</h5>
+          <p class="card-text">{{ game.description|truncatechars:100 }}</p>
+        </div>
+        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
+          <small class="text-muted"><i class="fas fa-eye me-1"></i>{{ game.view_count }}</small>
+          <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary">
+            <i class="fas fa-play me-1"></i>{% trans 'Play Now' %}
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-3">
+    <a href="{% url 'games:category_games' category.slug %}" class="btn btn-outline-primary">
+      <i class="fas fa-th-list me-2"></i>{% trans 'View All Games' %}
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<!-- 相关分类 -->
+{% if related_categories %}
+<div class="mb-5">
+  <h2 class="mb-4">{% trans 'Related Categories' %}</h2>
+  <div class="row">
+    {% for related_category in related_categories %}
+    <div class="col-md-4 col-lg-3 mb-4">
+      <div class="card h-100 shadow-sm hover-effect">
+        <div class="position-relative">
+          {% if related_category.image %}
+          <img src="{{ related_category.image.url }}" class="card-img-top" alt="{{ related_category.name }}">
+          {% else %}
+          <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ related_category.name }}">
+          {% endif %}
+          <div class="category-badge position-absolute top-0 end-0 m-2 badge bg-primary rounded-pill">
+            {{ related_category.games.count }} {% trans 'games' %}
+          </div>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title fw-bold">{{ related_category.name }}</h5>
+          <p class="card-text">{{ related_category.description|truncatechars:100 }}</p>
+        </div>
+        <div class="card-footer bg-transparent border-top-0">
+          <a href="{% url 'games:category_detail' related_category.slug %}" class="btn btn-outline-primary w-100">
+            <i class="fas fa-info-circle me-2"></i>{% trans 'View Details' %}
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- 分类说明 -->
+<div class="card bg-light mt-5">
+  <div class="card-body">
+    <h4 class="card-title"><i class="fas fa-info-circle me-2"></i>{% trans 'About' %} {{ category.name }}</h4>
+    <p class="card-text">{{ category.description }}</p>
+    {% if category.parent %}
+    <p class="card-text">
+      <small class="text-muted">
+        {% trans 'This is a subcategory of' %} 
+        <a href="{% url 'games:category_detail' category.parent.slug %}">{{ category.parent.name }}</a>
+      </small>
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // 添加页面加载动画
+  window.addEventListener('load', function() {
+    document.body.classList.add('loaded');
+  });
+  
+  // 添加卡片悬停效果
+  document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.hover-effect');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.classList.add('shadow');
+        this.style.transform = 'translateY(-5px)';
+        this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+      });
+      card.addEventListener('mouseleave', function() {
+        this.classList.remove('shadow');
+        this.style.transform = 'translateY(0)';
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}
+    {% if current_category %}
+        {{ current_category.name }} - {% trans 'Games' %}
+    {% elif search_query %}
+        {% trans 'Search Results' %}: {{ search_query }}
+    {% else %}
+        {% trans 'All Games' %}
+    {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+<!-- 基本SEO元标签 -->
+<meta name="description" content="{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}">
+<meta name="keywords" content="{% if current_category %}{{ current_category.name }}, {% endif %}{% trans 'HTML5 games, browser games, online games, free games' %}{% if search_query %}, {{ search_query }}{% endif %}">
+<meta name="author" content="HTML5 Games">
+<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Open Graph 元标签 -->
+<meta property="og:title" content="{% if current_category %}{{ current_category.name }} - {% trans 'Games' %}{% elif search_query %}{% trans 'Search Results' %}: {{ search_query }}{% else %}{% trans 'All Games' %}{% endif %}">
+<meta property="og:description" content="{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+<meta property="og:site_name" content="{% trans 'HTML5 Games' %}">
+{% if games.0.thumbnail %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ games.0.thumbnail.url }}">
+{% endif %}
+
+<!-- Twitter Card 元标签 -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% if current_category %}{{ current_category.name }} - {% trans 'Games' %}{% elif search_query %}{% trans 'Search Results' %}: {{ search_query }}{% else %}{% trans 'All Games' %}{% endif %}">
+<meta name="twitter:description" content="{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}">
+{% if games.0.thumbnail %}
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ games.0.thumbnail.url }}">
+{% endif %}
+
+<!-- 规范链接 -->
+<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+{% if page_obj.has_previous %}
+<link rel="prev" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}page={{ page_obj.previous_page_number }}">
+{% endif %}
+{% if page_obj.has_next %}
+<link rel="next" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}page={{ page_obj.next_page_number }}">
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 广告横幅样式 */
+    .ad-banner {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    .ad-banner:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .ad-banner img {
+        width: 100%;
+        border-radius: 0.25rem;
+    }
+    
+    /* 游戏卡片样式 */
+    .game-card {
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid rgba(0,0,0,.125);
+        border-radius: 0.25rem;
+        overflow: hidden;
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .game-card .card-img-top {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .game-card .card-body {
+        padding: 1rem;
+    }
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .game-card .card-text {
+        height: 3em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    /* 响应式设计优化 */
+    @media (max-width: 991.98px) {
+        .game-card .card-img-top {
+            height: 160px;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .ad-banner {
+            margin-bottom: 1rem !important;
+        }
+        .game-card .card-img-top {
+            height: 150px;
+        }
+        .col-lg-9.col-md-8 {
+            order: 2;
+        }
+        .col-lg-3.col-md-4 {
+            order: 1;
+            margin-bottom: 1.5rem;
+        }
+        .game-card .card-title {
+            font-size: 1rem;
+        }
+        .game-card .card-text {
+            font-size: 0.85rem;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .game-card .card-img-top {
+            height: 140px;
+        }
+        h1 {
+            font-size: 1.75rem;
+        }
+        .dropdown button {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+    
+    /* 加载动画 */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 2rem 0;
+    }
+    .loading-spinner.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 结构化数据 - 游戏列表 -->
+<script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "ItemList",
+    "itemListElement": [
+        {% for game in games %}
+        {
+            "@type": "ListItem",
+            "position": {{ forloop.counter }},
+            "item": {
+                "@type": "VideoGame",
+                "name": "{{ game.title }}",
+                "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'games:game_detail' game.slug %}",
+                {% if game.thumbnail %}
+                "image": "{{ request.scheme }}://{{ request.get_host }}{{ game.thumbnail.url }}",
+                {% endif %}
+                "description": "{{ game.description|truncatechars:160|striptags }}",
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "{{ game.rating }}",
+                    "bestRating": "5",
+                    "worstRating": "1",
+                    "ratingCount": "{{ game.comments.count|default:'1' }}"
+                },
+                "genre": [
+                    {% for category in game.categories.all %}
+                    "{{ category.name }}"{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+
+<!-- 结构化数据 - 网站信息 -->
+<script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "WebSite",
+    "name": "{% trans 'HTML5 Games' %}",
+    "url": "{{ request.scheme }}://{{ request.get_host }}",
+    "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ request.scheme }}://{{ request.get_host }}{% url 'games:game_list' %}?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+    }
+}
+</script>
+
+<div class="row">
+    <!-- 主内容区 -->
+    <div class="col-lg-9 col-md-8 mb-4">
+        <!-- 游戏列表上方广告 -->
+        {% if game_between_ads %}
+        <div class="ad-banner mb-4">
+            {% for ad in game_between_ads %}
+                {% if ad.html_code %}
+                    {{ ad.html_code|safe }}
+                {% else %}
+                    <a href="{{ ad.url }}" target="_blank" class="d-block" onclick="incrementAdClick('{{ ad.id }}')">
+                        {% if ad.image %}
+                            <img src="{{ ad.image.url }}" alt="{{ ad.name }}" class="img-fluid">
+                        {% else %}
+                            <div class="bg-secondary text-white p-3 rounded text-center">
+                                <h4>{{ ad.name }}</h4>
+                                <p>{% trans 'Sponsored content' %}</p>
+                            </div>
+                        {% endif %}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        <!-- 页面标题 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                {% if current_category %}
+                    {{ current_category.name }}
+                {% elif search_query %}
+                    {% trans 'Search Results' %}: {{ search_query }}
+                {% else %}
+                    {% trans 'All Games' %}
+                {% endif %}
+            </h1>
+            
+            <!-- 排序选项 -->
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if sort == 'popular' %}
+                        {% trans 'Sort by Popularity' %}
+                    {% elif sort == 'rating' %}
+                        {% trans 'Sort by Rating' %}
+                    {% else %}
+                        {% trans 'Sort by Latest' %}
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                    <li><a class="dropdown-item {% if sort == 'latest' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=latest">{% trans 'Latest' %}</a></li>
+                    <li><a class="dropdown-item {% if sort == 'popular' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=popular">{% trans 'Popular' %}</a></li>
+                    <li><a class="dropdown-item {% if sort == 'rating' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating">{% trans 'Rating' %}</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 分类描述 -->
+        {% if current_category and current_category.description %}
+        <div class="alert alert-light mb-4">
+            {{ current_category.description }}
+        </div>
+        {% endif %}
+        
+        <!-- 游戏列表 -->
+        {% if games %}
+        <div class="row" id="gamesList">
+            {% for game in games %}
+            <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+                <div class="card game-card" itemscope itemtype="http://schema.org/Game">
+                    <a href="{% url 'games:game_detail' game.slug %}" class="text-decoration-none">
+                        {% if game.thumbnail %}
+                        <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}" itemprop="image" loading="lazy">
+                        {% else %}
+                        <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}" itemprop="image" loading="lazy">
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title" itemprop="name">
+                            <a href="{% url 'games:game_detail' game.slug %}" class="text-decoration-none text-dark" itemprop="url">{{ game.title }}</a>
+                        </h5>
+                        <p class="card-text small" itemprop="description">{{ game.description|truncatechars:80 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="small text-warning" itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating">
+                                <meta itemprop="ratingValue" content="{{ game.rating }}">
+                                <meta itemprop="bestRating" content="5">
+                                <meta itemprop="worstRating" content="1">
+                                <meta itemprop="ratingCount" content="{{ game.comments.count|default:'1' }}">
+                                {% for i in '12345'|make_list %}
+                                {% if forloop.counter <= game.rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted"><i class="fas fa-eye me-1"></i> {{ game.view_count }} {% trans 'views' %}</small>
+                        </div>
+                        <div class="mt-2">
+                            {% for category in game.categories.all|slice:":2" %}
+                            <a href="{% url 'games:category_detail' category.slug %}" class="badge bg-secondary text-decoration-none me-1">{{ category.name }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary w-100">{% trans 'Play Game' %}</a>
+                    </div>
+                    <meta itemprop="applicationCategory" content="Game">
+                    {% for category in game.categories.all %}
+                    <meta itemprop="genre" content="{{ category.name }}">
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- 加载动画 -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">{% trans 'Loading...' %}</span>
+            </div>
+            <p class="mt-2">{% trans 'Loading more games...' %}</p>
+        </div>
+        
+        <!-- 分页 -->
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                        {% trans 'Previous' %}
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">{% trans 'Previous' %}</span>
+                </li>
+                {% endif %}
+                
+                {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}page={{ page_obj.next_page_number }}">
+                        {% trans 'Next' %}
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">{% trans 'Next' %}</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info">
+            {% if search_query %}
+            {% trans 'No games found related to' %} "{{ search_query }}"
+            {% else %}
+            {% trans 'No games available' %}
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- 游戏列表底部广告 -->
+        {% if game_between_ads %}
+        <div class="ad-banner mt-4 mb-4">
+            {% for ad in game_between_ads %}
+                {% if ad.html_code %}
+                    {{ ad.html_code|safe }}
+                {% else %}
+                    <a href="{{ ad.url }}" target="_blank" class="d-block" onclick="incrementAdClick('{{ ad.id }}')">
+                        {% if ad.image %}
+                            <img src="{{ ad.image.url }}" alt="{{ ad.name }}" class="img-fluid">
+                        {% else %}
+                            <div class="bg-secondary text-white p-3 rounded text-center">
+                                <h4>{{ ad.name }}</h4>
+                                <p>{% trans 'Sponsored content' %}</p>
+                            </div>
+                        {% endif %}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 侧边栏 -->
+    <div class="col-lg-3 col-md-4">
+        <!-- 侧边栏广告 -->
+        {% if sidebar_ads %}
+        <div class="ad-banner mb-4">
+            {% for ad in sidebar_ads %}
+                {% if ad.html_code %}
+                    {{ ad.html_code|safe }}
+                {% else %}
+                    <a href="{{ ad.url }}" target="_blank" class="d-block" onclick="incrementAdClick('{{ ad.id }}')">
+                        {% if ad.image %}
+                            <img src="{{ ad.image.url }}" alt="{{ ad.name }}" class="img-fluid">
+                        {% else %}
+                            <div class="bg-secondary text-white p-3 rounded text-center">
+                                <h4>{{ ad.name }}</h4>
+                                <p>{% trans 'Sponsored content' %}</p>
+                            </div>
+                        {% endif %}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- 搜索框 -->
+        <div class="card mb-4">
+            <div class="card-header">{% trans 'Search Games' %}</div>
+            <div class="card-body">
+                <form action="{% url 'games:game_list' %}" method="get">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" placeholder="{% trans 'Search...' %}" value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">{% trans 'Search' %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 分类列表 -->
+        <div class="card mb-4">
+            <div class="card-header">{% trans 'Game Categories' %}</div>
+            <div class="list-group list-group-flush">
+                {% for category in categories %}
+                <a href="{% url 'games:category_detail' category.slug %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if current_category.id == category.id %}active{% endif %}">
+                    {{ category.name }}
+                    <span class="badge bg-primary rounded-pill">{{ category.games.count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- 热门游戏 -->
+        <div class="card">
+            <div class="card-header">{% trans 'Popular Games' %}</div>
+            <div class="list-group list-group-flush">
+                {% for game in popular_games %}
+                <a href="{% url 'games:game_detail' game.slug %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex align-items-center">
+                        {% if game.thumbnail %}
+                        <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                        <img src="{% static 'img/game-placeholder.jpg' %}" alt="{{ game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">{{ game.title }}</h6>
+                            <div class="small text-warning">
+                                {% for i in '12345'|make_list %}
+                                {% if forloop.counter <= game.rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/game-list.js' %}"></script>
+{% endblock %}

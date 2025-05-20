@@ -1,0 +1,13 @@
+{% load i18n %}
+{% if children %}
+<ul class="list-inline mb-0">
+    {% for child in children %}
+        <li class="list-inline-item">
+            <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}">
+                {{ child.get_menu_title }}
+            </a>
+            {% if not forloop.last %}|{% endif %}
+        </li>
+    {% endfor %}
+</ul>
+{% endif %} 

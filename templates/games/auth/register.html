@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}Register - HTML5 Games{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        display: flex;
+        align-items: center;
+        padding: 40px 0;
+    }
+    .auth-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        background-color: white;
+    }
+    .auth-sidebar {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .auth-sidebar h2 {
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    .auth-sidebar p {
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+    .auth-sidebar .features {
+        margin-bottom: 30px;
+    }
+    .auth-sidebar .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .auth-sidebar .feature-icon {
+        background-color: rgba(255,255,255,0.2);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+    .auth-content {
+        padding: 40px;
+    }
+    .nav-tabs {
+        border-bottom: none;
+        margin-bottom: 30px;
+    }
+    .nav-tabs .nav-link {
+        border: none;
+        font-weight: 600;
+        padding: 10px 20px;
+        color: #6c757d;
+    }
+    .nav-tabs .nav-link.active {
+        color: #6a11cb;
+        border-bottom: 2px solid #6a11cb;
+    }
+    .btn-auth {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        border: none;
+        padding: 12px 20px;
+        font-weight: 600;
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 30px 0;
+        color: #6c757d;
+    }
+    .divider::before, .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .divider span {
+        padding: 0 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container auth-container">
+    <div class="row auth-card mx-auto" style="max-width: 1000px;">
+        <!-- 左侧信息栏 -->
+        <div class="col-md-5 auth-sidebar d-none d-md-flex">
+            <div>
+                <h2>{% trans 'Join HTML5 Games' %}</h2>
+                <p>{% trans 'Create an account to access thousands of free HTML5 games, track your favorites, and enjoy a premium experience.' %}</p>
+                
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <div>{% trans 'Access to all games' %}</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div>{% trans 'Save your favorite games' %}</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div>{% trans 'Upgrade to premium membership' %}</div>
+                    </div>
+                </div>
+                
+                <p class="mb-0">{% trans "Already have an account?" %}</p>
+                <a href="{% url 'games:login' %}" class="btn btn-light mt-3">{% trans 'Login Now' %}</a>
+            </div>
+        </div>
+        
+        <!-- 右侧注册表单 -->
+        <div class="col-md-7 auth-content">
+            <ul class="nav nav-tabs" id="authTab" role="tablist">
+                <li class="nav-item d-md-none" role="presentation">
+                    <button class="nav-link" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="false">{% trans 'Login' %}</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab" aria-controls="register" aria-selected="true">{% trans 'Register' %}</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="authTabContent">
+                <!-- 注册表单 -->
+                <div class="tab-pane fade show active" id="register" role="tabpanel" aria-labelledby="register-tab">
+                    <h3 class="mb-4">{% trans 'Create Your Account' %}</h3>
+                    
+                    {% if messages %}
+                    <div class="alert alert-info">
+                        {% for message in messages %}
+                            {{ message }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'games:register' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="text-danger">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_first_name" class="form-label">{{ form.first_name.label }}</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.first_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_last_name" class="form-label">{{ form.last_name.label }}</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.last_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_password1" class="form-label">{{ form.password1.label }}</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password1.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.password1.help_text }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_password2" class="form-label">{{ form.password2.label }}</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password2.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">{% trans 'I agree to the Terms and Conditions' %}</label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-auth">{% trans 'Register' %}</button>
+                        </div>
+                    </form>
+                    
+                    <div class="d-md-none text-center mt-4">
+                        <p>{% trans "Already have an account?" %}</p>
+                        <a href="{% url 'games:login' %}" class="btn btn-outline-primary">{% trans 'Login Now' %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

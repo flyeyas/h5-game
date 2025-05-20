@@ -1,0 +1,9 @@
+{% extends "games/frontend/bootstrap5/includes/bootstrap.html" %}
+{% comment %}
+这是djangocms-frontend的基础模板。
+它将由Bootstrap 5组件使用，不会直接被视图渲染。
+{% endcomment %}
+
+{% block instance_content %}
+{% include instance.template_choices|default:"games/frontend/bootstrap5/includes/default.html" %}
+{% endblock %} 

@@ -1,0 +1,28 @@
+Django==5.2
+django-cms==5.0
+django-classy-tags>=4.1.0
+django-sekizai>=4.1.0
+django-treebeard>=4.7.1
+django-filer>=3.1.1
+easy-thumbnails>=2.8.5
+django-mptt>=0.14.0
+django-parler>=2.3
+django-modeltranslation>=0.18.11
+Pillow>=10.0.0
+psycopg2-binary>=2.9.9
+python-dotenv>=1.0.0
+django-allauth>=0.57.0
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+django-compressor>=4.4
+django-bootstrap5>=23.3
+fontawesomefree==6.0.0 
+django-plans>=2.0.0
+django-plans-payments>=1.5.0
+# 支付网关依赖
+stripe>=6.0.0
+paypalrestsdk>=1.13.1
+django-countries>=7.5  # 用于国家选择字段
+pycryptodome>=3.18.0  # 用于加密和签名验证
+django-payments>=2.0.0
+django-ipware>=5.0.0  # 用于获取用户IP地址，防欺诈

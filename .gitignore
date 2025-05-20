@@ -1,0 +1,8 @@
+.DS_Store
+.cursor/
+.history/
+.trae/
+.vscode/
+doc/
+logs/
+原型/

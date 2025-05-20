@@ -1,0 +1,36 @@
+{% load i18n %}
+{% load static %}
+
+<div class="col-6 col-md-3">
+    <div class="game-card">
+        {% if game.thumbnail %}
+            <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}" loading="lazy">
+        {% else %}
+            <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}" loading="lazy">
+        {% endif %}
+        <div class="card-body">
+            <h5 class="card-title">{{ game.title }}</h5>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="rating">
+                    {% for i in '12345'|make_list %}
+                        {% if forloop.counter <= game.rating %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <small class="text-muted ms-1">{{ game.rating|floatformat:1 }}</small>
+                </span>
+                <small class="text-muted">{{ game.view_count }} {% trans 'views' %}</small>
+            </div>
+            {% if game.categories.exists %}
+                <div class="mb-2">
+                    {% for category in game.categories.all|slice:":2" %}
+                        <span class="category-badge">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-primary w-100">{% trans 'Play Game' %}</a>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,869 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{{ game.title }} - {% trans 'HTML5 Games' %}{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="{{ game.description|truncatechars:160|striptags }}">
+<meta property="og:title" content="{{ game.title }} - {% trans 'HTML5 Games' %}">
+<meta property="og:description" content="{{ game.description|truncatechars:160|striptags }}">
+{% if game.thumbnail %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ game.thumbnail.url }}">
+{% endif %}
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .game-iframe-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 56.25%; /* 16:9 宽高比 */
+        overflow: hidden;
+        background-color: #000;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        touch-action: pan-x pan-y; /* 优化触控体验 */
+    }
+    .game-iframe-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    .fullscreen-btn {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .fullscreen-btn:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+    /* 移动端游戏控制UI */
+    .mobile-controls {
+        display: none;
+        position: absolute;
+        bottom: 10px;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        text-align: center;
+        padding: 10px;
+        transition: opacity 0.3s ease;
+    }
+    .mobile-control-btn {
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        margin: 0 5px;
+        font-size: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+    .mobile-control-btn:active,
+    .mobile-control-btn.active {
+        background: rgba(0, 0, 0, 0.8);
+        transform: scale(0.95);
+    }
+    .mobile-controls.fullscreen {
+        opacity: 0.4;
+    }
+    .mobile-controls.fullscreen:hover,
+    .mobile-controls.fullscreen:active {
+        opacity: 1;
+    }
+    /* 屏幕方向提示 */
+    .orientation-message {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        z-index: 200;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+    }
+    .orientation-message i {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        animation: rotate 2s infinite;
+    }
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(90deg); }
+        50% { transform: rotate(90deg); }
+        75% { transform: rotate(90deg); }
+        100% { transform: rotate(0deg); }
+    }
+    @media (max-width: 767.98px) {
+        .game-iframe-container {
+            padding-bottom: 75%; /* 移动设备上更高的比例 */
+            touch-action: manipulation; /* 防止双击缩放 */
+        }
+        .mobile-controls {
+            display: block;
+        }
+        .fullscreen-btn {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+    }
+    .favorite-btn {
+        cursor: pointer;
+    }
+    .favorite-btn.active {
+        color: #ff5252;
+    }
+    .ad-banner {
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 结构化数据 -->
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "VideoGame",
+        "name": "{{ game.title }}",
+        "description": "{{ game.description|striptags }}",
+        "url": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}",
+        {% if game.thumbnail %}
+        "image": "{{ request.scheme }}://{{ request.get_host }}{{ game.thumbnail.url }}",
+        {% endif %}
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "{{ game.rating }}",
+            "bestRating": "5",
+            "worstRating": "1",
+            "ratingCount": "{{ comments.count|default:'1' }}"
+        },
+        "genre": [
+            {% for category in game.categories.all %}
+            "{{ category.name }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        "playMode": "SinglePlayer",
+        "applicationCategory": "Game"
+    }
+    </script>
+    
+    <!-- 主内容区 -->
+    <div class="col-lg-8" itemscope itemtype="http://schema.org/VideoGame">
+        <!-- 游戏上方广告 -->
+        {% if game_between_ads %}
+        <div class="ad-banner mb-4">
+            {% for ad in game_between_ads %}
+                {% if ad.html_code %}
+                    {{ ad.html_code|safe }}
+                {% else %}
+                    <a href="{{ ad.url }}" target="_blank" class="d-block" onclick="incrementAdClick('{{ ad.id }}')">
+                        {% if ad.image %}
+                            <img src="{{ ad.image.url }}" alt="{{ ad.name }}" class="img-fluid">
+                        {% else %}
+                            <div class="bg-secondary text-white p-3 rounded text-center">
+                                <h4>{{ ad.name }}</h4>
+                                <p>{% trans 'Sponsored content' %}</p>
+                            </div>
+                        {% endif %}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        <!-- 游戏标题和操作 -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1>{{ game.title }}</h1>
+            <div>
+                {% if user.is_authenticated %}
+                <span class="favorite-btn me-2 {% if is_favorite %}active{% endif %}" data-game-id="{{ game.id }}" title="{% trans 'Favorite' %}">
+                    <i class="{% if is_favorite %}fas{% else %}far{% endif %} fa-heart fa-lg"></i>
+                </span>
+                {% endif %}
+                <span class="text-muted"><i class="fas fa-eye me-1"></i> {{ game.view_count }}</span>
+            </div>
+        </div>
+        
+        <!-- 游戏分类 -->
+        <div class="mb-3">
+            {% for category in game.categories.all %}
+            <a href="{% url 'games:category_detail' category.slug %}" class="badge bg-secondary text-decoration-none me-1">{{ category.name }}</a>
+            {% endfor %}
+        </div>
+        
+        <!-- 游戏评分 -->
+        <div class="mb-4">
+            <div class="text-warning d-inline-block me-2">
+                {% for i in '12345'|make_list %}
+                {% if forloop.counter <= game.rating %}
+                <i class="fas fa-star"></i>
+                {% else %}
+                <i class="far fa-star"></i>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <span class="text-muted">{{ game.rating }} / 5</span>
+        </div>
+        
+        <!-- 游戏iframe -->
+        <div class="game-iframe-container game-details mb-4" id="gameContainer">
+            <button class="fullscreen-btn" id="fullscreenBtn" title="{% trans 'Fullscreen' %}"><i class="fas fa-expand"></i></button>
+            <iframe src="{{ game.iframe_url }}" allowfullscreen id="gameIframe" class="game-iframe"></iframe>
+            <!-- 移动端游戏控制UI -->
+            <div class="mobile-controls">
+                <button class="mobile-control-btn" id="mobileUp"><i class="fas fa-arrow-up"></i></button>
+                <div class="d-inline-block">
+                    <button class="mobile-control-btn" id="mobileLeft"><i class="fas fa-arrow-left"></i></button>
+                    <button class="mobile-control-btn" id="mobileAction"><i class="fas fa-circle"></i></button>
+                    <button class="mobile-control-btn" id="mobileRight"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <button class="mobile-control-btn" id="mobileDown"><i class="fas fa-arrow-down"></i></button>
+            </div>
+            <!-- 屏幕方向提示 -->
+            <div class="orientation-message" id="orientationMessage">
+                <div>
+                    <i class="fas fa-mobile-alt"></i>
+                    <h4>{% trans 'Rotate your device' %}</h4>
+                    <p>{% trans 'For the best gaming experience, please rotate your device to landscape mode.' %}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 游戏控制 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <button class="btn btn-sm btn-outline-primary me-2" id="refreshGame" title="{% trans 'Refresh Game' %}"><i class="fas fa-sync-alt"></i> {% trans 'Refresh' %}</button>
+                {% if user.is_authenticated and not user.is_premium %}
+                <a href="{% url 'accounts:premium' %}" class="btn btn-sm btn-warning"><i class="fas fa-crown"></i> {% trans 'Go Premium' %}</a>
+                {% endif %}
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="me-3"><i class="fas fa-gamepad me-1"></i> {% trans 'Played' %}: {{ game.play_count }}</span>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-share-alt"></i> {% trans 'Share' %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="shareDropdown">
+                        <li><a class="dropdown-item" href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{{ request.path }}" target="_blank"><i class="fab fa-facebook me-2"></i>Facebook</a></li>
+                        <li><a class="dropdown-item" href="https://twitter.com/intent/tweet?url={{ request.scheme }}://{{ request.get_host }}{{ request.path }}&text={{ game.title }}" target="_blank"><i class="fab fa-twitter me-2"></i>Twitter</a></li>
+                        <li><a class="dropdown-item" href="https://api.whatsapp.com/send?text={{ game.title }} {{ request.scheme }}://{{ request.get_host }}{{ request.path }}" target="_blank"><i class="fab fa-whatsapp me-2"></i>WhatsApp</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 游戏描述 -->
+        <div class="card mb-4">
+            <div class="card-header">{% trans 'Game Description' %}</div>
+            <div class="card-body">
+                {{ game.description|linebreaks }}
+            </div>
+        </div>
+        
+        <!-- 游戏内容 -->
+        {% if game.content %}
+        <div class="card mb-4">
+            <div class="card-header">{% trans 'Game Content' %}</div>
+            <div class="card-body">
+                {% render_placeholder game.content %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- 评论区 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>{% trans 'Comments' %} ({{ comments.count }})</span>
+                {% if user.is_authenticated %}
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#commentModal">
+                    {% trans 'Add Comment' %}
+                </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if comments %}
+                {% for comment in comments %}
+                <div class="d-flex mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                    <div class="flex-shrink-0">
+                        {% if comment.user.profile.avatar %}
+                        <img src="{{ comment.user.profile.avatar.url }}" alt="{{ comment.user.username }}" class="rounded-circle" width="50" height="50">
+                        {% else %}
+                        <img src="{% static 'img/avatar-placeholder.jpg' %}" alt="{{ comment.user.username }}" class="rounded-circle" width="50" height="50">
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">{{ comment.user.username }}</h6>
+                            <small class="text-muted">{{ comment.created_at|date:"Y-m-d H:i" }}</small>
+                        </div>
+                        <div class="text-warning small mb-2">
+                            {% for i in '12345'|make_list %}
+                            {% if forloop.counter <= comment.rating %}
+                            <i class="fas fa-star"></i>
+                            {% else %}
+                            <i class="far fa-star"></i>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="mb-0">{{ comment.content }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-center text-muted my-3">{% trans 'No comments yet' %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 侧边栏 -->
+    <div class="col-lg-4">
+        <!-- 侧边栏广告 -->
+        {% if sidebar_ads %}
+        <div class="ad-banner mb-4">
+            {% for ad in sidebar_ads %}
+                {% if ad.html_code %}
+                    {{ ad.html_code|safe }}
+                {% else %}
+                    <a href="{{ ad.url }}" target="_blank" class="d-block" onclick="incrementAdClick('{{ ad.id }}')">
+                        {% if ad.image %}
+                            <img src="{{ ad.image.url }}" alt="{{ ad.name }}" class="img-fluid">
+                        {% else %}
+                            <div class="bg-secondary text-white p-3 rounded text-center">
+                                <h4>{{ ad.name }}</h4>
+                                <p>{% trans 'Sponsored content' %}</p>
+                            </div>
+                        {% endif %}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- 相关游戏 -->
+        {% if related_games %}
+        <div class="card mb-4">
+            <div class="card-header">{% trans 'Related Games' %}</div>
+            <div class="list-group list-group-flush">
+                {% for related_game in related_games %}
+                <a href="{% url 'games:game_detail' related_game.slug %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex align-items-center">
+                        {% if related_game.thumbnail %}
+                        <img src="{{ related_game.thumbnail.url }}" alt="{{ related_game.title }}" class="me-2" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <img src="{% static 'img/game-placeholder.jpg' %}" alt="{{ related_game.title }}" class="me-2" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">{{ related_game.title }}</h6>
+                            <div class="small text-warning">
+                                {% for i in '12345'|make_list %}
+                                {% if forloop.counter <= related_game.rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- 热门游戏 -->
+        <div class="card mb-4">
+            <div class="card-header">{% trans 'Popular Games' %}</div>
+            <div class="list-group list-group-flush">
+                {% for popular_game in popular_games %}
+                <a href="{% url 'games:game_detail' popular_game.slug %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex align-items-center">
+                        {% if popular_game.thumbnail %}
+                        <img src="{{ popular_game.thumbnail.url }}" alt="{{ popular_game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                        <img src="{% static 'img/game-placeholder.jpg' %}" alt="{{ popular_game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">{{ popular_game.title }}</h6>
+                            <div class="small text-warning">
+                                {% for i in '12345'|make_list %}
+                                {% if forloop.counter <= popular_game.rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- 游戏分类 -->
+        <div class="card">
+            <div class="card-header">{% trans 'Game Categories' %}</div>
+            <div class="list-group list-group-flush">
+                {% for category in categories %}
+                <a href="{% url 'games:category_detail' category.slug %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    {{ category.name }}
+                    <span class="badge bg-primary rounded-pill">{{ category.games.count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 评论模态框 -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="commentModalLabel">{% trans 'Add Comment' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="commentForm" action="{% url 'games:add_comment' game.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="rating" class="form-label">{% trans 'Rating' %}</label>
+                        <select class="form-select" id="rating" name="rating" required>
+                            <option value="5">5 - {% trans 'Excellent' %}</option>
+                            <option value="4">4 - {% trans 'Very Good' %}</option>
+                            <option value="3">3 - {% trans 'Good' %}</option>
+                            <option value="2">2 - {% trans 'Fair' %}</option>
+                            <option value="1">1 - {% trans 'Poor' %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">{% trans 'Comment' %}</label>
+                        <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans 'Submit' %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 全屏功能
+        const gameContainer = document.getElementById('gameContainer');
+        const gameIframe = document.getElementById('gameIframe');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        
+        // 检测是否为移动设备
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // 检测屏幕方向函数
+        function checkOrientation() {
+            const orientationMessage = document.getElementById('orientationMessage');
+            if (!orientationMessage) return;
+            
+            // 使用更可靠的方法检测屏幕方向
+            const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+            
+            if (isPortrait && !document.fullscreenElement) {
+                // 竖屏模式
+                orientationMessage.style.display = 'flex';
+            } else {
+                // 横屏模式
+                orientationMessage.style.display = 'none';
+            }
+        }
+        
+        // 全屏按钮事件
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', function() {
+                toggleFullscreen();
+            });
+            
+            // 监听全屏状态变化
+            document.addEventListener('fullscreenchange', updateFullscreenUI);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+            document.addEventListener('mozfullscreenchange', updateFullscreenUI);
+            document.addEventListener('MSFullscreenChange', updateFullscreenUI);
+        }
+        
+        // 切换全屏模式
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                // 如果已经是全屏，则退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            } else {
+                // 进入全屏
+                const element = gameContainer;
+                if (element.requestFullscreen) {
+                    element.requestFullscreen();
+                } else if (element.webkitRequestFullscreen) { /* Safari */
+                    element.webkitRequestFullscreen();
+                } else if (element.mozRequestFullScreen) { /* Firefox */
+                    element.mozRequestFullScreen();
+                } else if (element.msRequestFullscreen) { /* IE/Edge */
+                    element.msRequestFullscreen();
+                }
+            }
+        }
+        
+        // 更新全屏UI
+        function updateFullscreenUI() {
+            const mobileControls = document.querySelector('.mobile-controls');
+            const orientationMessage = document.getElementById('orientationMessage');
+            
+            if (document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenBtn.title = '{% trans "Exit Fullscreen" %}';
+                if (mobileControls) {
+                    mobileControls.classList.add('fullscreen');
+                }
+                // 全屏模式下隐藏方向提示
+                if (orientationMessage) {
+                    orientationMessage.style.display = 'none';
+                }
+                // 锁定屏幕方向为横屏（如果浏览器支持）
+                if (screen.orientation && screen.orientation.lock) {
+                    try {
+                        screen.orientation.lock('landscape').catch(() => {
+                            // 忽略错误，有些浏览器不支持或需要特定权限
+                        });
+                    } catch (e) {
+                        // 忽略不支持的浏览器
+                    }
+                }
+            } else {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenBtn.title = '{% trans "Fullscreen" %}';
+                if (mobileControls) {
+                    mobileControls.classList.remove('fullscreen');
+                }
+                // 退出全屏时检查方向
+                if (isMobile && orientationMessage) {
+                    checkOrientation();
+                }
+                // 解锁屏幕方向（如果浏览器支持）
+                if (screen.orientation && screen.orientation.unlock) {
+                    try {
+                        screen.orientation.unlock();
+                    } catch (e) {
+                        // 忽略不支持的浏览器
+                    }
+                }
+            }
+        }
+        
+        // 移动端触控控制
+        if (isMobile) {
+            const mobileUp = document.getElementById('mobileUp');
+            const mobileDown = document.getElementById('mobileDown');
+            const mobileLeft = document.getElementById('mobileLeft');
+            const mobileRight = document.getElementById('mobileRight');
+            const mobileAction = document.getElementById('mobileAction');
+            const orientationMessage = document.getElementById('orientationMessage');
+            const mobileControls = document.querySelector('.mobile-controls');
+            
+            // 初始检测
+            checkOrientation();
+            
+            // 监听屏幕方向变化
+            window.addEventListener('resize', checkOrientation);
+            window.addEventListener('orientationchange', checkOrientation);
+            
+            // 模拟键盘事件 - 改进版本
+            function simulateKeyEvent(keyCode, type) {
+                try {
+                    // 尝试直接向iframe发送事件
+                    if (gameIframe && gameIframe.contentWindow) {
+                        const event = new KeyboardEvent(type, {
+                            bubbles: true,
+                            cancelable: true,
+                            keyCode: keyCode,
+                            which: keyCode,
+                            code: getKeyCodeString(keyCode),
+                            key: getKeyFromCode(keyCode)
+                        });
+                        
+                        // 尝试向iframe文档发送事件
+                        try {
+                            gameIframe.contentWindow.document.dispatchEvent(event);
+                        } catch (e) {
+                            // 如果无法访问iframe内容（跨域限制），则向父文档发送事件
+                            document.dispatchEvent(event);
+                        }
+                    } else {
+                        // 如果iframe不可用，向当前文档发送事件
+                        document.dispatchEvent(new KeyboardEvent(type, {
+                            bubbles: true,
+                            cancelable: true,
+                            keyCode: keyCode,
+                            which: keyCode,
+                            code: getKeyCodeString(keyCode),
+                            key: getKeyFromCode(keyCode)
+                        }));
+                    }
+                } catch (e) {
+                    console.error('无法模拟键盘事件:', e);
+                }
+            }
+            
+            // 获取键码对应的字符串
+            function getKeyCodeString(keyCode) {
+                const keyMap = {
+                    37: 'ArrowLeft',
+                    38: 'ArrowUp',
+                    39: 'ArrowRight',
+                    40: 'ArrowDown',
+                    32: 'Space'
+                };
+                return keyMap[keyCode] || '';
+            }
+            
+            // 获取键码对应的键名
+            function getKeyFromCode(keyCode) {
+                const keyMap = {
+                    37: 'ArrowLeft',
+                    38: 'ArrowUp',
+                    39: 'ArrowRight',
+                    40: 'ArrowDown',
+                    32: ' '
+                };
+                return keyMap[keyCode] || '';
+            }
+            
+            // 添加触控事件 - 改进版本
+            const controlButtons = {
+                'mobileUp': { keyCode: 38, element: mobileUp },
+                'mobileDown': { keyCode: 40, element: mobileDown },
+                'mobileLeft': { keyCode: 37, element: mobileLeft },
+                'mobileRight': { keyCode: 39, element: mobileRight },
+                'mobileAction': { keyCode: 32, element: mobileAction }
+            };
+            
+            // 为每个控制按钮添加事件
+            Object.keys(controlButtons).forEach(function(key) {
+                const button = controlButtons[key];
+                if (button.element) {
+                    // 触摸开始事件
+                    button.element.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        simulateKeyEvent(button.keyCode, 'keydown');
+                        button.element.classList.add('active');
+                    }, { passive: false });
+                    
+                    // 触摸结束事件
+                    button.element.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        simulateKeyEvent(button.keyCode, 'keyup');
+                        button.element.classList.remove('active');
+                    }, { passive: false });
+                    
+                    // 触摸取消事件
+                    button.element.addEventListener('touchcancel', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        simulateKeyEvent(button.keyCode, 'keyup');
+                        button.element.classList.remove('active');
+                    }, { passive: false });
+                }
+            });
+            
+            // 防止页面滚动
+            if (gameContainer) {
+                gameContainer.addEventListener('touchmove', function(e) {
+                    if (document.fullscreenElement) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            }
+            
+            // 双击全屏
+            if (gameContainer) {
+                let lastTap = 0;
+                gameContainer.addEventListener('touchend', function(e) {
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTap;
+                    if (tapLength < 500 && tapLength > 0) {
+                        // 双击检测到，切换全屏
+                        toggleFullscreen();
+                        e.preventDefault();
+                    }
+                    lastTap = currentTime;
+                });
+            }
+        }
+        
+        // 刷新游戏
+        const refreshBtn = document.getElementById('refreshGame');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                gameIframe.src = gameIframe.src;
+            });
+        }
+        
+        // 收藏功能
+        const favoriteBtn = document.querySelector('.favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', function() {
+                const gameId = this.getAttribute('data-game-id');
+                
+                fetch('/games/toggle_favorite/' + gameId + '/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.classList.toggle('active');
+                        const icon = this.querySelector('i');
+                        if (data.is_favorite) {
+                            icon.classList.replace('far', 'fas');
+                        } else {
+                            icon.classList.replace('fas', 'far');
+                        }
+                    }
+                });
+            });
+        }
+        
+        // 评论表单提交
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+            commentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                fetch(this.getAttribute('action'), {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const commentModal = document.getElementById('commentModal');
+                        const modalInstance = bootstrap.Modal.getInstance(commentModal);
+                        modalInstance.hide();
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            });
+        }
+        
+        // 获取CSRF Cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // 记录游戏播放次数
+        fetch('/games/increment_play/{{ game.id }}/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+        
+        // 广告点击追踪
+        function incrementAdClick(adId) {
+            fetch('/ads/increment_click/' + adId + '/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
+        }
+        
+        // 为所有广告链接添加点击追踪
+        document.querySelectorAll('[onclick*="incrementAdClick"]').forEach(function(adLink) {
+            // 移除内联onclick属性，改用事件监听器
+            const onclickAttr = adLink.getAttribute('onclick');
+            const adIdMatch = onclickAttr.match(/incrementAdClick\((\d+)\)/);
+            
+            if (adIdMatch && adIdMatch[1]) {
+                const adId = adIdMatch[1];
+                adLink.removeAttribute('onclick');
+                
+                adLink.addEventListener('click', function(e) {
+                    incrementAdClick(adId);
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
