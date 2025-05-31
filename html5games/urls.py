@@ -19,13 +19,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps.views import sitemap
-from cms.sitemaps import CMSSitemap
 from games.sitemaps import GameSitemap, CategorySitemap, StaticSitemap
 from games import views as games_views
 
 # 站点地图配置
 sitemaps = {
-    'cmspages': CMSSitemap,  # 添加CMS页面到站点地图
     'games': GameSitemap,
     'categories': CategorySitemap,
     'static': StaticSitemap,
@@ -44,8 +42,6 @@ urlpatterns += i18n_patterns(
     path('admin/', admin.site.urls),
     # 游戏应用URL
     path('', include('games.urls')),
-    # Django CMS URLs - 应放在最后以处理所有其他URL
-    path('', include('cms.urls')),
     # 添加语言后缀
     prefix_default_language=True
 )

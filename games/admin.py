@@ -1,11 +1,9 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
 from .models import (
-    Game, Category, Advertisement, 
-    UserProfile, Membership
+    Game, Category, Advertisement
 )
-from .models_menu_settings import Language, Menu, MenuItem, WebsiteSetting
-from .models_payment import MembershipPlan, MembershipPayment, PaymentMethod, PaymentTemplate
 
 
 @admin.register(Game)
@@ -23,10 +21,25 @@ class GameAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'parent', 'is_active', 'order')
+    list_display = ('name', 'parent', 'is_active', 'order', 'display_icon')
     list_filter = ('is_active', 'parent')
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'slug', 'description', 'parent', 'order', 'is_active')
+        }),
+        (_('Visuals'), {
+            'fields': ('image', 'icon_class'),
+            'description': _('You can either use an image or a Font Awesome icon. If both are provided, the icon will be used as a fallback if the image fails to load.')
+        }),
+    )
+
+    def display_icon(self, obj):
+        if obj.icon_class:
+            return format_html('<i class="{0}"></i> {0}', obj.icon_class)
+        return '-'
+    display_icon.short_description = _('Icon')
 
 
 @admin.register(Advertisement)
@@ -37,102 +50,6 @@ class AdvertisementAdmin(admin.ModelAdmin):
     date_hierarchy = 'start_date'
 
 
-@admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'created_at', 'updated_at')
-    search_fields = ('user__username', 'user__email')
-    date_hierarchy = 'created_at'
 
 
-@admin.register(Membership)
-class MembershipAdmin(admin.ModelAdmin):
-    list_display = ('name', 'level', 'price', 'duration_days', 'is_active')
-    list_filter = ('level', 'is_active')
-    search_fields = ('name', 'description')
-    prepopulated_fields = {'slug': ('name',)}
 
-
-@admin.register(Menu)
-class MenuAdmin(admin.ModelAdmin):
-    list_display = ('name', 'menu_type', 'is_active')
-    list_filter = ('menu_type', 'is_active')
-    search_fields = ('name',)
-
-
-@admin.register(MenuItem)
-class MenuItemAdmin(admin.ModelAdmin):
-    list_display = ('title', 'menu', 'parent', 'url', 'order', 'is_active')
-    list_filter = ('menu', 'is_active')
-    search_fields = ('title',)
-
-
-@admin.register(WebsiteSetting)
-class WebsiteSettingAdmin(admin.ModelAdmin):
-    list_display = ('site_name',)
-    search_fields = ('site_name', 'site_description')
-
-
-@admin.register(Language)
-class LanguageAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'is_active', 'is_default')
-    list_filter = ('is_active', 'is_default')
-    search_fields = ('code', 'name')
-
-
-@admin.register(MembershipPlan)
-class MembershipPlanAdmin(admin.ModelAdmin):
-    list_display = ('membership', 'plan')
-
-
-@admin.register(MembershipPayment)
-class MembershipPaymentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'membership', 'total', 'status', 'created_at')
-    list_filter = ('status', 'membership', 'is_recurring')
-    search_fields = ('user__username', 'user__email', 'transaction_id')
-    date_hierarchy = 'created_at'
-
-
-@admin.register(PaymentMethod)
-class PaymentMethodAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'is_active', 'sort_order')
-    list_filter = ('is_active',)
-    search_fields = ('name', 'code', 'provider_class')
-    readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        (None, {
-            'fields': ('name', 'code', 'provider_class', 'is_active', 'sort_order')
-        }),
-        (_('Display Settings'), {
-            'fields': ('icon', 'description')
-        }),
-        (_('Configuration'), {
-            'fields': ('configuration',)
-        }),
-        (_('Timestamps'), {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-
-
-@admin.register(PaymentTemplate)
-class PaymentTemplateAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'template_type', 'status', 'created_at', 'updated_at')
-    list_filter = ('template_type', 'status')
-    search_fields = ('name', 'code', 'description')
-    readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        (None, {
-            'fields': ('name', 'code', 'template_type', 'status')
-        }),
-        (_('Template Content'), {
-            'fields': ('subject', 'content', 'variables')
-        }),
-        (_('Additional Information'), {
-            'fields': ('description',)
-        }),
-        (_('Timestamps'), {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )

@@ -1,257 +1,501 @@
-{% extends 'base.html' %}
-{% load static i18n %}
+{% extends "base.html" %}
+{% load static i18n url_tags %}
 
-{% block title %}{% trans 'Game Categories' %} - HTML5 Games{% endblock %}
+{% block title %}Game Categories - HTML5 Games{% endblock %}
+
+{% block main_class %}{% endblock %}
+{% block meta_description %}Browse various types of exciting games and find your favorite game category{% endblock %}
+{% block meta_keywords %}game categories, action games, puzzle games, strategy games, RPG games, casual games, racing games, simulation games, adventure games, shooting games{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 背景装饰效果 */
+    .category-header:before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 0;
+    }
+
+    .category-header .container {
+        position: relative;
+        z-index: 1;
+    }
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+    }
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .game-card .card-body {
+        padding: 15px;
+    }
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .game-card .rating {
+        color: #ffc107;
+    }
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+    .ad-banner {
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .filter-sidebar {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .filter-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    .filter-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+
+    /* Rating筛选器样式 */
+    .rating-filter-label {
+        display: flex !important;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .rating-stars {
+        display: inline-block;
+        margin-right: 8px;
+        font-size: 0.85rem;
+        line-height: 1;
+    }
+
+    .rating-stars i {
+        margin-right: 1px;
+    }
+
+    .rating-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+        flex-shrink: 0;
+    }
+    .pagination .page-link {
+        color: #6a11cb;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    .category-pill {
+        display: inline-block;
+        padding: 8px 15px;
+        margin: 0 5px 10px 0;
+        background-color: white;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: 1px solid #dee2e6;
+        cursor: pointer;
+    }
+    .category-pill:hover, .category-pill.active {
+        background-color: #6a11cb;
+        color: white;
+        border-color: #6a11cb;
+    }
+    .category-pill:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.25);
+    }
+    @media (max-width: 767.98px) {
+        .category-header {
+            padding: 30px 0;
+        }
+        .game-card img {
+            height: 150px;
+        }
+        .filter-sidebar {
+            margin-bottom: 20px;
+        }
+
+        /* 移动端Rating筛选器优化 */
+        .rating-filter-label {
+            font-size: 0.85rem;
+        }
+
+        .rating-stars {
+            font-size: 0.8rem;
+            margin-right: 6px;
+        }
+
+        .rating-text {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<!-- Category Header -->
+<section class="category-header">
+    <div class="container">
+        <h1>{% trans "Game Categories" %}</h1>
+        <p class="lead">{% trans "Browse various types of exciting games and find your favorite game category" %}</p>
+    </div>
+</section>
+{% endblock %}
 
 {% block content %}
-<!-- 面包屑导航 -->
-<nav aria-label="breadcrumb" class="mb-4">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{% url 'games:home' %}">{% trans 'Home' %}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">{% trans 'Game Categories' %}</li>
-  </ol>
-</nav>
-
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-    <h1 class="mb-0">{% trans 'Game Categories' %}</h1>
-    <div class="d-flex flex-column flex-sm-row gap-2">
-        <div class="input-group">
-            <input type="text" id="categorySearch" class="form-control" placeholder="{% trans 'Search categories...' %}">
-            <button class="btn btn-outline-secondary" type="button" id="searchButton">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-        <select class="form-select" id="categorySorting">
-            <option value="name">{% trans 'Name' %}</option>
-            <option value="games">{% trans 'Games Count' %}</option>
-            <option value="newest">{% trans 'Newest' %}</option>
-        </select>
+<div class="container">
+    <!-- Category Pills -->
+    <div class="mb-4 text-center">
+        <button type="button" class="category-pill {% if not current_category %}active{% endif %}" data-category="all">{% trans "All" %}</button>
+        {% for category in categories %}
+            <button type="button" class="category-pill {% if current_category.slug == category.slug %}active{% endif %}" data-category="{{ category.slug }}">{{ category.name }}</button>
+        {% endfor %}
     </div>
-</div>
 
-{% if categories %}
-<!-- 搜索无结果提示 -->
-<div id="noSearchResults" class="alert alert-info" style="display: none;">
-    <i class="fas fa-search me-2"></i>{% trans 'No categories found matching your search.' %}
-    <button class="btn btn-sm btn-outline-secondary ms-3" onclick="document.getElementById('categorySearch').value=''; document.getElementById('searchButton').click();">
-        {% trans 'Clear Search' %}
-    </button>
-</div>
-
-<div class="category-container">
 <div class="row">
-    {% for category in categories %}
-    <div class="col-md-4 col-lg-3 mb-4">
-        <div class="card h-100 shadow-sm hover-effect">
-            <div class="position-relative">
-                {% if category.image %}
-                <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}">
-                {% else %}
-                <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ category.name }}">
+    <!-- Filter Sidebar -->
+    <div class="col-md-3">
+        <div class="filter-sidebar">
+            <h4 class="filter-title">{% trans "Filter Options" %}</h4>
+            
+            <form method="get" action="{% url 'games:game_list' %}">
+                {% if current_category %}
+                <input type="hidden" name="category" value="{{ current_category.slug }}">
                 {% endif %}
-                <div class="category-badge position-absolute top-0 end-0 m-2 badge bg-primary rounded-pill">
-                    {{ category.games.count }} {% trans 'games' %}
+                
+                <div class="filter-group">
+                    <h5>{% trans "Rating" %}</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="rating" value="5" id="rating5" {% if '5' in selected_ratings %}checked{% endif %}>
+                        <label class="form-check-label rating-filter-label" for="rating5">
+                            <span class="rating-stars">
+                                <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i>
+                            </span>
+                            <span class="rating-text">(5 stars)</span>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="rating" value="4" id="rating4" {% if '4' in selected_ratings %}checked{% endif %}>
+                        <label class="form-check-label rating-filter-label" for="rating4">
+                            <span class="rating-stars">
+                                <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="far fa-star text-warning"></i>
+                            </span>
+                            <span class="rating-text">(4+ stars)</span>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="rating" value="3" id="rating3" {% if '3' in selected_ratings %}checked{% endif %}>
+                        <label class="form-check-label rating-filter-label" for="rating3">
+                            <span class="rating-stars">
+                                <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="far fa-star text-warning"></i><i class="far fa-star text-warning"></i>
+                            </span>
+                            <span class="rating-text">(3+ stars)</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <h5 class="card-title fw-bold">{{ category.name }}</h5>
-                <p class="card-text">{{ category.description|truncatechars:100 }}</p>
-            </div>
-            <div class="card-footer bg-transparent border-top-0 d-flex gap-2">
-                <a href="{% url 'games:category_detail' category.slug %}" class="btn btn-outline-primary flex-grow-1">
-                    <i class="fas fa-info-circle me-2"></i>{% trans 'Details' %}
-                </a>
-                <a href="{% url 'games:category_games' category.slug %}" class="btn btn-primary flex-grow-1">
-                    <i class="fas fa-gamepad me-2"></i>{% trans 'Games' %}
-                </a>
-            </div>
+                
+                <div class="filter-group">
+                    <h5>{% trans "Release Date" %}</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="release_time" value="all" id="releaseAll" {% if release_time == 'all' or not release_time %}checked{% endif %}>
+                        <label class="form-check-label" for="releaseAll">{% trans "All Time" %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="release_time" value="week" id="releaseWeek" {% if release_time == 'week' %}checked{% endif %}>
+                        <label class="form-check-label" for="releaseWeek">{% trans "This Week" %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="release_time" value="month" id="releaseMonth" {% if release_time == 'month' %}checked{% endif %}>
+                        <label class="form-check-label" for="releaseMonth">{% trans "This Month" %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="release_time" value="year" id="releaseYear" {% if release_time == 'year' %}checked{% endif %}>
+                        <label class="form-check-label" for="releaseYear">{% trans "This Year" %}</label>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <h5>{% trans "Features" %}</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="feature" value="multiplayer" id="featureMultiplayer" {% if 'multiplayer' in selected_features %}checked{% endif %}>
+                        <label class="form-check-label" for="featureMultiplayer">{% trans "Multiplayer" %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="feature" value="singleplayer" id="featureSingleplayer" {% if 'singleplayer' in selected_features %}checked{% endif %}>
+                        <label class="form-check-label" for="featureSingleplayer">{% trans "Single Player" %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="feature" value="touch" id="featureTouch" {% if 'touch' in selected_features %}checked{% endif %}>
+                        <label class="form-check-label" for="featureTouch">{% trans "Touch Optimized" %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="feature" value="fullscreen" id="featureFullscreen" {% if 'fullscreen' in selected_features %}checked{% endif %}>
+                        <label class="form-check-label" for="featureFullscreen">{% trans "Fullscreen Support" %}</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">{% trans "Apply Filters" %}</button>
+                <a href="{% url 'games:category_list' %}" class="btn btn-outline-secondary w-100 mt-2">{% trans "Reset" %}</a>
+            </form>
         </div>
     </div>
-    {% endfor %}
-</div>
-
-<!-- 子分类 -->
-{% for category in categories %}
-    {% if category.children.exists %}
-    <div class="mt-5 mb-4">
-        <div class="d-flex align-items-center mb-3">
-            <h2 class="mb-0">{{ category.name }} {% trans 'Subcategories' %}</h2>
-            <a href="{% url 'games:category_games' category.slug %}" class="ms-auto btn btn-sm btn-outline-secondary">
-                <i class="fas fa-arrow-up me-1"></i>{% trans 'Back to Parent' %}
-            </a>
-        </div>
-        <hr>
-        <div class="row">
-            {% for subcategory in category.children.all %}
-            <div class="col-md-4 col-lg-3 mb-4">
-                <div class="card h-100 shadow-sm hover-effect">
-                    <div class="position-relative">
-                        {% if subcategory.image %}
-                        <img src="{{ subcategory.image.url }}" class="card-img-top" alt="{{ subcategory.name }}">
-                        {% else %}
-                        <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ subcategory.name }}">
+    
+    <!-- Game List -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="text-muted">{% trans "Showing" %} {{ page_obj.start_index }}-{{ page_obj.end_index }} {% trans "of" %} {{ paginator.count }} {% trans "games" %}</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <label class="me-2">{% trans "Sort by" %}:</label>
+                <form method="get" id="sort-form">
+                    {% if current_category %}
+                    <input type="hidden" name="category" value="{{ current_category.slug }}">
+                    {% endif %}
+                    {% for key, value in request.GET.items %}
+                        {% if key != 'sort' and key != 'page' and key != 'category' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
                         {% endif %}
-                        <div class="category-badge position-absolute top-0 end-0 m-2 badge bg-primary rounded-pill">
-                            {{ subcategory.games.count }} {% trans 'games' %}
+                    {% endfor %}
+                    <select class="form-select form-select-sm" style="width: auto;" name="sort" onchange="document.getElementById('sort-form').submit()">
+                        <option value="popular" {% if sort == 'popular' %}selected{% endif %}>{% trans "Most Popular" %}</option>
+                        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{% trans "Newest" %}</option>
+                        <option value="rating" {% if sort == 'rating' %}selected{% endif %}>{% trans "Highest Rated" %}</option>
+                        <option value="name" {% if sort == 'name' %}selected{% endif %}>{% trans "Name A-Z" %}</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% if games %}
+                {% for game in games %}
+                <div class="col-sm-6 col-md-4">
+                    <div class="game-card">
+                        {% if game.thumbnail %}
+                        <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}">
+                        {% else %}
+                        <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ game.title }}</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="rating">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= game.rating|floatformat:"0"|add:"0" %}
+                                            <i class="fas fa-star"></i>
+                                        {% elif forloop.counter <= game.rating|floatformat:"1"|add:"0.5" %}
+                                            <i class="fas fa-star-half-alt"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <small class="text-muted ms-1">{{ game.rating|floatformat:1 }}</small>
+                                </span>
+                                {% with game.categories.all|first as primary_category %}
+                                    {% if primary_category %}
+                                    <span class="category-badge">{{ primary_category.name }}</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <p class="card-text">{{ game.description|truncatechars:60 }}</p>
+                            <a href="{% url 'games:game_detail' game_slug=game.slug %}" class="btn btn-sm btn-primary w-100">{% trans "Play Now" %}</a>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">{{ subcategory.name }}</h5>
-                        <p class="card-text">{{ subcategory.description|truncatechars:100 }}</p>
-                    </div>
-                    <div class="card-footer bg-transparent border-top-0 d-flex gap-2">
-                        <a href="{% url 'games:category_detail' subcategory.slug %}" class="btn btn-outline-primary flex-grow-1">
-                            <i class="fas fa-info-circle me-2"></i>{% trans 'Details' %}
-                        </a>
-                        <a href="{% url 'games:category_games' subcategory.slug %}" class="btn btn-primary flex-grow-1">
-                            <i class="fas fa-gamepad me-2"></i>{% trans 'Games' %}
-                        </a>
-                    </div>
                 </div>
-            </div>
-            {% endfor %}
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> {% trans "No games found matching your criteria. Try adjusting your filters." %}
+                    </div>
+                    <a href="{% url 'games:category_list' %}" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-sync-alt me-2"></i> {% trans "Reset Filters" %}
+                    </a>
+                </div>
+            {% endif %}
         </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% url_replace request 'page' page_obj.previous_page_number %}" tabindex="-1">{% trans "Previous" %}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">{% trans "Previous" %}</a>
+                </li>
+                {% endif %}
+                
+                {% for i in paginator.page_range %}
+                    {% if page_obj.number == i %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                    {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+                        <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% url_replace request 'page' page_obj.next_page_number %}">{% trans "Next" %}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-disabled="true">{% trans "Next" %}</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
     </div>
-    {% endif %}
-{% endfor %}
-
-{% else %}
-<div class="alert alert-info">
-    <i class="fas fa-info-circle me-2"></i>{% trans 'No game categories available' %}
-    <p class="mt-2 mb-0">{% trans 'Please check back later as we continue to add new game categories.' %}</p>
 </div>
-{% endif %}
-
-<!-- 分类说明 -->
-<div class="card bg-light mt-5">
-    <div class="card-body">
-        <h4 class="card-title"><i class="fas fa-info-circle me-2"></i>{% trans 'About Game Categories' %}</h4>
-        <p class="card-text">{% trans 'Browse our extensive collection of HTML5 games organized by categories. Each category contains games with similar gameplay, themes, or mechanics.' %}</p>
-        <p class="card-text">{% trans 'Click on any category to explore the games within it. You can also navigate through subcategories for more specific game types.' %}</p>
-    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // 添加页面加载动画
-    window.addEventListener('load', function() {
-        document.body.classList.add('loaded');
-    });
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        // 分类搜索功能
-        const searchInput = document.getElementById('categorySearch');
-        const searchButton = document.getElementById('searchButton');
-        const sortSelect = document.getElementById('categorySorting');
-        const mainCategoryRow = document.querySelector('.row');
-        const categoryCards = mainCategoryRow.querySelectorAll('.col-md-4');
-        
-        // 搜索功能 - 同时搜索主分类和子分类
-        function searchCategories() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            const allCards = document.querySelectorAll('.card.h-100.shadow-sm');
-            
-            // 如果搜索词为空，显示所有卡片和子分类标题
-            if (searchTerm === '') {
-                allCards.forEach(card => {
-                    card.closest('.col-md-4').style.display = '';
-                });
-                document.querySelectorAll('.mt-5.mb-4').forEach(section => {
-                    section.style.display = '';
-                });
-                return;
-            }
-            
-            // 搜索所有卡片
-            let hasVisibleCards = false;
-            allCards.forEach(card => {
-                const cardContainer = card.closest('.col-md-4');
-                const categoryName = card.querySelector('.card-title').textContent.toLowerCase();
-                const categoryDesc = card.querySelector('.card-text').textContent.toLowerCase();
-                
-                if (categoryName.includes(searchTerm) || categoryDesc.includes(searchTerm)) {
-                    cardContainer.style.display = '';
-                    hasVisibleCards = true;
-                    
-                    // 如果是子分类卡片，确保其父分类标题也可见
-                    const subcategorySection = cardContainer.closest('.mt-5.mb-4');
-                    if (subcategorySection) {
-                        subcategorySection.style.display = '';
-                    }
-                } else {
-                    cardContainer.style.display = 'none';
-                }
-            });
-            
-            // 隐藏没有可见子分类的分类标题
-            document.querySelectorAll('.mt-5.mb-4').forEach(section => {
-                const visibleSubcategories = section.querySelectorAll('.col-md-4[style="display: "]');
-                if (visibleSubcategories.length === 0) {
-                    section.style.display = 'none';
-                }
-            });
-            
-            // 显示无结果提示
-            const noResultsAlert = document.getElementById('noSearchResults');
-            if (noResultsAlert) {
-                noResultsAlert.style.display = hasVisibleCards ? 'none' : 'block';
-            }
-        }
-        
-        // 排序功能 - 只排序主分类
-        function sortCategories() {
-            const sortValue = sortSelect.value;
-            const cardsArray = Array.from(categoryCards);
-            
-            cardsArray.sort((a, b) => {
-                if (sortValue === 'name') {
-                    const nameA = a.querySelector('.card-title').textContent.toLowerCase();
-                    const nameB = b.querySelector('.card-title').textContent.toLowerCase();
-                    return nameA.localeCompare(nameB);
-                } else if (sortValue === 'games') {
-                    const countA = parseInt(a.querySelector('.category-badge').textContent);
-                    const countB = parseInt(b.querySelector('.category-badge').textContent);
-                    return countB - countA; // 降序排列
-                } else if (sortValue === 'newest') {
-                    // 这里假设最新的在前面，所以保持原有顺序
-                    return 0;
-                }
-                return 0;
-            });
-            
-            // 重新添加排序后的卡片
-            cardsArray.forEach(card => {
-                mainCategoryRow.appendChild(card);
-            });
-        }
-        
-        // 事件监听
-        searchButton.addEventListener('click', searchCategories);
-        searchInput.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') {
-                searchCategories();
-            } else if (e.key === 'Escape') {
-                searchInput.value = '';
-                searchCategories();
+document.addEventListener('DOMContentLoaded', function() {
+    // 分类筛选功能
+    const categoryPills = document.querySelectorAll('.category-pill');
+    const gameContainer = document.querySelector('.col-md-9 .row');
+    const showingInfo = document.querySelector('.text-muted');
+
+    categoryPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            const selectedCategory = this.getAttribute('data-category');
+
+            // 更新active状态
+            categoryPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+
+            // 显示加载状态
+            gameContainer.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">{% trans "Loading..." %}</span>
+                    </div>
+                    <p class="mt-2">{% trans "Loading games..." %}</p>
+                </div>
+            `;
+
+            // 构建筛选URL
+            let url = new URL(window.location.href);
+            url.searchParams.delete('page'); // 重置分页
+
+            if (selectedCategory === 'all') {
+                url.searchParams.delete('category');
             } else {
-                // 实时搜索
-                searchCategories();
+                url.searchParams.set('category', selectedCategory);
             }
-        });
-        
-        sortSelect.addEventListener('change', sortCategories);
-        
-        // 添加卡片悬停动画效果
-        const cards = document.querySelectorAll('.hover-effect');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.classList.add('shadow');
-            });
-            card.addEventListener('mouseleave', function() {
-                this.classList.remove('shadow');
+
+            // 发送AJAX请求
+            fetch(url.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // 解析返回的HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // 更新游戏列表
+                const newGameContainer = doc.querySelector('.col-md-9 .row');
+                if (newGameContainer) {
+                    gameContainer.innerHTML = newGameContainer.innerHTML;
+                }
+
+                // 更新显示信息
+                const newShowingInfo = doc.querySelector('.text-muted');
+                if (newShowingInfo && showingInfo) {
+                    showingInfo.textContent = newShowingInfo.textContent;
+                }
+
+                // 更新分页
+                const paginationContainer = document.querySelector('nav[aria-label="Page navigation"]');
+                const newPagination = doc.querySelector('nav[aria-label="Page navigation"]');
+                if (paginationContainer && newPagination) {
+                    paginationContainer.innerHTML = newPagination.innerHTML;
+                } else if (paginationContainer && !newPagination) {
+                    paginationContainer.style.display = 'none';
+                }
+
+                // 更新URL但不刷新页面
+                window.history.pushState({}, '', url.toString());
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                gameContainer.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% trans "Error loading games. Please try again." %}
+                        </div>
+                    </div>
+                `;
             });
         });
     });
+
+    // 处理浏览器前进后退
+    window.addEventListener('popstate', function() {
+        location.reload();
+    });
+});
 </script>
 {% endblock %}

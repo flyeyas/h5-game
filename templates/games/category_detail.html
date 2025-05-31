@@ -3,7 +3,58 @@
 
 {% block title %}{{ category.name }} - {% trans 'Category Details' %} - HTML5 Games{% endblock %}
 
+{% block meta_description %}{{ category.description|truncatechars:160|striptags }}{% endblock %}
+
+{% block meta_keywords %}{{ category.name }}, {% trans 'HTML5 games, browser games, online games, free games' %}{% endblock %}
+
+{% block og_title %}{{ category.name }} - {% trans 'Category Details' %} - HTML5 Games{% endblock %}
+
+{% block og_description %}{{ category.description|truncatechars:160|striptags }}{% endblock %}
+
+{% block og_image %}{% if category.image %}{{ request.scheme }}://{{ request.get_host }}{{ category.image.url }}{% else %}{% static 'img/logo.png' %}{% endif %}{% endblock %}
+
+{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}
+
+{% block twitter_title %}{{ category.name }} - {% trans 'Category Details' %} - HTML5 Games{% endblock %}
+
+{% block twitter_description %}{{ category.description|truncatechars:160|striptags }}{% endblock %}
+
+{% block twitter_image %}{% if category.image %}{{ request.scheme }}://{{ request.get_host }}{{ category.image.url }}{% else %}{% static 'img/logo.png' %}{% endif %}{% endblock %}
+
+{% block twitter_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}
+
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "CollectionPage",
+    "name": "{{ category.name }}",
+    "description": "{{ category.description|striptags }}",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}",
+    {% if category.image %}
+    "image": "{{ request.scheme }}://{{ request.get_host }}{{ category.image.url }}",
+    {% endif %}
+    "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": "{{ games.count }}",
+        "itemListElement": [
+            {% for game in popular_games %}
+            {
+                "@type": "VideoGame",
+                "name": "{{ game.title }}",
+                "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'games:game_detail' game_slug=game.slug %}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+}
+</script>
+{% endblock %}
+
 {% block content %}
+<!-- 会员功能已移除 -->
 <!-- 面包屑导航 -->
 <nav aria-label="breadcrumb" class="mb-4">
   <ol class="breadcrumb">
@@ -17,7 +68,11 @@
 <div class="card mb-5">
   <div class="row g-0">
     <div class="col-md-4">
-      {% if category.image %}
+      {% if category.icon_class %}
+      <div class="d-flex justify-content-center align-items-center bg-light h-100 p-3">
+        <i class="{{ category.icon_class }}" style="font-size: 8rem;"></i>
+      </div>
+      {% elif category.image %}
       <img src="{{ category.image.url }}" class="img-fluid rounded-start" alt="{{ category.name }}">
       {% else %}
       <img src="{% static 'img/category-placeholder.jpg' %}" class="img-fluid rounded-start" alt="{{ category.name }}">
@@ -26,7 +81,12 @@
     <div class="col-md-8">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h1 class="card-title">{{ category.name }}</h1>
+          <h1 class="card-title">
+            {% if category.icon_class %}
+            <i class="{{ category.icon_class }} me-2"></i>
+            {% endif %}
+            {{ category.name }}
+          </h1>
           <span class="badge bg-primary rounded-pill fs-6">{{ games.count }} {% trans 'games' %}</span>
         </div>
         <p class="card-text">{{ category.description }}</p>
@@ -50,7 +110,11 @@
     <div class="col-md-4 col-lg-3 mb-4">
       <div class="card h-100 shadow-sm hover-effect">
         <div class="position-relative">
-          {% if subcategory.image %}
+          {% if subcategory.icon_class %}
+          <div class="card-img-top d-flex justify-content-center align-items-center bg-light py-4">
+            <i class="{{ subcategory.icon_class }}" style="font-size: 4rem;"></i>
+          </div>
+          {% elif subcategory.image %}
           <img src="{{ subcategory.image.url }}" class="card-img-top" alt="{{ subcategory.name }}">
           {% else %}
           <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ subcategory.name }}">
@@ -60,7 +124,12 @@
           </div>
         </div>
         <div class="card-body">
-          <h5 class="card-title fw-bold">{{ subcategory.name }}</h5>
+          <h5 class="card-title fw-bold">
+            {% if subcategory.icon_class %}
+            <i class="{{ subcategory.icon_class }} me-2"></i>
+            {% endif %}
+            {{ subcategory.name }}
+          </h5>
           <p class="card-text">{{ subcategory.description|truncatechars:100 }}</p>
         </div>
         <div class="card-footer bg-transparent border-top-0">
@@ -99,7 +168,7 @@
         </div>
         <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
           <small class="text-muted"><i class="fas fa-eye me-1"></i>{{ game.view_count }}</small>
-          <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary">
+          <a href="{% url 'games:game_detail' game_slug=game.slug %}" class="btn btn-sm btn-primary">
             <i class="fas fa-play me-1"></i>{% trans 'Play Now' %}
           </a>
         </div>
@@ -108,7 +177,7 @@
     {% endfor %}
   </div>
   <div class="text-center mt-3">
-    <a href="{% url 'games:category_games' category.slug %}" class="btn btn-outline-primary">
+    <a href="{% url 'games:category_games' category_slug=category.slug %}" class="btn btn-outline-primary">
       <i class="fas fa-th-list me-2"></i>{% trans 'View All Games' %}
     </a>
   </div>
@@ -124,7 +193,11 @@
     <div class="col-md-4 col-lg-3 mb-4">
       <div class="card h-100 shadow-sm hover-effect">
         <div class="position-relative">
-          {% if related_category.image %}
+          {% if related_category.icon_class %}
+          <div class="card-img-top d-flex justify-content-center align-items-center bg-light py-4">
+            <i class="{{ related_category.icon_class }}" style="font-size: 4rem;"></i>
+          </div>
+          {% elif related_category.image %}
           <img src="{{ related_category.image.url }}" class="card-img-top" alt="{{ related_category.name }}">
           {% else %}
           <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ related_category.name }}">
@@ -134,11 +207,16 @@
           </div>
         </div>
         <div class="card-body">
-          <h5 class="card-title fw-bold">{{ related_category.name }}</h5>
+          <h5 class="card-title fw-bold">
+            {% if related_category.icon_class %}
+            <i class="{{ related_category.icon_class }} me-2"></i>
+            {% endif %}
+            {{ related_category.name }}
+          </h5>
           <p class="card-text">{{ related_category.description|truncatechars:100 }}</p>
         </div>
         <div class="card-footer bg-transparent border-top-0">
-          <a href="{% url 'games:category_detail' related_category.slug %}" class="btn btn-outline-primary w-100">
+          <a href="{% url 'games:category_detail' category_slug=related_category.slug %}" class="btn btn-outline-primary w-100">
             <i class="fas fa-info-circle me-2"></i>{% trans 'View Details' %}
           </a>
         </div>
@@ -158,7 +236,7 @@
     <p class="card-text">
       <small class="text-muted">
         {% trans 'This is a subcategory of' %} 
-        <a href="{% url 'games:category_detail' category.parent.slug %}">{{ category.parent.name }}</a>
+        <a href="{% url 'games:category_detail' category_slug=category.parent.slug %}">{{ category.parent.name }}</a>
       </small>
     </p>
     {% endif %}

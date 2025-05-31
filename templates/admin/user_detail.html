@@ -20,9 +20,6 @@
                         <li><a class="dropdown-item" href="{% url 'admin:auth_user_change' profile.user.id %}" target="_blank">
                             <i class="fas fa-edit me-1"></i> {% trans 'Edit User' %}
                         </a></li>
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#membershipModal">
-                            <i class="fas fa-id-card me-1"></i> {% trans 'Manage Membership' %}
-                        </a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item {% if not profile.user.is_active %}text-success{% else %}text-danger{% endif %}" href="#" id="toggleUserStatus">
@@ -56,23 +53,11 @@
                         <span>{{ profile.user.first_name }} {{ profile.user.last_name }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>{% trans 'Membership' %}</span>
-                        {% if profile.membership %}
-                        <span class="badge bg-primary">{{ profile.membership.name }}</span>
+                        <span>{% trans 'Role' %}</span>
+                        {% if profile.user.is_superuser %}
+                        <span class="badge bg-primary">{% trans 'Admin' %}</span>
                         {% else %}
-                        <span class="badge bg-light text-dark">{% trans 'Free' %}</span>
-                        {% endif %}
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>{% trans 'Expiry Date' %}</span>
-                        {% if profile.membership_expiry %}
-                            {% if profile.membership_expiry < now %}
-                            <span class="badge bg-danger">{% trans 'Expired' %}</span>
-                            {% else %}
-                            {{ profile.membership_expiry|date:"M d, Y" }}
-                            {% endif %}
-                        {% else %}
-                        <span class="text-muted">-</span>
+                        <span class="badge bg-secondary">{% trans 'User' %}</span>
                         {% endif %}
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -254,43 +239,6 @@
                 </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- 会员管理模态框 -->
-<div class="modal fade" id="membershipModal" tabindex="-1" aria-labelledby="membershipModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="membershipModalLabel">{% trans 'Manage Membership' %}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="membershipForm" method="post" action="{% url 'games:admin_update_membership' profile.user.id %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="membershipSelect" class="form-label">{% trans 'Membership Type' %}</label>
-                        <select class="form-select" id="membershipSelect" name="membership_id">
-                            <option value="">{% trans 'Free (No Membership)' %}</option>
-                            {% for membership in memberships %}
-                            <option value="{{ membership.id }}" {% if profile.membership and profile.membership.id == membership.id %}selected{% endif %}>
-                                {{ membership.name }} ({{ membership.price_monthly }}{% trans 'per month' %} | {{ membership.price_yearly }}{% trans 'per year' %})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="expiryDate" class="form-label">{% trans 'Expiry Date' %}</label>
-                        <input type="date" class="form-control" id="expiryDate" name="expiry_date" 
-                            value="{% if profile.membership_expiry %}{{ profile.membership_expiry|date:'Y-m-d' }}{% endif %}">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
-                    <button type="submit" class="btn btn-primary">{% trans 'Save Changes' %}</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

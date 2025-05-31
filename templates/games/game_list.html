@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 
+{% block main_class %}py-0{% endblock %}
+
 {% block title %}
     {% if current_category %}
         {{ current_category.name }} - {% trans 'Games' %}
@@ -11,34 +13,29 @@
     {% endif %}
 {% endblock %}
 
-{% block meta_description %}
-<!-- 基本SEO元标签 -->
-<meta name="description" content="{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}">
-<meta name="keywords" content="{% if current_category %}{{ current_category.name }}, {% endif %}{% trans 'HTML5 games, browser games, online games, free games' %}{% if search_query %}, {{ search_query }}{% endif %}">
-<meta name="author" content="HTML5 Games">
-<meta name="robots" content="index, follow">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block meta_description %}{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}{% endblock %}
 
-<!-- Open Graph 元标签 -->
-<meta property="og:title" content="{% if current_category %}{{ current_category.name }} - {% trans 'Games' %}{% elif search_query %}{% trans 'Search Results' %}: {{ search_query }}{% else %}{% trans 'All Games' %}{% endif %}">
-<meta property="og:description" content="{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}">
-<meta property="og:type" content="website">
-<meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
-<meta property="og:site_name" content="{% trans 'HTML5 Games' %}">
-{% if games.0.thumbnail %}
-<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ games.0.thumbnail.url }}">
-{% endif %}
+{% block meta_keywords %}{% if current_category %}{{ current_category.name }}, {% endif %}{% trans 'HTML5 games, browser games, online games, free games' %}{% if search_query %}, {{ search_query }}{% endif %}{% endblock %}
 
-<!-- Twitter Card 元标签 -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{% if current_category %}{{ current_category.name }} - {% trans 'Games' %}{% elif search_query %}{% trans 'Search Results' %}: {{ search_query }}{% else %}{% trans 'All Games' %}{% endif %}">
-<meta name="twitter:description" content="{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}">
-{% if games.0.thumbnail %}
-<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ games.0.thumbnail.url }}">
-{% endif %}
+{% block og_title %}{% if current_category %}{{ current_category.name }} - {% trans 'Games' %}{% elif search_query %}{% trans 'Search Results' %}: {{ search_query }}{% else %}{% trans 'All Games' %}{% endif %}{% endblock %}
 
-<!-- 规范链接 -->
-<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+{% block og_description %}{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}{% endblock %}
+
+{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}
+
+{% block og_image %}{% if games.0.thumbnail %}{{ request.scheme }}://{{ request.get_host }}{{ games.0.thumbnail.url }}{% else %}{% static 'img/logo.png' %}{% endif %}{% endblock %}
+
+{% block twitter_title %}{% if current_category %}{{ current_category.name }} - {% trans 'Games' %}{% elif search_query %}{% trans 'Search Results' %}: {{ search_query }}{% else %}{% trans 'All Games' %}{% endif %}{% endblock %}
+
+{% block twitter_description %}{% if current_category %}{{ current_category.description|truncatechars:160|striptags }}{% elif search_query %}{% trans 'Search results for' %}: {{ search_query }}{% else %}{% trans 'Play free HTML5 games online. Browse our collection of the best browser games that you can play directly in your web browser without download.' %}{% endif %}{% endblock %}
+
+{% block twitter_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}
+
+{% block twitter_image %}{% if games.0.thumbnail %}{{ request.scheme }}://{{ request.get_host }}{{ games.0.thumbnail.url }}{% else %}{% static 'img/logo.png' %}{% endif %}{% endblock %}
+
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}
+
+{% block extra_meta %}
 {% if page_obj.has_previous %}
 <link rel="prev" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}page={{ page_obj.previous_page_number }}">
 {% endif %}
@@ -47,116 +44,7 @@
 {% endif %}
 {% endblock %}
 
-{% block extra_css %}
-<style>
-    /* 广告横幅样式 */
-    .ad-banner {
-        background-color: #f8f9fa;
-        border-radius: 0.25rem;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        margin-bottom: 1.5rem;
-    }
-    .ad-banner:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-    .ad-banner img {
-        width: 100%;
-        border-radius: 0.25rem;
-    }
-    
-    /* 游戏卡片样式 */
-    .game-card {
-        transition: all 0.3s ease;
-        height: 100%;
-        border: 1px solid rgba(0,0,0,.125);
-        border-radius: 0.25rem;
-        overflow: hidden;
-    }
-    .game-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-    .game-card .card-img-top {
-        height: 180px;
-        object-fit: cover;
-        width: 100%;
-    }
-    .game-card .card-body {
-        padding: 1rem;
-    }
-    .game-card .card-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .game-card .card-text {
-        height: 3em;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-    }
-    
-    /* 响应式设计优化 */
-    @media (max-width: 991.98px) {
-        .game-card .card-img-top {
-            height: 160px;
-        }
-    }
-    
-    @media (max-width: 767.98px) {
-        .ad-banner {
-            margin-bottom: 1rem !important;
-        }
-        .game-card .card-img-top {
-            height: 150px;
-        }
-        .col-lg-9.col-md-8 {
-            order: 2;
-        }
-        .col-lg-3.col-md-4 {
-            order: 1;
-            margin-bottom: 1.5rem;
-        }
-        .game-card .card-title {
-            font-size: 1rem;
-        }
-        .game-card .card-text {
-            font-size: 0.85rem;
-        }
-    }
-    
-    @media (max-width: 575.98px) {
-        .game-card .card-img-top {
-            height: 140px;
-        }
-        h1 {
-            font-size: 1.75rem;
-        }
-        .dropdown button {
-            font-size: 0.85rem;
-            padding: 0.25rem 0.5rem;
-        }
-    }
-    
-    /* 加载动画 */
-    .loading-spinner {
-        display: none;
-        text-align: center;
-        padding: 2rem 0;
-    }
-    .loading-spinner.active {
-        display: block;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<!-- 结构化数据 - 游戏列表 -->
+{% block structured_data %}
 <script type="application/ld+json">
 {
     "@context": "http://schema.org",
@@ -169,7 +57,7 @@
             "item": {
                 "@type": "VideoGame",
                 "name": "{{ game.title }}",
-                "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'games:game_detail' game.slug %}",
+                "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'games:game_detail' game_slug=game.slug %}",
                 {% if game.thumbnail %}
                 "image": "{{ request.scheme }}://{{ request.get_host }}{{ game.thumbnail.url }}",
                 {% endif %}
@@ -193,7 +81,6 @@
 }
 </script>
 
-<!-- 结构化数据 - 网站信息 -->
 <script type="application/ld+json">
 {
     "@context": "http://schema.org",
@@ -207,10 +94,319 @@
     }
 }
 </script>
+{% endblock %}
 
-<div class="row">
-    <!-- 主内容区 -->
-    <div class="col-lg-9 col-md-8 mb-4">
+{% block extra_css %}
+<style>
+    /* 游戏列表页面头部样式 */
+    .games-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 背景装饰效果 */
+    .games-header:before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 0;
+    }
+
+    .games-header .container {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 游戏卡片样式 - 基于原型设计 */
+    .game-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        background: white;
+        border: none;
+        position: relative;
+    }
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+    .game-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+        transition: transform 0.3s;
+    }
+    .game-card:hover img {
+        transform: scale(1.05);
+    }
+    .game-card .card-body {
+        padding: 15px;
+    }
+    .game-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .game-card .card-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+        height: 3em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .game-card .rating {
+        color: #ffc107;
+        font-size: 0.9rem;
+    }
+
+    /* 热门标签 */
+    .popular-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 2;
+    }
+
+    /* 分类标签样式 */
+    .category-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    .category-badge:hover {
+        background-color: #6a11cb;
+        color: white;
+        text-decoration: none;
+    }
+
+    /* 筛选侧边栏样式 */
+    .filter-sidebar {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 20px;
+        z-index: 999;
+    }
+    .filter-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    .filter-group h6 {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    .filter-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+        font-weight: normal;
+    }
+
+    /* 分页样式 */
+    .pagination .page-link {
+        color: #6a11cb;
+        border-color: #dee2e6;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    .pagination .page-link:hover {
+        color: #2575fc;
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    /* 广告横幅样式 */
+    .ad-banner {
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    /* 按钮样式 */
+    .btn-primary {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+        transition: all 0.3s;
+    }
+    .btn-primary:hover {
+        background-color: #2575fc;
+        border-color: #2575fc;
+    }
+    .btn-outline-primary {
+        color: #6a11cb;
+        border-color: #6a11cb;
+    }
+    .btn-outline-primary:hover {
+        background-color: #6a11cb;
+        border-color: #6a11cb;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 767.98px) {
+        .games-header {
+            padding: 30px 0;
+        }
+        .game-card img {
+            height: 150px;
+        }
+        .filter-sidebar {
+            margin-bottom: 20px;
+            position: static;
+        }
+        .game-card .card-title {
+            font-size: 1rem;
+        }
+        .game-card .card-text {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* 加载动画 */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 2rem 0;
+    }
+    .loading-spinner.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<!-- 游戏列表页面头部 -->
+<section class="games-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-12">
+                <h1>
+                    {% if current_category %}
+                        {{ current_category.name }}
+                    {% elif search_query %}
+                        {% trans 'Search Results' %}: {{ search_query }}
+                    {% elif sort == 'popular' %}
+                        {% trans 'Popular Games' %}
+                    {% elif sort == 'rating' %}
+                        {% trans 'Top Rated Games' %}
+                    {% else %}
+                        {% trans 'New Games' %}
+                    {% endif %}
+                </h1>
+                <p class="lead">
+                    {% if current_category and current_category.description %}
+                        {{ current_category.description }}
+                    {% elif search_query %}
+                        {% trans 'Search results for' %} "{{ search_query }}"
+                    {% elif sort == 'popular' %}
+                        {% trans 'Explore the most popular games loved by players worldwide' %}
+                    {% elif sort == 'rating' %}
+                        {% trans 'Discover the highest rated games with excellent reviews' %}
+                    {% else %}
+                        {% trans 'Check out the new games added to our collection' %}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- 左侧筛选栏 -->
+        <div class="col-md-3">
+            <div class="filter-sidebar">
+                <h5 class="filter-title">{% trans 'Filter Options' %}</h5>
+
+                <div class="filter-group">
+                    <h6>{% trans 'Sort By' %}</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOption" id="sortPopular" {% if sort == 'popular' %}checked{% endif %}>
+                        <label class="form-check-label" for="sortPopular">{% trans 'Most Popular' %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOption" id="sortRating" {% if sort == 'rating' %}checked{% endif %}>
+                        <label class="form-check-label" for="sortRating">{% trans 'Highest Rated' %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOption" id="sortLatest" {% if sort == 'latest' or not sort %}checked{% endif %}>
+                        <label class="form-check-label" for="sortLatest">{% trans 'Latest' %}</label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h6>{% trans 'Game Categories' %}</h6>
+                    {% for category in categories %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="category{{ category.id }}" {% if current_category.id == category.id %}checked{% endif %}>
+                        <label class="form-check-label" for="category{{ category.id }}">{{ category.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="filter-group">
+                    <h6>{% trans 'Rating' %}</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rating5">
+                        <label class="form-check-label" for="rating5">5 {% trans 'stars' %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rating4">
+                        <label class="form-check-label" for="rating4">4+ {% trans 'stars' %}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rating3">
+                        <label class="form-check-label" for="rating3">3+ {% trans 'stars' %}</label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary w-100 mt-3">{% trans 'Apply Filters' %}</button>
+                <button class="btn btn-outline-secondary w-100 mt-2">{% trans 'Reset' %}</button>
+            </div>
+        </div>
+
+        <!-- 右侧游戏列表 -->
+        <div class="col-md-9">
         <!-- 游戏列表上方广告 -->
         {% if game_between_ads %}
         <div class="ad-banner mb-4">
@@ -232,36 +428,30 @@
             {% endfor %}
         </div>
         {% endif %}
-        <!-- 页面标题 -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                {% if current_category %}
-                    {{ current_category.name }}
-                {% elif search_query %}
-                    {% trans 'Search Results' %}: {{ search_query }}
-                {% else %}
-                    {% trans 'All Games' %}
-                {% endif %}
-            </h1>
-            
-            <!-- 排序选项 -->
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    {% if sort == 'popular' %}
-                        {% trans 'Sort by Popularity' %}
-                    {% elif sort == 'rating' %}
-                        {% trans 'Sort by Rating' %}
+            <!-- 游戏列表控制区域 -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>
+                    {% if current_category %}
+                        {{ current_category.name }} {% trans 'Games' %}
+                    {% elif search_query %}
+                        {% trans 'Search Results' %}
+                    {% elif sort == 'popular' %}
+                        {% trans 'Popular Games List' %}
                     {% else %}
-                        {% trans 'Sort by Latest' %}
+                        {% trans 'Games List' %}
                     {% endif %}
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                    <li><a class="dropdown-item {% if sort == 'latest' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=latest">{% trans 'Latest' %}</a></li>
-                    <li><a class="dropdown-item {% if sort == 'popular' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=popular">{% trans 'Popular' %}</a></li>
-                    <li><a class="dropdown-item {% if sort == 'rating' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating">{% trans 'Rating' %}</a></li>
-                </ul>
+                </h4>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                        {% trans 'Show' %}: {{ games|length }} {% trans 'games' %}
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}per_page=12">{% trans 'Show' %}: 12 {% trans 'games' %}</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}per_page=24">{% trans 'Show' %}: 24 {% trans 'games' %}</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}per_page=36">{% trans 'Show' %}: 36 {% trans 'games' %}</a></li>
+                    </ul>
+                </div>
             </div>
-        </div>
         
         <!-- 分类描述 -->
         {% if current_category and current_category.description %}
@@ -270,57 +460,63 @@
         </div>
         {% endif %}
         
-        <!-- 游戏列表 -->
-        {% if games %}
-        <div class="row" id="gamesList">
-            {% for game in games %}
-            <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                <div class="card game-card" itemscope itemtype="http://schema.org/Game">
-                    <a href="{% url 'games:game_detail' game.slug %}" class="text-decoration-none">
-                        {% if game.thumbnail %}
-                        <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}" itemprop="image" loading="lazy">
-                        {% else %}
-                        <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}" itemprop="image" loading="lazy">
+            <!-- 游戏列表 -->
+            {% if games %}
+            <div class="row">
+                {% for game in games %}
+                <div class="col-sm-6 col-md-4 mb-4">
+                    <div class="game-card position-relative" itemscope itemtype="http://schema.org/Game">
+                        {% if sort == 'popular' and forloop.counter <= 3 %}
+                        <span class="popular-badge">{% trans 'Popular' %} #{{ forloop.counter }}</span>
                         {% endif %}
-                    </a>
-                    <div class="card-body">
-                        <h5 class="card-title" itemprop="name">
-                            <a href="{% url 'games:game_detail' game.slug %}" class="text-decoration-none text-dark" itemprop="url">{{ game.title }}</a>
-                        </h5>
-                        <p class="card-text small" itemprop="description">{{ game.description|truncatechars:80 }}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="small text-warning" itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating">
-                                <meta itemprop="ratingValue" content="{{ game.rating }}">
-                                <meta itemprop="bestRating" content="5">
-                                <meta itemprop="worstRating" content="1">
-                                <meta itemprop="ratingCount" content="{{ game.comments.count|default:'1' }}">
-                                {% for i in '12345'|make_list %}
-                                {% if forloop.counter <= game.rating %}
-                                <i class="fas fa-star"></i>
-                                {% else %}
-                                <i class="far fa-star"></i>
-                                {% endif %}
+
+                        <a href="{% url 'games:game_detail' game_slug=game.slug %}" class="text-decoration-none">
+                            {% if game.thumbnail %}
+                            <img src="{{ game.thumbnail.url }}" class="card-img-top" alt="{{ game.title }}" itemprop="image" loading="lazy">
+                            {% else %}
+                            <img src="{% static 'img/game-placeholder.jpg' %}" class="card-img-top" alt="{{ game.title }}" itemprop="image" loading="lazy">
+                            {% endif %}
+                        </a>
+
+                        <div class="card-body">
+                            <h5 class="card-title" itemprop="name">{{ game.title }}</h5>
+                            <div class="mb-2">
+                                <span class="rating" itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating">
+                                    <span itemprop="ratingValue" style="display: none;">{{ game.rating }}</span>
+                                    <span itemprop="bestRating" style="display: none;">5</span>
+                                    <span itemprop="worstRating" style="display: none;">1</span>
+                                    <span itemprop="ratingCount" style="display: none;">{{ game.comments.count|default:'1' }}</span>
+                                    {% for i in '12345'|make_list %}
+                                    {% if forloop.counter <= game.rating %}
+                                    <i class="fas fa-star"></i>
+                                    {% else %}
+                                    <i class="far fa-star"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                </span>
+                                <small class="text-muted ms-1">{{ game.rating }} ({{ game.view_count }})</small>
+                            </div>
+                            <p class="card-text" itemprop="description">{{ game.description|truncatechars:80 }}</p>
+                            <div class="mb-2">
+                                {% for category in game.categories.all|slice:":2" %}
+                                <a href="{% url 'games:category_detail' category.slug %}" class="category-badge">{{ category.name }}</a>
                                 {% endfor %}
                             </div>
-                            <small class="text-muted"><i class="fas fa-eye me-1"></i> {{ game.view_count }} {% trans 'views' %}</small>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">{% trans 'Plays' %}: {{ game.play_count|default:'0' }}+</small>
+                                <a href="{% url 'games:game_detail' game_slug=game.slug %}" class="btn btn-sm btn-primary">{% trans 'Play Now' %}</a>
+                            </div>
                         </div>
-                        <div class="mt-2">
-                            {% for category in game.categories.all|slice:":2" %}
-                            <a href="{% url 'games:category_detail' category.slug %}" class="badge bg-secondary text-decoration-none me-1">{{ category.name }}</a>
-                            {% endfor %}
-                        </div>
+
+                        <span itemprop="applicationCategory" style="display: none;">Game</span>
+                        <span itemprop="url" style="display: none;">{{ request.scheme }}://{{ request.get_host }}{% url 'games:game_detail' game_slug=game.slug %}</span>
+                        {% for category in game.categories.all %}
+                        <span itemprop="genre" style="display: none;">{{ category.name }}</span>
+                        {% endfor %}
                     </div>
-                    <div class="card-footer bg-transparent border-top-0">
-                        <a href="{% url 'games:game_detail' game.slug %}" class="btn btn-sm btn-primary w-100">{% trans 'Play Game' %}</a>
-                    </div>
-                    <meta itemprop="applicationCategory" content="Game">
-                    {% for category in game.categories.all %}
-                    <meta itemprop="genre" content="{{ category.name }}">
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         
         <!-- 加载动画 -->
         <div class="loading-spinner" id="loadingSpinner">
@@ -401,91 +597,86 @@
             {% endfor %}
         </div>
         {% endif %}
-    </div>
-    
-    <!-- 侧边栏 -->
-    <div class="col-lg-3 col-md-4">
-        <!-- 侧边栏广告 -->
-        {% if sidebar_ads %}
-        <div class="ad-banner mb-4">
-            {% for ad in sidebar_ads %}
-                {% if ad.html_code %}
-                    {{ ad.html_code|safe }}
-                {% else %}
-                    <a href="{{ ad.url }}" target="_blank" class="d-block" onclick="incrementAdClick('{{ ad.id }}')">
-                        {% if ad.image %}
-                            <img src="{{ ad.image.url }}" alt="{{ ad.name }}" class="img-fluid">
-                        {% else %}
-                            <div class="bg-secondary text-white p-3 rounded text-center">
-                                <h4>{{ ad.name }}</h4>
-                                <p>{% trans 'Sponsored content' %}</p>
-                            </div>
-                        {% endif %}
-                    </a>
-                {% endif %}
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <!-- 搜索框 -->
-        <div class="card mb-4">
-            <div class="card-header">{% trans 'Search Games' %}</div>
-            <div class="card-body">
-                <form action="{% url 'games:game_list' %}" method="get">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="q" placeholder="{% trans 'Search...' %}" value="{{ search_query }}">
-                        <button class="btn btn-primary" type="submit">{% trans 'Search' %}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- 分类列表 -->
-        <div class="card mb-4">
-            <div class="card-header">{% trans 'Game Categories' %}</div>
-            <div class="list-group list-group-flush">
-                {% for category in categories %}
-                <a href="{% url 'games:category_detail' category.slug %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if current_category.id == category.id %}active{% endif %}">
-                    {{ category.name }}
-                    <span class="badge bg-primary rounded-pill">{{ category.games.count }}</span>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- 热门游戏 -->
-        <div class="card">
-            <div class="card-header">{% trans 'Popular Games' %}</div>
-            <div class="list-group list-group-flush">
-                {% for game in popular_games %}
-                <a href="{% url 'games:game_detail' game.slug %}" class="list-group-item list-group-item-action">
-                    <div class="d-flex align-items-center">
-                        {% if game.thumbnail %}
-                        <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                        {% else %}
-                        <img src="{% static 'img/game-placeholder.jpg' %}" alt="{{ game.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                        {% endif %}
-                        <div>
-                            <h6 class="mb-0">{{ game.title }}</h6>
-                            <div class="small text-warning">
-                                {% for i in '12345'|make_list %}
-                                {% if forloop.counter <= game.rating %}
-                                <i class="fas fa-star"></i>
-                                {% else %}
-                                <i class="far fa-star"></i>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/game-list.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 筛选功能
+    const sortRadios = document.querySelectorAll('input[name="sortOption"]');
+    const categoryCheckboxes = document.querySelectorAll('input[id^="category"]');
+    const ratingCheckboxes = document.querySelectorAll('input[id^="rating"]');
+    const applyButton = document.querySelector('.btn-primary');
+    const resetButton = document.querySelector('.btn-outline-secondary');
+
+    // 应用筛选
+    if (applyButton) {
+        applyButton.addEventListener('click', function() {
+            let url = new URL(window.location.href);
+            url.searchParams.delete('sort');
+            url.searchParams.delete('category');
+            url.searchParams.delete('rating');
+
+            // 获取选中的排序方式
+            const selectedSort = document.querySelector('input[name="sortOption"]:checked');
+            if (selectedSort) {
+                const sortValue = selectedSort.id.replace('sort', '').toLowerCase();
+                url.searchParams.set('sort', sortValue);
+            }
+
+            // 获取选中的分类
+            const selectedCategories = [];
+            categoryCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const categoryId = checkbox.id.replace('category', '');
+                    selectedCategories.push(categoryId);
+                }
+            });
+            if (selectedCategories.length > 0) {
+                url.searchParams.set('categories', selectedCategories.join(','));
+            }
+
+            // 获取选中的评分
+            const selectedRatings = [];
+            ratingCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const rating = checkbox.id.replace('rating', '');
+                    selectedRatings.push(rating);
+                }
+            });
+            if (selectedRatings.length > 0) {
+                url.searchParams.set('rating', selectedRatings.join(','));
+            }
+
+            window.location.href = url.toString();
+        });
+    }
+
+    // 重置筛选
+    if (resetButton) {
+        resetButton.addEventListener('click', function() {
+            let url = new URL(window.location.href);
+            url.searchParams.delete('sort');
+            url.searchParams.delete('categories');
+            url.searchParams.delete('rating');
+            window.location.href = url.toString();
+        });
+    }
+
+    // 游戏卡片悬停效果
+    const gameCards = document.querySelectorAll('.game-card');
+    gameCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'djangocms_admin_style',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,44 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'cms',
-    'menus',
-    'treebeard',
-    'sekizai',
-    'filer',
-    'easy_thumbnails',
-    'djangocms_text_ckeditor',
-    'djangocms_link',
-    'djangocms_file',
-    'djangocms_picture',
-    'djangocms_video',
-    'djangocms_frontend',
-    'djangocms_frontend.contrib.accordion',
-    'djangocms_frontend.contrib.alert',
-    'djangocms_frontend.contrib.badge',
-    'djangocms_frontend.contrib.card',
-    'djangocms_frontend.contrib.carousel',
-    'djangocms_frontend.contrib.collapse',
-    'djangocms_frontend.contrib.content',
-    'djangocms_frontend.contrib.grid',
-    'djangocms_frontend.contrib.image',
-    'djangocms_frontend.contrib.jumbotron',
-    'djangocms_frontend.contrib.link',
-    'djangocms_frontend.contrib.listgroup',
-    'djangocms_frontend.contrib.media',
-    'djangocms_frontend.contrib.tabs',
-    'djangocms_frontend.contrib.utilities',
-    
-    # 多语言支持
-    'modeltranslation',
-    
-    # 支付相关
+    'django.contrib.sitemaps',
+
+    # 第三方应用
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'django_bootstrap5',
     'django_countries',
-    'ordered_model',
-    'plans',
-    'payments',
-    'plans_payments',
-    
+
     # 自定义应用
     'games',
 ]
@@ -91,12 +60,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'cms.middleware.user.CurrentUserMiddleware',
-    'cms.middleware.page.CurrentPageMiddleware',
-    'cms.middleware.toolbar.ToolbarMiddleware',
-    'cms.middleware.language.LanguageCookieMiddleware',
-    # Django CMS 5.0 新增中间件
-    'cms.middleware.utils.ApphookReloadMiddleware',
     # 自定义中间件
     'games.middleware.BrowserLanguageDetectionMiddleware',
 ]
@@ -120,17 +83,9 @@ TEMPLATES = [
                 'django.template.context_processors.csrf',
                 'django.template.context_processors.tz',
                 'django.template.context_processors.i18n',
-                'cms.context_processors.cms_settings',
-                'sekizai.context_processors.sekizai',
                 'games.context_processors.advertisements',
                 'games.context_processors.website_settings',
             ],
-            # Django CMS 5.0 需要的模板库
-            'libraries': {
-                'cms_tags': 'cms.templatetags.cms_tags',
-                'menu_tags': 'menus.templatetags.menu_tags',
-                'sekizai_tags': 'sekizai.templatetags.sekizai_tags',
-            },
         },
     },
 ]
@@ -171,10 +126,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-# Django Plans Payments 基础配置
-# 移除 PAYMENTS_HOST 配置，改为从数据库读取
-# PAYMENTS_HOST = 'localhost:8000'
-
 LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'UTC'
@@ -191,38 +142,20 @@ LANGUAGES = [
     ('zh', '中文'),
 ]
 
-CMS_LANGUAGES = {
-    1: [
-        {
-            'code': 'en',
-            'name': 'English',
-            'fallbacks': ['zh'],
-            'public': True,
-        },
-        {
-            'code': 'zh',
-            'name': '中文',
-            'fallbacks': ['en'],
-            'public': True,
-        },
-    ],
-    'default': {
-        'fallbacks': ['en'],
-        'redirect_on_fallback': True,
-        'public': True,
-        'hide_untranslated': False,
-    },
-}
-
 LOCALE_PATHS = [BASE_DIR / 'locale']
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'static'
-MEDIA_URL = 'media/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (User uploads)
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
@@ -230,65 +163,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Django CMS 设置
+# Django 站点设置
 SITE_ID = 1
-CMS_CONFIRM_VERSION4 = True
-CMS_CONFIRM_VERSION5 = True
 
-CMS_TEMPLATES = [
-    ('games/home.html', '首页模板'),
-    ('games/game_detail.html', '游戏详情页模板'),
-    ('games/category_detail.html', '分类详情页模板'),
-    ('games/category_list.html', '分类列表页模板'),
-    ('games/game_list.html', '游戏列表页面'),
-    ('games/profile.html', '用户资料页面'),
-    ('fullwidth.html', '全宽页面'),
-]
+# Crispy Forms 设置
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# Django CMS 5.0 新增配置
-CMS_RENDERER = 'default'
-CMS_CACHE_PREFIX = 'html5games-cms'
-CMS_CONTENT_CACHE_DURATION = 60
-# 修复toolbar_pool路径问题
-CMS_TOOLBARS = []  # Django CMS 5.0不再需要此设置，使用cms.toolbar.utils.get_toolbars()代替
-
-CMS_PERMISSION = True
-CMS_PLACEHOLDER_CONF = {}
-
-# 缩略图设置
-THUMBNAIL_HIGH_RESOLUTION = True
-THUMBNAIL_PROCESSORS = (
-    'easy_thumbnails.processors.colorspace',
-    'easy_thumbnails.processors.autocrop',
-    'filer.thumbnail_processors.scale_and_crop_with_subject_location',
-    'easy_thumbnails.processors.filters',
-)
-
-# Frontend 设置
-DJANGOCMS_FRONTEND_USE_SELECT2 = True
-DJANGOCMS_FRONTEND_TAB_STYLE = "nav-tabs"
-DJANGOCMS_FRONTEND_GRID_SIZE = 12
-DJANGOCMS_FRONTEND_GRID_CONTAINERS = [
-    ('container', 'Container'),
-    ('container-fluid', 'Fluid container')
-]
-DJANGOCMS_FRONTEND_GRID_CONTAINER_MARGIN = "my-3"
-# 默认使用Bootstrap 5
-DJANGOCMS_FRONTEND_FRAMEWORK = "bootstrap5"
-# 为Django CMS 5.0优化
-DJANGOCMS_FRONTEND_ADMIN_CSS = {
-    'all': (
-        'djangocms_frontend/css/admin.css',
-    )
-}
-
-# 前端模板目录
-DJANGOCMS_FRONTEND_TEMPLATES_DIR = [
-    os.path.join(BASE_DIR, 'templates/games/frontend/bootstrap5'),  # Bootstrap 5模板
-    os.path.join(BASE_DIR, 'templates/games'),  # 游戏应用模板
-]
-
-# 在文件末尾添加支付日志配置
+# 日志配置
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -306,7 +188,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/payments.log'),
+            'filename': os.path.join(BASE_DIR, 'logs/app.log'),
             'formatter': 'verbose',
         },
         'console': {
@@ -316,19 +198,9 @@ LOGGING = {
         },
     },
     'loggers': {
-        'payment_callbacks': {
+        'django': {
             'handlers': ['file', 'console'],
             'level': 'INFO',
-            'propagate': True,
-        },
-        'payment_process': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'payment_security': {
-            'handlers': ['file', 'console'],
-            'level': 'WARNING',
             'propagate': True,
         },
     },

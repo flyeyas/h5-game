@@ -1,11 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, TemplateView
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseRedirect
-from .models import Game, Category, UserProfile, GameHistory
+from .models import Game, Category
 from django.utils import translation
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import translate_url
@@ -20,18 +18,19 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['featured_games'] = Game.objects.filter(is_featured=True, is_active=True)[:6]
-        context['latest_games'] = Game.objects.filter(is_active=True).order_by('-created_at')[:8]
+        context['new_games'] = Game.objects.filter(is_active=True).order_by('-created_at')[:8]
         context['popular_games'] = Game.objects.filter(is_active=True).order_by('-view_count')[:8]
-        context['categories'] = Category.objects.filter(parent=None)[:6]
-        
+        context['recommended_games'] = Game.objects.filter(is_featured=True, is_active=True)[:4]
+        context['categories'] = Category.objects.filter(parent=None, is_active=True)[:6]
+
         # 设置占位符标志
         context['placeholder_hero_image'] = False
         context['placeholder_featured_games'] = False
         context['placeholder_popular_games'] = False
         context['placeholder_new_games'] = False
+        context['placeholder_recommended_games'] = False
         context['placeholder_categories'] = False
-        context['placeholder_why_choose_us'] = False
-        
+
         return context
 
 
@@ -108,17 +107,6 @@ class GameDetailView(DetailView):
         ).exclude(id=game.id).distinct()[:4]
         context['related_games'] = related_games
         
-        # 评论
-        context['comments'] = game.comments.filter(is_approved=True).order_by('-created_at')
-        
-        # 用户收藏状态
-        if self.request.user.is_authenticated:
-            try:
-                user_profile = UserProfile.objects.get(user=self.request.user)
-                context['is_favorite'] = game in user_profile.favorite_games.all()
-            except UserProfile.DoesNotExist:
-                context['is_favorite'] = False
-        
         return context
     
     def get(self, request, *args, **kwargs):
@@ -129,58 +117,104 @@ class GameDetailView(DetailView):
         game.view_count += 1
         game.save(update_fields=['view_count'])
         
-        # 记录游戏历史
-        if request.user.is_authenticated:
-            GameHistory.objects.create(user=request.user, game=game)
-        
         return response
 
 
-@login_required
-def toggle_favorite(request, game_id):
-    """切换游戏收藏状态"""
-    game = get_object_or_404(Game, id=game_id)
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-    
-    if game in profile.favorite_games.all():
-        profile.favorite_games.remove(game)
-        is_favorite = False
-    else:
-        profile.favorite_games.add(game)
-        is_favorite = True
-    
-    return JsonResponse({'status': 'success', 'is_favorite': is_favorite})
+
 
 
 class CategoryListView(ListView):
     """分类列表视图"""
-    model = Category
+    model = Game
     template_name = 'games/category_list.html'
-    context_object_name = 'categories'
-    
+    context_object_name = 'games'
+    paginate_by = 12
+
     def get_queryset(self):
-        return Category.objects.filter(parent=None)
+        queryset = Game.objects.filter(is_active=True)
 
+        # 分类过滤
+        category_slug = self.request.GET.get('category')
+        if category_slug and category_slug != 'all':
+            try:
+                category = Category.objects.get(slug=category_slug)
+                queryset = queryset.filter(categories=category)
+            except Category.DoesNotExist:
+                pass
 
-@method_decorator(login_required, name='dispatch')
-class UserProfileView(TemplateView):
-    """用户资料视图"""
-    template_name = 'games/profile.html'
-    
+        # 评分过滤
+        rating = self.request.GET.get('rating')
+        if rating:
+            rating_values = rating.split(',')
+            rating_filters = Q()
+            for r in rating_values:
+                if r == '5':
+                    rating_filters |= Q(rating=5)
+                elif r == '4':
+                    rating_filters |= Q(rating__gte=4, rating__lt=5)
+                elif r == '3':
+                    rating_filters |= Q(rating__gte=3, rating__lt=4)
+            if rating_filters:
+                queryset = queryset.filter(rating_filters)
+
+        # 发布时间过滤
+        release_time = self.request.GET.get('release_time')
+        if release_time and release_time != 'all':
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            if release_time == 'week':
+                queryset = queryset.filter(created_at__gte=now - timedelta(days=7))
+            elif release_time == 'month':
+                queryset = queryset.filter(created_at__gte=now - timedelta(days=30))
+            elif release_time == 'year':
+                queryset = queryset.filter(created_at__gte=now - timedelta(days=365))
+
+        # 特性过滤
+        features = self.request.GET.get('feature')
+        if features:
+            feature_list = features.split(',')
+            # 这里可以根据需要添加特性过滤逻辑
+            # 目前暂时跳过，因为Game模型中没有对应字段
+
+        # 排序
+        sort = self.request.GET.get('sort', 'popular')
+        if sort == 'newest':
+            queryset = queryset.order_by('-created_at')
+        elif sort == 'rating':
+            queryset = queryset.order_by('-rating')
+        elif sort == 'name':
+            queryset = queryset.order_by('title')
+        else:  # popular
+            queryset = queryset.order_by('-view_count')
+
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        
-        try:
-            profile = UserProfile.objects.get(user=user)
-        except UserProfile.DoesNotExist:
-            profile = UserProfile.objects.create(user=user)
-        
-        context['profile'] = profile
-        context['favorite_games'] = profile.favorite_games.all()
-        context['game_history'] = GameHistory.objects.filter(user=user).order_by('-played_at')[:10]
-        
+
+        # 添加分类数据
+        context['categories'] = Category.objects.filter(parent=None, is_active=True)
+
+        # 当前选中的分类
+        category_slug = self.request.GET.get('category')
+        if category_slug and category_slug != 'all':
+            try:
+                context['current_category'] = Category.objects.get(slug=category_slug)
+            except Category.DoesNotExist:
+                context['current_category'] = None
+        else:
+            context['current_category'] = None
+
+        # 筛选参数
+        context['selected_ratings'] = self.request.GET.get('rating', '').split(',') if self.request.GET.get('rating') else []
+        context['release_time'] = self.request.GET.get('release_time', 'all')
+        context['selected_features'] = self.request.GET.get('feature', '').split(',') if self.request.GET.get('feature') else []
+        context['sort'] = self.request.GET.get('sort', 'popular')
+
         return context
+
+
+
 
 
 def custom_set_language(request):

@@ -1,8 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-from cms.models.fields import PlaceholderField
-from filer.fields.image import FilerImageField
 
 
 class Category(models.Model):
@@ -12,8 +9,8 @@ class Category(models.Model):
     description = models.TextField(_('分类描述'), blank=True)
     parent = models.ForeignKey('self', verbose_name=_('父级分类'), null=True, blank=True, 
                                on_delete=models.SET_NULL, related_name='children')
-    image = FilerImageField(verbose_name=_('分类图片'), null=True, blank=True, 
-                           on_delete=models.SET_NULL, related_name='category_images')
+    image = models.ImageField(verbose_name=_('分类图片'), upload_to='categories/', null=True, blank=True)
+    icon_class = models.CharField(_('Icon Class'), max_length=100, blank=True, help_text=_('Font Awesome 6+ icon class, e.g., "fa-solid fa-gamepad"'))
     order = models.IntegerField(_('排序'), default=0)
     is_active = models.BooleanField(_('是否激活'), default=True)
     created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
@@ -34,10 +31,9 @@ class Game(models.Model):
     slug = models.SlugField(_('URL别名'), max_length=200, unique=True)
     description = models.TextField(_('游戏描述'))
     iframe_url = models.URLField(_('游戏iframe地址'))
-    thumbnail = FilerImageField(verbose_name=_('游戏缩略图'), null=True, blank=True,
-                               on_delete=models.SET_NULL, related_name='game_thumbnails')
+    thumbnail = models.ImageField(verbose_name=_('游戏缩略图'), upload_to='games/', null=True, blank=True)
     categories = models.ManyToManyField(Category, verbose_name=_('游戏分类'), related_name='games')
-    content = PlaceholderField('game_content', verbose_name=_('游戏内容'))
+    content = models.TextField(_('游戏内容'), blank=True)
     is_featured = models.BooleanField(_('是否推荐'), default=False)
     is_active = models.BooleanField(_('是否激活'), default=True)
     view_count = models.PositiveIntegerField(_('浏览次数'), default=0)
@@ -53,88 +49,15 @@ class Game(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def rating_int(self):
+        """返回评分的整数部分"""
+        return int(self.rating)
 
-class Membership(models.Model):
-    """会员等级模型"""
-    MEMBERSHIP_CHOICES = (
-        ('free', _('免费会员')),
-        ('basic', _('基础会员')),
-        ('premium', _('高级会员')),
-    )
-    
-    name = models.CharField(_('会员等级名称'), max_length=100)
-    slug = models.SlugField(_('URL别名'), max_length=100, unique=True)
-    level = models.CharField(_('等级类型'), max_length=20, choices=MEMBERSHIP_CHOICES, default='free')
-    price = models.DecimalField(_('价格'), max_digits=10, decimal_places=2, default=0.0)
-    duration_days = models.PositiveIntegerField(_('有效期(天)'), default=30)
-    description = models.TextField(_('会员权益描述'))
-    is_active = models.BooleanField(_('是否激活'), default=True)
-    created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('更新时间'), auto_now=True)
-    
-    class Meta:
-        verbose_name = _('会员等级')
-        verbose_name_plural = _('会员等级')
-        ordering = ['price']
-    
-    def __str__(self):
-        return self.name
-
-
-class UserProfile(models.Model):
-    """用户资料模型"""
-    user = models.OneToOneField(User, verbose_name=_('用户'), on_delete=models.CASCADE, related_name='profile')
-    avatar = FilerImageField(verbose_name=_('头像'), null=True, blank=True,
-                            on_delete=models.SET_NULL, related_name='user_avatars')
-    bio = models.TextField(_('个人简介'), blank=True)
-    favorite_games = models.ManyToManyField(Game, verbose_name=_('收藏的游戏'), related_name='favorited_by')
-    created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('更新时间'), auto_now=True)
-    
-    class Meta:
-        verbose_name = _('用户资料')
-        verbose_name_plural = _('用户资料')
-    
-    def __str__(self):
-        return self.user.username
-
-
-class GameComment(models.Model):
-    """游戏评论模型"""
-    game = models.ForeignKey(Game, verbose_name=_('游戏'), on_delete=models.CASCADE, related_name='comments')
-    user = models.ForeignKey(User, verbose_name=_('用户'), on_delete=models.CASCADE, related_name='game_comments')
-    content = models.TextField(_('评论内容'))
-    rating = models.PositiveSmallIntegerField(_('评分'), choices=[(i, i) for i in range(1, 6)], default=5)
-    is_approved = models.BooleanField(_('是否审核通过'), default=True)
-    created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('更新时间'), auto_now=True)
-    
-    class Meta:
-        verbose_name = _('游戏评论')
-        verbose_name_plural = _('游戏评论')
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.game.title}"
-
-
-class GameHistory(models.Model):
-    """游戏历史记录模型"""
-    user = models.ForeignKey(User, verbose_name=_('用户'), on_delete=models.CASCADE, related_name='game_history')
-    game = models.ForeignKey(Game, verbose_name=_('游戏'), on_delete=models.CASCADE, related_name='play_history')
-    play_time = models.PositiveIntegerField(_('游戏时长(秒)'), default=0)
-    played_at = models.DateTimeField(_('游玩时间'), auto_now_add=True)
-    last_played = models.DateTimeField(_('最后游戏时间'), auto_now=True)
-    created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
-    
-    class Meta:
-        verbose_name = _('游戏历史')
-        verbose_name_plural = _('游戏历史')
-        ordering = ['-last_played']
-        unique_together = ['user', 'game']
-    
-    def __str__(self):
-        return f'{self.user.username} - {self.game.title}'
+    @property
+    def rating_int_plus_half(self):
+        """返回评分的整数部分+0.5，用于显示半星"""
+        return int(self.rating) + 1 if self.rating % 1 >= 0.5 else None
 
 
 class Advertisement(models.Model):
@@ -148,8 +71,7 @@ class Advertisement(models.Model):
     
     name = models.CharField(_('广告名称'), max_length=100)
     position = models.CharField(_('广告位置'), max_length=20, choices=POSITION_CHOICES)
-    image = FilerImageField(verbose_name=_('广告图片'), null=True, blank=True, 
-                           on_delete=models.SET_NULL, related_name='ad_images')
+    image = models.ImageField(verbose_name=_('广告图片'), upload_to='ads/', null=True, blank=True)
     url = models.URLField(_('广告链接'))
     html_code = models.TextField(_('HTML代码'), blank=True, help_text=_('如果使用第三方广告代码，请填写此字段'))
     is_active = models.BooleanField(_('是否激活'), default=True)

@@ -17,11 +17,7 @@
                 <h5>{{ user.username }}</h5>
                 <p class="text-muted mb-1">{{ user.email }}</p>
                 <p class="text-muted mb-4">
-                    {% if profile.membership %}
-                    <span class="badge bg-primary">{{ profile.membership.get_level_display }}</span>
-                    {% else %}
-                    <span class="badge bg-secondary">{% trans 'Free Member' %}</span>
-                    {% endif %}
+                    <span class="badge bg-secondary">{% trans 'Member' %}</span>
                 </p>
             </div>
         </div>
@@ -64,36 +60,7 @@
                             </div>
                         </div>
                         <hr>
-                        <div class="row">
-                            <div class="col-sm-3">
-                                <p class="mb-0">{% trans 'Membership Level' %}</p>
-                            </div>
-                            <div class="col-sm-9">
-                                <p class="text-muted mb-0">
-                                    {% if profile.membership %}
-                                    {{ profile.membership.name }}
-                                    {% else %}
-                                    {% trans 'Free Member' %}
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-sm-3">
-                                <p class="mb-0">{% trans 'Membership Expiry' %}</p>
-                            </div>
-                            <div class="col-sm-9">
-                                <p class="text-muted mb-0">
-                                    {% if profile.membership_expiry %}
-                                    {{ profile.membership_expiry|date:"Y-m-d" }}
-                                    {% else %}
-                                    {% trans 'None' %}
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                        <hr>
+
                         <div class="row">
                             <div class="col-sm-3">
                                 <p class="mb-0">{% trans 'Registration Date' %}</p>
@@ -105,18 +72,7 @@
                     </div>
                 </div>
                 
-                <!-- 会员升级卡片 -->
-                {% if not profile.membership or profile.membership.level == 'free' %}
-                <div class="card mt-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">{% trans 'Upgrade Membership' %}</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>{% trans 'Upgrade your membership to get more games and privileges!' %}</p>
-                        <a href="{% url 'games:subscription' %}" class="btn btn-primary">{% trans 'View Membership Plans' %}</a>
-                    </div>
-                </div>
-                {% endif %}
+
             </div>
             
             <!-- 收藏的游戏 -->

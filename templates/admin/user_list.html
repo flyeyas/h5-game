@@ -26,8 +26,7 @@
                     <tr>
                         <th>{% trans 'User' %}</th>
                         <th>{% trans 'Email' %}</th>
-                        <th>{% trans 'Membership' %}</th>
-                        <th>{% trans 'Expiry Date' %}</th>
+                        <th>{% trans 'Status' %}</th>
                         <th>{% trans 'Joined' %}</th>
                         <th>{% trans 'Actions' %}</th>
                     </tr>
@@ -52,21 +51,10 @@
                         </td>
                         <td>{{ profile.user.email }}</td>
                         <td>
-                            {% if profile.membership %}
-                            <span class="badge bg-primary">{{ profile.membership.name }}</span>
+                            {% if profile.user.is_active %}
+                            <span class="badge bg-success">{% trans 'Active' %}</span>
                             {% else %}
-                            <span class="badge bg-light text-dark">{% trans 'Free' %}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if profile.membership_expiry %}
-                                {% if profile.membership_expiry < now %}
-                                <span class="badge bg-danger">{% trans 'Expired' %}</span>
-                                {% else %}
-                                {{ profile.membership_expiry|date:"M d, Y" }}
-                                {% endif %}
-                            {% else %}
-                            <span class="text-muted">-</span>
+                            <span class="badge bg-danger">{% trans 'Inactive' %}</span>
                             {% endif %}
                         </td>
                         <td>{{ profile.created_at|date:"M d, Y" }}</td>
@@ -166,8 +154,8 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 添加当前时间到上下文中，用于比较会员过期时间
-        window.now = new Date();
+        // 初始化页面
+        console.log('User list page loaded');
     });
 </script>
 {% endblock %}

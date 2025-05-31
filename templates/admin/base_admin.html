@@ -169,9 +169,7 @@
                 <a href="{% url 'games:admin_user_list' %}" class="menu-item {% if request.resolver_match.url_name == 'admin_user_list' %}active{% endif %}">
                     <i class="fas fa-list"></i> {% trans 'All Users' %}
                 </a>
-                <a href="{% url 'games:admin_membership_list' %}" class="menu-item {% if request.resolver_match.url_name == 'admin_membership_list' %}active{% endif %}">
-                    <i class="fas fa-id-card"></i> {% trans 'Memberships' %}
-                </a>
+                <!-- 会员功能已移除 -->
             </div>
             <a href="#" class="menu-item has-submenu" data-bs-toggle="collapse" data-bs-target="#adsSubmenu">
                 <i class="fas fa-ad"></i> {% trans 'Advertisements' %}

@@ -3,19 +3,28 @@
 
 <div class="col-6 col-md-3">
     <div class="game-card">
-        {% if category.image %}
+        {% if category.icon_class %}
+        <div class="card-img-top d-flex justify-content-center align-items-center bg-light py-4">
+            <i class="{{ category.icon_class }}" style="font-size: 4rem;"></i>
+        </div>
+        {% elif category.image %}
             <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}" loading="lazy">
         {% else %}
             <img src="{% static 'img/category-placeholder.jpg' %}" class="card-img-top" alt="{{ category.name }}" loading="lazy">
         {% endif %}
         <div class="card-body text-center">
-            <h5 class="card-title">{{ category.name }}</h5>
+            <h5 class="card-title">
+                {% if category.icon_class %}
+                <i class="{{ category.icon_class }} me-2"></i>
+                {% endif %}
+                {{ category.name }}
+            </h5>
             {% if category.description %}
                 <p class="card-text small text-muted">{{ category.description|truncatechars:60 }}</p>
             {% endif %}
             <div class="d-grid gap-2">
-                <a href="{% url 'games:category_detail' category.slug %}" class="btn btn-outline-primary">{% trans 'View Details' %}</a>
-                <a href="{% url 'games:category_games' category.slug %}" class="btn btn-primary">{% trans 'Play Games' %}</a>
+                <a href="{% url 'games:category_detail' category_slug=category.slug %}" class="btn btn-outline-primary">{% trans 'View Details' %}</a>
+                <a href="{% url 'games:category_games' category_slug=category.slug %}" class="btn btn-primary">{% trans 'Play Games' %}</a>
             </div>
         </div>
     </div>

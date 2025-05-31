@@ -1,0 +1,2543 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: HTML5 Games Platform\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-05-31 09:33+0000\n"
+"PO-Revision-Date: 2025-05-31 09:33+0000\n"
+"Last-Translator: HTML5 Games Team\n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+#: games/admin.py:20
+msgid "分类"
+msgstr ""
+
+#: games/admin.py:33
+msgid "Visuals"
+msgstr ""
+
+#: games/admin.py:35
+msgid ""
+"You can either use an image or a Font Awesome icon. If both are provided, "
+"the icon will be used as a fallback if the image fails to load."
+msgstr ""
+
+#: games/admin.py:43 games/models_menu_settings.py:69
+msgid "Icon"
+msgstr ""
+
+#: games/apps.py:8
+msgid "游戏管理"
+msgstr ""
+
+#: games/cms_plugins.py:10
+msgid "Game List"
+msgstr ""
+
+#: games/cms_plugins.py:39
+msgid "Category List"
+msgstr ""
+
+#: games/models.py:9
+msgid "分类名称"
+msgstr ""
+
+#: games/models.py:10 games/models.py:34
+msgid "URL别名"
+msgstr ""
+
+#: games/models.py:11
+msgid "分类描述"
+msgstr ""
+
+#: games/models.py:12
+msgid "父级分类"
+msgstr ""
+
+#: games/models.py:14
+msgid "分类图片"
+msgstr ""
+
+#: games/models.py:16 templates/admin/menu_item_form.html:90
+msgid "Icon Class"
+msgstr ""
+
+#: games/models.py:16
+msgid "Font Awesome 6+ icon class, e.g., \"fa-solid fa-gamepad\""
+msgstr ""
+
+#: games/models.py:17
+msgid "排序"
+msgstr ""
+
+#: games/models.py:18 games/models.py:42 games/models.py:82
+msgid "是否激活"
+msgstr ""
+
+#: games/models.py:19 games/models.py:45 games/models.py:87
+msgid "创建时间"
+msgstr ""
+
+#: games/models.py:20 games/models.py:46 games/models.py:88
+msgid "更新时间"
+msgstr ""
+
+#: games/models.py:23 games/models.py:24 games/models.py:39
+msgid "游戏分类"
+msgstr ""
+
+#: games/models.py:33
+msgid "游戏标题"
+msgstr ""
+
+#: games/models.py:35
+msgid "游戏描述"
+msgstr ""
+
+#: games/models.py:36
+msgid "游戏iframe地址"
+msgstr ""
+
+#: games/models.py:37
+msgid "游戏缩略图"
+msgstr ""
+
+#: games/models.py:40
+msgid "游戏内容"
+msgstr ""
+
+#: games/models.py:41
+msgid "是否推荐"
+msgstr ""
+
+#: games/models.py:43
+msgid "浏览次数"
+msgstr ""
+
+#: games/models.py:44
+msgid "评分"
+msgstr ""
+
+#: games/models.py:49 games/models.py:50
+msgid "游戏"
+msgstr ""
+
+#: games/models.py:70
+msgid "页面顶部"
+msgstr ""
+
+#: games/models.py:71
+msgid "侧边栏"
+msgstr ""
+
+#: games/models.py:72
+msgid "游戏间隙"
+msgstr ""
+
+#: games/models.py:73
+msgid "页面底部"
+msgstr ""
+
+#: games/models.py:76
+msgid "广告名称"
+msgstr ""
+
+#: games/models.py:77
+msgid "广告位置"
+msgstr ""
+
+#: games/models.py:78
+msgid "广告图片"
+msgstr ""
+
+#: games/models.py:80
+msgid "广告链接"
+msgstr ""
+
+#: games/models.py:81
+msgid "HTML代码"
+msgstr ""
+
+#: games/models.py:81
+msgid "如果使用第三方广告代码，请填写此字段"
+msgstr ""
+
+#: games/models.py:83
+msgid "开始日期"
+msgstr ""
+
+#: games/models.py:84
+msgid "结束日期"
+msgstr ""
+
+#: games/models.py:85
+msgid "点击次数"
+msgstr ""
+
+#: games/models.py:86
+msgid "展示次数"
+msgstr ""
+
+#: games/models.py:91 games/models.py:92
+msgid "广告"
+msgstr ""
+
+#: games/models_cms.py:8
+msgid "Featured Games"
+msgstr ""
+
+#: games/models_cms.py:9 templates/base.html:200 templates/base.html:358
+#: templates/games/game_detail.html:413 templates/games/game_list.html:459
+#: templates/games/home.html:262
+msgid "Popular Games"
+msgstr "人気ゲーム"
+
+#: games/models_cms.py:10
+msgid "Newest Games"
+msgstr ""
+
+#: games/models_cms.py:11
+msgid "Category Games"
+msgstr ""
+
+#: games/models_cms.py:14 games/models_cms.py:28
+#: games/models_menu_settings.py:67 templates/admin/menu_item_form.html:32
+#: templates/admin/menu_item_list.html:31
+msgid "Title"
+msgstr ""
+
+#: games/models_cms.py:15
+msgid "List Type"
+msgstr ""
+
+#: games/models_cms.py:16 templates/admin/category_list.html:20
+#: templates/admin/dashboard.html:68 templates/games/profile.html:141
+msgid "Category"
+msgstr ""
+
+#: games/models_cms.py:18 games/models_cms.py:32
+msgid "Maximum Items"
+msgstr ""
+
+#: games/models_cms.py:19 games/models_cms.py:33
+msgid "Show More Link"
+msgstr ""
+
+#: games/models_cms.py:20 games/models_cms.py:34
+msgid "More Link Text"
+msgstr ""
+
+#: games/models_cms.py:20 games/models_cms.py:34
+#: templates/admin/dashboard.html:60 templates/admin/dashboard.html:124
+#: templates/games/home.html:262 templates/games/home.html:343
+msgid "View All"
+msgstr ""
+
+#: games/models_cms.py:21 games/models_cms.py:35
+msgid "More Link URL"
+msgstr ""
+
+#: games/models_cms.py:24
+msgid "Game List Plugin"
+msgstr ""
+
+#: games/models_cms.py:25
+msgid "Game List Plugins"
+msgstr ""
+
+#: games/models_cms.py:29
+msgid "Show Parent Categories Only"
+msgstr ""
+
+#: games/models_cms.py:30 templates/admin/category_form.html:92
+#: templates/admin/category_list.html:21
+msgid "Parent Category"
+msgstr ""
+
+#: games/models_cms.py:38
+msgid "Category List Plugin"
+msgstr ""
+
+#: games/models_cms.py:39
+msgid "Category List Plugins"
+msgstr ""
+
+#: games/models_menu_settings.py:9 templates/admin/language_management.html:128
+#: templates/admin/language_management.html:178
+msgid "Language Code"
+msgstr ""
+
+#: games/models_menu_settings.py:10
+#: templates/admin/language_management.html:124
+#: templates/admin/language_management.html:174
+msgid "Language Name"
+msgstr ""
+
+#: games/models_menu_settings.py:11
+msgid "Flag"
+msgstr ""
+
+#: games/models_menu_settings.py:13 games/models_menu_settings.py:48
+#: games/models_menu_settings.py:72 templates/admin/ad_form.html:88
+#: templates/admin/ad_list.html:52 templates/admin/dashboard.html:101
+#: templates/admin/game_confirm_delete.html:51
+#: templates/admin/game_form.html:145 templates/admin/game_list.html:75
+#: templates/admin/menu_form.html:59 templates/admin/menu_item_form.html:121
+#: templates/admin/menu_item_list.html:61
+#: templates/admin/menu_item_list.html:108
+#: templates/admin/menu_item_list.html:126 templates/admin/menu_list.html:45
+#: templates/admin/user_detail.html:74 templates/admin/user_list.html:55
+msgid "Active"
+msgstr ""
+
+#: games/models_menu_settings.py:14 templates/admin/language_management.html:23
+msgid "Default"
+msgstr ""
+
+#: games/models_menu_settings.py:15 games/models_menu_settings.py:49
+#: games/models_menu_settings.py:75 games/models_menu_settings.py:111
+msgid "Created At"
+msgstr ""
+
+#: games/models_menu_settings.py:16 games/models_menu_settings.py:50
+#: games/models_menu_settings.py:76 games/models_menu_settings.py:112
+msgid "Updated At"
+msgstr ""
+
+#: games/models_menu_settings.py:19 templates/admin/language_management.html:20
+#: templates/admin/translation_management.html:20
+#: templates/admin/translation_management.html:92
+msgid "Language"
+msgstr ""
+
+#: games/models_menu_settings.py:20
+msgid "Languages"
+msgstr ""
+
+#: games/models_menu_settings.py:39
+msgid "Header Menu"
+msgstr ""
+
+#: games/models_menu_settings.py:40
+msgid "Footer Menu"
+msgstr ""
+
+#: games/models_menu_settings.py:41
+msgid "Sidebar Menu"
+msgstr ""
+
+#: games/models_menu_settings.py:42
+msgid "Backend Menu"
+msgstr ""
+
+#: games/models_menu_settings.py:45 templates/admin/menu_form.html:29
+msgid "Menu Name"
+msgstr ""
+
+#: games/models_menu_settings.py:46 templates/admin/menu_form.html:42
+msgid "Menu Type"
+msgstr ""
+
+#: games/models_menu_settings.py:47 games/models_menu_settings.py:71
+#: templates/admin/category_list.html:23 templates/admin/menu_item_form.html:74
+#: templates/admin/menu_item_list.html:34
+msgid "Order"
+msgstr ""
+
+#: games/models_menu_settings.py:53 games/models_menu_settings.py:64
+msgid "Menu"
+msgstr ""
+
+#: games/models_menu_settings.py:54
+msgid "Menus"
+msgstr ""
+
+#: games/models_menu_settings.py:65 templates/admin/menu_item_form.html:61
+msgid "Parent Item"
+msgstr ""
+
+#: games/models_menu_settings.py:68 templates/admin/menu_item_form.html:45
+#: templates/admin/menu_item_list.html:32
+msgid "URL"
+msgstr ""
+
+#: games/models_menu_settings.py:69
+msgid "Font Awesome icon class name"
+msgstr ""
+
+#: games/models_menu_settings.py:70 templates/admin/menu_item_form.html:104
+msgid "Target"
+msgstr ""
+
+#: games/models_menu_settings.py:70
+msgid "Current Window"
+msgstr ""
+
+#: games/models_menu_settings.py:70
+msgid "New Window"
+msgstr ""
+
+#: games/models_menu_settings.py:73
+msgid "Permission Required"
+msgstr ""
+
+#: games/models_menu_settings.py:74
+msgid "Django permission format, e.g.: app.add_model"
+msgstr ""
+
+#: games/models_menu_settings.py:79
+msgid "Menu Item"
+msgstr ""
+
+#: games/models_menu_settings.py:80 templates/admin/menu_item_list.html:4
+#: templates/admin/menu_item_list.html:13
+msgid "Menu Items"
+msgstr ""
+
+#: games/models_menu_settings.py:89 templates/admin/website_settings.html:44
+msgid "Site Name"
+msgstr ""
+
+#: games/models_menu_settings.py:90 templates/admin/website_settings.html:105
+msgid "Site Description"
+msgstr ""
+
+#: games/models_menu_settings.py:91
+msgid "Site Logo"
+msgstr ""
+
+#: games/models_menu_settings.py:93 templates/admin/website_settings.html:138
+msgid "Favicon"
+msgstr ""
+
+#: games/models_menu_settings.py:95 templates/admin/website_settings.html:58
+msgid "Contact Email"
+msgstr ""
+
+#: games/models_menu_settings.py:96 templates/admin/website_settings.html:73
+msgid "Contact Phone"
+msgstr ""
+
+#: games/models_menu_settings.py:97 templates/admin/website_settings.html:86
+msgid "Address"
+msgstr ""
+
+#: games/models_menu_settings.py:98 templates/admin/website_settings.html:158
+msgid "Copyright Text"
+msgstr ""
+
+#: games/models_menu_settings.py:99 templates/admin/website_settings.html:211
+msgid "Facebook URL"
+msgstr ""
+
+#: games/models_menu_settings.py:100 templates/admin/website_settings.html:224
+msgid "Twitter URL"
+msgstr ""
+
+#: games/models_menu_settings.py:101 templates/admin/website_settings.html:239
+msgid "Instagram URL"
+msgstr ""
+
+#: games/models_menu_settings.py:102 templates/admin/website_settings.html:252
+msgid "YouTube URL"
+msgstr ""
+
+#: games/models_menu_settings.py:103 templates/admin/website_settings.html:178
+msgid "Meta Keywords"
+msgstr ""
+
+#: games/models_menu_settings.py:103
+msgid "SEO keywords separated by commas"
+msgstr ""
+
+#: games/models_menu_settings.py:104 templates/admin/website_settings.html:192
+msgid "Meta Description"
+msgstr ""
+
+#: games/models_menu_settings.py:104
+msgid "SEO description"
+msgstr ""
+
+#: games/models_menu_settings.py:105 templates/admin/website_settings.html:271
+msgid "Google Analytics Code"
+msgstr ""
+
+#: games/models_menu_settings.py:107
+#: templates/admin/language_management.html:93
+msgid "Enable Language Switcher"
+msgstr ""
+
+#: games/models_menu_settings.py:108
+msgid "Show language switcher in the site header"
+msgstr ""
+
+#: games/models_menu_settings.py:109
+#: templates/admin/language_management.html:100
+msgid "Auto-detect User Language"
+msgstr ""
+
+#: games/models_menu_settings.py:110
+msgid "Automatically detect and use the user's browser language if available"
+msgstr ""
+
+#: games/models_menu_settings.py:115
+msgid "Website Setting"
+msgstr ""
+
+#: games/models_menu_settings.py:116 games/views_menu_settings.py:207
+#: templates/admin/base_admin.html:196 templates/admin/settings.html:37
+#: templates/admin/website_settings.html:5
+#: templates/admin/website_settings.html:15
+msgid "Website Settings"
+msgstr ""
+
+#: games/views_admin.py:107 templates/admin/base_admin.html:151
+#: templates/admin/game_list.html:12 templates/admin/game_list.html:109
+msgid "Add New Game"
+msgstr ""
+
+#: games/views_admin.py:112
+msgid "Game created successfully."
+msgstr ""
+
+#: games/views_admin.py:127
+msgid "Edit Game"
+msgstr ""
+
+#: games/views_admin.py:132
+msgid "Game updated successfully."
+msgstr ""
+
+#: games/views_admin.py:145
+msgid "Game deleted successfully."
+msgstr ""
+
+#: games/views_admin.py:173 templates/admin/base_admin.html:162
+#: templates/admin/category_list.html:12 templates/admin/category_list.html:77
+msgid "Add New Category"
+msgstr ""
+
+#: games/views_admin.py:178
+msgid "Category created successfully."
+msgstr ""
+
+#: games/views_admin.py:193
+msgid "Edit Category"
+msgstr ""
+
+#: games/views_admin.py:198
+msgid "Category updated successfully."
+msgstr ""
+
+#: games/views_admin.py:211
+msgid "Category deleted successfully."
+msgstr ""
+
+#: games/views_admin.py:245 templates/admin/ad_form.html:4
+#: templates/admin/ad_form.html:5 templates/admin/ad_form.html:10
+#: templates/admin/ad_list.html:13 templates/admin/ad_list.html:95
+msgid "Add New Advertisement"
+msgstr ""
+
+#: games/views_admin.py:250
+msgid "Advertisement created successfully."
+msgstr ""
+
+#: games/views_admin.py:265 templates/admin/ad_form.html:4
+#: templates/admin/ad_form.html:5 templates/admin/ad_form.html:10
+msgid "Edit Advertisement"
+msgstr ""
+
+#: games/views_admin.py:270
+msgid "Advertisement updated successfully."
+msgstr ""
+
+#: games/views_admin.py:283
+msgid "Advertisement deleted successfully."
+msgstr ""
+
+#: games/views_admin.py:344 templates/admin/stats.html:328
+msgid "Free Users"
+msgstr ""
+
+#: games/views_menu_settings.py:38
+msgid "Create Menu"
+msgstr ""
+
+#: games/views_menu_settings.py:42
+msgid "Menu created successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:55
+msgid "Edit Menu"
+msgstr ""
+
+#: games/views_menu_settings.py:59
+msgid "Menu updated successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:70
+msgid "Menu deleted successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:142
+msgid "Create Menu Item"
+msgstr ""
+
+#: games/views_menu_settings.py:148
+msgid "Menu item created successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:168
+msgid "Edit Menu Item"
+msgstr ""
+
+#: games/views_menu_settings.py:173
+msgid "Menu item updated successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:186
+msgid "Menu item deleted successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:201
+msgid "Website settings updated successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:245
+msgid "Language status updated successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:250 games/views_menu_settings.py:281
+#: games/views_menu_settings.py:382 games/views_menu_settings.py:411
+msgid "Language not found."
+msgstr ""
+
+#: games/views_menu_settings.py:275
+msgid "Default language set successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:301
+msgid "Language with this code already exists."
+msgstr ""
+
+#: games/views_menu_settings.py:331
+msgid "Language added successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:347
+msgid "Another language with this code already exists."
+msgstr ""
+
+#: games/views_menu_settings.py:380
+msgid "Language updated successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:397
+msgid "Cannot delete default language."
+msgstr ""
+
+#: games/views_menu_settings.py:409
+msgid "Language deleted successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:441
+msgid "Language settings updated successfully."
+msgstr ""
+
+#: games/views_menu_settings.py:443
+msgid "Selected language not found."
+msgstr ""
+
+#: games/views_menu_settings.py:454 templates/admin/base_admin.html:202
+#: templates/admin/language_management.html:4
+#: templates/admin/language_management.html:5
+#: templates/admin/translation_management.html:158
+msgid "Language Management"
+msgstr ""
+
+#: games/views_menu_settings.py:595 templates/admin/base_admin.html:205
+#: templates/admin/translation_management.html:4
+#: templates/admin/translation_management.html:5
+msgid "Translation Management"
+msgstr ""
+
+#: templates/admin/ad_confirm_delete.html:4
+#: templates/admin/ad_confirm_delete.html:5
+#: templates/admin/ad_confirm_delete.html:48
+msgid "Delete Advertisement"
+msgstr ""
+
+#: templates/admin/ad_confirm_delete.html:10
+#: templates/admin/category_confirm_delete.html:10
+#: templates/admin/game_confirm_delete.html:10
+#: templates/admin/language_management.html:219
+msgid "Confirm Deletion"
+msgstr ""
+
+#: templates/admin/ad_confirm_delete.html:15
+msgid "Are you sure you want to delete this advertisement?"
+msgstr ""
+
+#: templates/admin/ad_confirm_delete.html:32 templates/admin/menu_list.html:26
+msgid "Created"
+msgstr ""
+
+#: templates/admin/ad_confirm_delete.html:33 templates/admin/ad_form.html:165
+#: templates/admin/ad_list.html:25 templates/admin/game_confirm_delete.html:41
+#: templates/admin/game_list.html:22 templates/admin/stats.html:223
+msgid "Views"
+msgstr ""
+
+#: templates/admin/ad_confirm_delete.html:34 templates/admin/ad_form.html:169
+#: templates/admin/ad_list.html:26 templates/admin/stats.html:224
+msgid "Clicks"
+msgstr ""
+
+#: templates/admin/ad_confirm_delete.html:45
+#: templates/admin/category_confirm_delete.html:79
+#: templates/admin/category_form.html:131
+#: templates/admin/game_confirm_delete.html:75
+#: templates/admin/game_form.html:158
+#: templates/admin/language_management.html:153
+#: templates/admin/language_management.html:207
+#: templates/admin/language_management.html:235
+#: templates/admin/menu_form.html:72 templates/admin/menu_item_form.html:134
+#: templates/admin/website_settings.html:287 templates/games/profile.html:212
+msgid "Cancel"
+msgstr ""
+
+#: templates/admin/ad_form.html:27
+msgid "Advertisement Name"
+msgstr ""
+
+#: templates/admin/ad_form.html:39 templates/admin/ad_list.html:23
+#: templates/admin/stats.html:222
+msgid "Position"
+msgstr ""
+
+#: templates/admin/ad_form.html:48
+msgid "Select where this advertisement will be displayed on the site."
+msgstr ""
+
+#: templates/admin/ad_form.html:52
+msgid "Advertisement URL"
+msgstr ""
+
+#: templates/admin/ad_form.html:61
+msgid ""
+"The URL where users will be redirected when they click on the advertisement."
+msgstr ""
+
+#: templates/admin/ad_form.html:67
+msgid "Advertisement Image"
+msgstr ""
+
+#: templates/admin/ad_form.html:76
+msgid ""
+"Upload an image for this advertisement. Recommended size depends on the "
+"position."
+msgstr ""
+
+#: templates/admin/ad_form.html:90
+msgid "Only active advertisements will be displayed on the site."
+msgstr ""
+
+#: templates/admin/ad_form.html:98
+msgid "HTML Code"
+msgstr ""
+
+#: templates/admin/ad_form.html:107
+msgid ""
+"If you are using third-party advertisement code (like Google AdSense), paste "
+"it here. This will override the image and URL settings."
+msgstr ""
+
+#: templates/admin/ad_form.html:115 templates/admin/stats.html:46
+msgid "Start Date"
+msgstr ""
+
+#: templates/admin/ad_form.html:124
+msgid ""
+"When this advertisement will start displaying. Leave blank for immediate "
+"start."
+msgstr ""
+
+#: templates/admin/ad_form.html:130 templates/admin/stats.html:50
+msgid "End Date"
+msgstr ""
+
+#: templates/admin/ad_form.html:139
+msgid ""
+"When this advertisement will stop displaying. Leave blank for no end date."
+msgstr ""
+
+#: templates/admin/ad_form.html:146 templates/admin/category_form.html:36
+#: templates/admin/game_form.html:39
+msgid "Back to List"
+msgstr ""
+
+#: templates/admin/ad_form.html:149
+msgid "Save Advertisement"
+msgstr ""
+
+#: templates/admin/ad_form.html:160
+msgid "Advertisement Statistics"
+msgstr ""
+
+#: templates/admin/ad_form.html:173 templates/admin/ad_list.html:27
+#: templates/admin/stats.html:225
+msgid "CTR"
+msgstr ""
+
+#: templates/admin/ad_form.html:207
+msgid "When using HTML code, the image and URL settings will be ignored."
+msgstr ""
+
+#: templates/admin/ad_list.html:4 templates/admin/ad_list.html:5
+msgid "Advertisement Management"
+msgstr ""
+
+#: templates/admin/ad_list.html:10
+msgid "All Advertisements"
+msgstr ""
+
+#: templates/admin/ad_list.html:22 templates/admin/menu_list.html:22
+msgid "Name"
+msgstr ""
+
+#: templates/admin/ad_list.html:24 templates/admin/dashboard.html:70
+#: templates/admin/game_confirm_delete.html:49
+#: templates/admin/game_list.html:24
+#: templates/admin/language_management.html:22
+#: templates/admin/menu_item_list.html:35 templates/admin/menu_list.html:24
+#: templates/admin/user_detail.html:72 templates/admin/user_list.html:29
+msgid "Status"
+msgstr ""
+
+#: templates/admin/ad_list.html:28
+msgid "Period"
+msgstr ""
+
+#: templates/admin/ad_list.html:29 templates/admin/category_list.html:25
+#: templates/admin/game_list.html:27
+#: templates/admin/language_management.html:24
+#: templates/admin/menu_item_list.html:36 templates/admin/menu_list.html:27
+#: templates/admin/user_detail.html:197 templates/admin/user_list.html:31
+#: templates/games/profile.html:143
+msgid "Actions"
+msgstr ""
+
+#: templates/admin/ad_list.html:54 templates/admin/dashboard.html:103
+#: templates/admin/game_confirm_delete.html:53
+#: templates/admin/game_list.html:77 templates/admin/menu_item_list.html:63
+#: templates/admin/menu_item_list.html:110
+#: templates/admin/menu_item_list.html:128 templates/admin/menu_list.html:47
+#: templates/admin/user_detail.html:76 templates/admin/user_list.html:57
+msgid "Inactive"
+msgstr ""
+
+#: templates/admin/ad_list.html:70
+msgid "From"
+msgstr ""
+
+#: templates/admin/ad_list.html:72
+msgid "Until"
+msgstr ""
+
+#: templates/admin/ad_list.html:93
+msgid "No advertisements found"
+msgstr ""
+
+#: templates/admin/ad_list.html:117 templates/admin/dashboard.html:49
+msgid "Total Views"
+msgstr ""
+
+#: templates/admin/ad_list.html:128
+msgid "Total Clicks"
+msgstr ""
+
+#: templates/admin/ad_list.html:139
+msgid "Average CTR"
+msgstr ""
+
+#: templates/admin/ad_list.html:156
+msgid "Active Ads"
+msgstr ""
+
+#: templates/admin/base_admin.html:137 templates/games/base.html:171
+msgid "Admin Panel"
+msgstr ""
+
+#: templates/admin/base_admin.html:141 templates/admin/base_admin.html:224
+#: templates/admin/dashboard.html:5 templates/admin/settings.html:13
+#: templates/admin/website_settings.html:13
+msgid "Dashboard"
+msgstr ""
+
+#: templates/admin/base_admin.html:144 templates/games/game_list.html:6
+#: templates/games/game_list.html:23 templates/games/game_list.html:34
+msgid "Games"
+msgstr ""
+
+#: templates/admin/base_admin.html:148 templates/admin/game_list.html:10
+#: templates/games/game_list.html:10 templates/games/game_list.html:23
+#: templates/games/game_list.html:34 templates/games/game_list.html:244
+msgid "All Games"
+msgstr ""
+
+#: templates/admin/base_admin.html:155 templates/admin/game_form.html:105
+#: templates/admin/game_list.html:21
+msgid "Categories"
+msgstr ""
+
+#: templates/admin/base_admin.html:159 templates/admin/category_list.html:10
+#: templates/base.html:196
+msgid "All Categories"
+msgstr ""
+
+#: templates/admin/base_admin.html:166
+msgid "Users"
+msgstr ""
+
+#: templates/admin/base_admin.html:170 templates/admin/user_list.html:10
+msgid "All Users"
+msgstr ""
+
+#: templates/admin/base_admin.html:175
+msgid "Advertisements"
+msgstr ""
+
+#: templates/admin/base_admin.html:179
+msgid "All Ads"
+msgstr ""
+
+#: templates/admin/base_admin.html:182
+msgid "Add New Ad"
+msgstr ""
+
+#: templates/admin/base_admin.html:186 templates/admin/stats.html:5
+#: templates/admin/stats.html:6
+msgid "Statistics"
+msgstr ""
+
+#: templates/admin/base_admin.html:189 templates/admin/base_admin.html:235
+#: templates/admin/settings.html:5 templates/admin/settings.html:14
+#: templates/admin/website_settings.html:14
+msgid "Settings"
+msgstr ""
+
+#: templates/admin/base_admin.html:193
+msgid "General Settings"
+msgstr ""
+
+#: templates/admin/base_admin.html:199 templates/admin/menu_list.html:4
+#: templates/admin/menu_list.html:12 templates/admin/settings.html:71
+msgid "Menu Management"
+msgstr ""
+
+#: templates/admin/base_admin.html:209
+msgid "Back to Site"
+msgstr ""
+
+#: templates/admin/base_admin.html:212 templates/admin/base_admin.html:237
+msgid "Logout"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:4
+#: templates/admin/category_confirm_delete.html:5
+#: templates/admin/category_confirm_delete.html:82
+msgid "Delete Category"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:14
+#: templates/admin/game_confirm_delete.html:14
+msgid "Warning!"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:15
+msgid ""
+"You are about to delete the following category. This action cannot be undone."
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:17
+msgid "Note:"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:17
+msgid ""
+"This category contains games. Deleting it will remove the category "
+"association from these games."
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:34
+msgid "Parent:"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:41
+#: templates/games/category_detail.html:4
+msgid "Category Details"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:44
+#: templates/admin/category_list.html:22
+msgid "Games Count"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:49
+#: templates/games/category_detail.html:57
+msgid "Subcategories"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:54
+#: templates/admin/category_form.html:118
+msgid "Display Order"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:58
+#: templates/admin/category_list.html:24
+#: templates/admin/game_confirm_delete.html:65
+#: templates/admin/game_list.html:26
+msgid "Date Added"
+msgstr ""
+
+#: templates/admin/category_confirm_delete.html:66
+#: templates/admin/category_form.html:81
+msgid "Description"
+msgstr ""
+
+#: templates/admin/category_form.html:45 templates/admin/game_form.html:48
+msgid "Please correct the errors below:"
+msgstr ""
+
+#: templates/admin/category_form.html:63
+msgid "Category Name"
+msgstr ""
+
+#: templates/admin/category_form.html:71 templates/admin/game_form.html:74
+msgid "URL Slug"
+msgstr ""
+
+#: templates/admin/category_form.html:76
+msgid "URL-friendly name for the category. Must be unique."
+msgstr ""
+
+#: templates/admin/category_form.html:97
+msgid "Select a parent category if this is a subcategory."
+msgstr ""
+
+#: templates/admin/category_form.html:102
+msgid "Category Image"
+msgstr ""
+
+#: templates/admin/category_form.html:107
+msgid "Upload an image for the category."
+msgstr ""
+
+#: templates/admin/category_form.html:123
+msgid "Categories with lower numbers will be displayed first."
+msgstr ""
+
+#: templates/admin/category_form.html:134
+msgid "Save Category"
+msgstr ""
+
+#: templates/admin/category_list.html:4 templates/admin/category_list.html:5
+msgid "Category Management"
+msgstr ""
+
+#: templates/admin/category_list.html:50
+msgid "None"
+msgstr ""
+
+#: templates/admin/category_list.html:58 templates/admin/game_list.html:90
+msgid "View"
+msgstr ""
+
+#: templates/admin/category_list.html:61 templates/admin/game_list.html:93
+#: templates/games/profile.html:41
+msgid "Edit"
+msgstr ""
+
+#: templates/admin/category_list.html:64 templates/admin/game_list.html:96
+msgid "Delete"
+msgstr ""
+
+#: templates/admin/category_list.html:75
+msgid "No categories found"
+msgstr ""
+
+#: templates/admin/dashboard.html:4
+msgid "Admin Dashboard"
+msgstr ""
+
+#: templates/admin/dashboard.html:16
+msgid "Total Games"
+msgstr ""
+
+#: templates/admin/dashboard.html:27
+msgid "Total Users"
+msgstr ""
+
+#: templates/admin/dashboard.html:38 templates/admin/stats.html:290
+msgid "Game Plays"
+msgstr ""
+
+#: templates/admin/dashboard.html:59
+msgid "Recently Added Games"
+msgstr ""
+
+#: templates/admin/dashboard.html:67 templates/admin/game_list.html:20
+#: templates/admin/stats.html:172 templates/admin/user_detail.html:194
+#: templates/games/profile.html:140
+msgid "Game"
+msgstr ""
+
+#: templates/admin/dashboard.html:69
+msgid "Added"
+msgstr ""
+
+#: templates/admin/dashboard.html:109 templates/admin/game_list.html:107
+msgid "No games found"
+msgstr ""
+
+#: templates/admin/dashboard.html:123
+msgid "Recently Registered Users"
+msgstr ""
+
+#: templates/admin/dashboard.html:131 templates/admin/user_detail.html:60
+#: templates/admin/user_list.html:27
+msgid "User"
+msgstr ""
+
+#: templates/admin/dashboard.html:132 templates/admin/user_list.html:28
+#: templates/games/profile.html:56 templates/games/profile.html:203
+msgid "Email"
+msgstr ""
+
+#: templates/admin/dashboard.html:133
+msgid "Registered"
+msgstr ""
+
+#: templates/admin/dashboard.html:160 templates/admin/user_list.html:79
+msgid "No users found"
+msgstr ""
+
+#: templates/admin/dashboard.html:174
+msgid "Game Views Statistics"
+msgstr ""
+
+#: templates/admin/dashboard.html:198
+msgid "Game Views"
+msgstr ""
+
+#: templates/admin/game_confirm_delete.html:4
+#: templates/admin/game_confirm_delete.html:5
+#: templates/admin/game_confirm_delete.html:78
+msgid "Delete Game"
+msgstr ""
+
+#: templates/admin/game_confirm_delete.html:15
+msgid ""
+"You are about to delete the following game. This action cannot be undone."
+msgstr ""
+
+#: templates/admin/game_confirm_delete.html:38
+msgid "Game Details"
+msgstr ""
+
+#: templates/admin/game_confirm_delete.html:45
+#: templates/admin/game_list.html:23 templates/games/category_list.html:159
+#: templates/games/game_detail.html:469 templates/games/game_list.html:262
+msgid "Rating"
+msgstr ""
+
+#: templates/admin/game_confirm_delete.html:57
+#: templates/admin/game_list.html:25 templates/admin/game_list.html:82
+msgid "Featured"
+msgstr ""
+
+#: templates/admin/game_confirm_delete.html:59
+msgid "Yes"
+msgstr ""
+
+#: templates/admin/game_confirm_delete.html:61
+msgid "No"
+msgstr ""
+
+#: templates/admin/game_form.html:66
+msgid "Game Title"
+msgstr ""
+
+#: templates/admin/game_form.html:79
+msgid "URL-friendly name for the game. Must be unique."
+msgstr ""
+
+#: templates/admin/game_form.html:84
+msgid "Game iframe URL"
+msgstr ""
+
+#: templates/admin/game_form.html:89
+msgid "The URL that will be embedded in an iframe to display the game."
+msgstr ""
+
+#: templates/admin/game_form.html:94 templates/games/game_detail.html:293
+msgid "Game Description"
+msgstr ""
+
+#: templates/admin/game_form.html:110
+msgid "Select one or more categories for this game."
+msgstr ""
+
+#: templates/admin/game_form.html:115
+msgid "Thumbnail Image"
+msgstr ""
+
+#: templates/admin/game_form.html:120
+msgid "Upload a thumbnail image for the game."
+msgstr ""
+
+#: templates/admin/game_form.html:133
+msgid "Featured Game"
+msgstr ""
+
+#: templates/admin/game_form.html:138
+msgid "Featured games appear on the homepage and get more visibility."
+msgstr ""
+
+#: templates/admin/game_form.html:150
+msgid "Inactive games are not visible to users."
+msgstr ""
+
+#: templates/admin/game_form.html:161
+msgid "Save Game"
+msgstr ""
+
+#: templates/admin/game_list.html:4 templates/admin/game_list.html:5
+msgid "Game Management"
+msgstr ""
+
+#: templates/admin/game_list.html:84
+msgid "Regular"
+msgstr ""
+
+#: templates/admin/language_management.html:10
+msgid "Available Languages"
+msgstr ""
+
+#: templates/admin/language_management.html:12
+#: templates/admin/language_management.html:154
+msgid "Add Language"
+msgstr ""
+
+#: templates/admin/language_management.html:21
+msgid "Code"
+msgstr ""
+
+#: templates/admin/language_management.html:64
+msgid "No languages found. Add your first language."
+msgstr ""
+
+#: templates/admin/language_management.html:75 templates/admin/settings.html:54
+msgid "Language Settings"
+msgstr ""
+
+#: templates/admin/language_management.html:82
+msgid "Default Language"
+msgstr ""
+
+#: templates/admin/language_management.html:88
+msgid "The default language will be used when a user first visits the site."
+msgstr ""
+
+#: templates/admin/language_management.html:95
+msgid "Allow users to switch between available languages."
+msgstr ""
+
+#: templates/admin/language_management.html:102
+msgid "Automatically detect and use the user\\"
+msgstr ""
+
+#: templates/admin/language_management.html:105
+#: templates/admin/website_settings.html:289
+msgid "Save Settings"
+msgstr ""
+
+#: templates/admin/language_management.html:116
+msgid "Add New Language"
+msgstr ""
+
+#: templates/admin/language_management.html:130
+#: templates/admin/language_management.html:180
+msgid "Format: ISO 639-1 code (e.g., en, fr, es, zh)"
+msgstr ""
+
+#: templates/admin/language_management.html:131
+#: templates/admin/language_management.html:181
+msgid "Please enter a valid language code (e.g., en, fr, es, zh)"
+msgstr ""
+
+#: templates/admin/language_management.html:134
+#: templates/admin/language_management.html:184
+msgid "Language Flag"
+msgstr ""
+
+#: templates/admin/language_management.html:136
+msgid "Recommended size: 24x16 pixels"
+msgstr ""
+
+#: templates/admin/language_management.html:141
+#: templates/admin/language_management.html:195
+msgid "Enable this language"
+msgstr ""
+
+#: templates/admin/language_management.html:147
+#: templates/admin/language_management.html:201
+msgid "Set as default language"
+msgstr ""
+
+#: templates/admin/language_management.html:165
+msgid "Edit Language"
+msgstr ""
+
+#: templates/admin/language_management.html:190
+msgid "Leave empty to keep current flag"
+msgstr ""
+
+#: templates/admin/language_management.html:208
+msgid "Save Changes"
+msgstr ""
+
+#: templates/admin/language_management.html:229
+msgid "Are you sure you want to delete this language?"
+msgstr ""
+
+#: templates/admin/language_management.html:231
+msgid ""
+"This action cannot be undone. All translations for this language will be "
+"lost."
+msgstr ""
+
+#: templates/admin/language_management.html:236
+msgid "Delete Language"
+msgstr ""
+
+#: templates/admin/language_management.html:377
+msgid "An error occurred while updating language status."
+msgstr ""
+
+#: templates/admin/language_management.html:445
+msgid "An error occurred while setting default language."
+msgstr ""
+
+#: templates/admin/language_management.html:475
+msgid "Operation completed successfully."
+msgstr ""
+
+#: templates/admin/language_management.html:484
+msgid "An error occurred."
+msgstr ""
+
+#: templates/admin/language_management.html:494 templates/admin/stats.html:419
+#: templates/games/game_list.html:329
+msgid "Loading..."
+msgstr ""
+
+#: templates/admin/language_management.html:496
+msgid "Processing..."
+msgstr ""
+
+#: templates/admin/menu_form.html:73 templates/admin/menu_item_form.html:135
+#: templates/games/profile.html:213
+msgid "Save"
+msgstr ""
+
+#: templates/admin/menu_item_form.html:14
+msgid "Back to Menu Items"
+msgstr ""
+
+#: templates/admin/menu_item_form.html:99
+msgid "FontAwesome icon class (e.g. fas fa-home)"
+msgstr ""
+
+#: templates/admin/menu_item_list.html:18
+msgid "Back to Menus"
+msgstr ""
+
+#: templates/admin/menu_item_list.html:21
+msgid "Add Menu Item"
+msgstr ""
+
+#: templates/admin/menu_item_list.html:33
+msgid "Parent"
+msgstr ""
+
+#: templates/admin/menu_item_list.html:81
+msgid "No menu items found. Add your first menu item!"
+msgstr ""
+
+#: templates/admin/menu_item_list.html:94
+msgid "Menu Structure Preview"
+msgstr ""
+
+#: templates/admin/menu_list.html:14
+msgid "Add Menu"
+msgstr ""
+
+#: templates/admin/menu_list.html:23
+msgid "Type"
+msgstr ""
+
+#: templates/admin/menu_list.html:25
+msgid "Items"
+msgstr ""
+
+#: templates/admin/menu_list.html:52
+msgid "Manage Items"
+msgstr ""
+
+#: templates/admin/menu_list.html:70
+msgid "No menus found. Create your first menu!"
+msgstr ""
+
+#: templates/admin/settings.html:24
+msgid "System Settings"
+msgstr ""
+
+#: templates/admin/settings.html:27
+msgid "Manage all system settings from this central location."
+msgstr ""
+
+#: templates/admin/settings.html:39
+msgid ""
+"Configure your website's basic information, logo, favicon, and SEO settings."
+msgstr ""
+
+#: templates/admin/settings.html:41 templates/admin/settings.html:58
+#: templates/admin/settings.html:75
+msgid "Manage"
+msgstr ""
+
+#: templates/admin/settings.html:56
+msgid "Manage available languages and default language settings."
+msgstr ""
+
+#: templates/admin/settings.html:73
+msgid "Manage navigation menus for your website."
+msgstr ""
+
+#: templates/admin/stats.html:36
+msgid "Date Range"
+msgstr ""
+
+#: templates/admin/stats.html:38
+msgid "Last 7 days"
+msgstr ""
+
+#: templates/admin/stats.html:39
+msgid "Last 30 days"
+msgstr ""
+
+#: templates/admin/stats.html:40
+msgid "Last 90 days"
+msgstr ""
+
+#: templates/admin/stats.html:41
+msgid "Last year"
+msgstr ""
+
+#: templates/admin/stats.html:42
+msgid "Custom range"
+msgstr ""
+
+#: templates/admin/stats.html:54
+msgid "Apply"
+msgstr ""
+
+#: templates/admin/stats.html:68
+msgid "Total Games Played"
+msgstr ""
+
+#: templates/admin/stats.html:70 templates/admin/stats.html:82
+#: templates/admin/stats.html:94 templates/admin/stats.html:106
+msgid "vs previous period"
+msgstr ""
+
+#: templates/admin/stats.html:80
+msgid "New Users"
+msgstr ""
+
+#: templates/admin/stats.html:92
+msgid "Avg. Play Time"
+msgstr ""
+
+#: templates/admin/stats.html:93 templates/admin/stats.html:196
+msgid "min"
+msgstr ""
+
+#: templates/admin/stats.html:104
+msgid "Ad Clicks"
+msgstr ""
+
+#: templates/admin/stats.html:117
+msgid "Game Activity Trend"
+msgstr ""
+
+#: templates/admin/stats.html:119
+msgid "Daily"
+msgstr ""
+
+#: templates/admin/stats.html:120
+msgid "Weekly"
+msgstr ""
+
+#: templates/admin/stats.html:121
+msgid "Monthly"
+msgstr ""
+
+#: templates/admin/stats.html:136
+msgid "User Distribution"
+msgstr ""
+
+#: templates/admin/stats.html:150
+msgid "Revenue Statistics"
+msgstr ""
+
+#: templates/admin/stats.html:164
+msgid "Top Games"
+msgstr ""
+
+#: templates/admin/stats.html:173
+msgid "Plays"
+msgstr ""
+
+#: templates/admin/stats.html:174
+msgid "Avg. Time"
+msgstr ""
+
+#: templates/admin/stats.html:200 templates/admin/stats.html:245
+msgid "No data available"
+msgstr ""
+
+#: templates/admin/stats.html:214
+msgid "Ad Performance"
+msgstr ""
+
+#: templates/admin/stats.html:221
+msgid "Ad Name"
+msgstr ""
+
+#: templates/admin/stats.html:328
+msgid "Basic Members"
+msgstr ""
+
+#: templates/admin/stats.html:328
+msgid "Premium Members"
+msgstr ""
+
+#: templates/admin/stats.html:357
+msgid "Revenue"
+msgstr ""
+
+#: templates/admin/stats.html:383
+msgid "Amount"
+msgstr ""
+
+#: templates/admin/stats.html:471
+msgid "Error loading data. Please try again."
+msgstr ""
+
+#: templates/admin/translation_management.html:10
+msgid "Translation Overview"
+msgstr ""
+
+#: templates/admin/translation_management.html:13
+msgid ""
+"This page provides an overview of all translatable content in the system. "
+"The statistics show the translation progress for each language."
+msgstr ""
+
+#: templates/admin/translation_management.html:15
+msgid "Translation Progress"
+msgstr ""
+
+#: templates/admin/translation_management.html:21
+msgid "Total Fields"
+msgstr ""
+
+#: templates/admin/translation_management.html:22
+msgid "Translated Fields"
+msgstr ""
+
+#: templates/admin/translation_management.html:23
+#: templates/admin/translation_management.html:94
+msgid "Progress"
+msgstr ""
+
+#: templates/admin/translation_management.html:55
+msgid "No translation statistics available."
+msgstr ""
+
+#: templates/admin/translation_management.html:66
+msgid "Translatable Models"
+msgstr ""
+
+#: templates/admin/translation_management.html:75
+msgid "items"
+msgstr ""
+
+#: templates/admin/translation_management.html:80
+msgid "Translatable Fields"
+msgstr ""
+
+#: templates/admin/translation_management.html:87
+msgid "Translation Progress by Language"
+msgstr ""
+
+#: templates/admin/translation_management.html:93
+msgid "Translated"
+msgstr ""
+
+#: templates/admin/translation_management.html:125
+msgid "Edit Translations in Admin"
+msgstr ""
+
+#: templates/admin/translation_management.html:133
+msgid "No translatable models found."
+msgstr ""
+
+#: templates/admin/translation_management.html:142
+msgid "Translation Tools"
+msgstr ""
+
+#: templates/admin/translation_management.html:149
+msgid "Django Admin"
+msgstr ""
+
+#: templates/admin/translation_management.html:150
+msgid ""
+"Use the Django admin interface to edit translations for each model "
+"individually."
+msgstr ""
+
+#: templates/admin/translation_management.html:151
+msgid "Go to Admin"
+msgstr ""
+
+#: templates/admin/translation_management.html:159
+msgid "Manage available languages and their settings."
+msgstr ""
+
+#: templates/admin/translation_management.html:160
+msgid "Manage Languages"
+msgstr ""
+
+#: templates/admin/user_detail.html:4 templates/admin/user_detail.html:5
+msgid "User Details"
+msgstr ""
+
+#: templates/admin/user_detail.html:13
+msgid "User Information"
+msgstr ""
+
+#: templates/admin/user_detail.html:21
+msgid "Edit User"
+msgstr ""
+
+#: templates/admin/user_detail.html:27
+msgid "Deactivate User"
+msgstr ""
+
+#: templates/admin/user_detail.html:29
+msgid "Activate User"
+msgstr ""
+
+#: templates/admin/user_detail.html:52
+msgid "Full Name"
+msgstr ""
+
+#: templates/admin/user_detail.html:56
+msgid "Role"
+msgstr ""
+
+#: templates/admin/user_detail.html:58 templates/games/base.html:168
+msgid "Admin"
+msgstr ""
+
+#: templates/admin/user_detail.html:64 templates/admin/user_list.html:30
+msgid "Joined"
+msgstr ""
+
+#: templates/admin/user_detail.html:68
+msgid "Last Login"
+msgstr ""
+
+#: templates/admin/user_detail.html:88
+msgid "User Statistics"
+msgstr ""
+
+#: templates/admin/user_detail.html:95
+msgid "Games Played"
+msgstr ""
+
+#: templates/admin/user_detail.html:101
+msgid "Favorites"
+msgstr ""
+
+#: templates/admin/user_detail.html:107
+msgid "Total Hours"
+msgstr ""
+
+#: templates/admin/user_detail.html:113
+msgid "Activity Score"
+msgstr ""
+
+#: templates/admin/user_detail.html:120
+msgid "Activity Trend"
+msgstr ""
+
+#: templates/admin/user_detail.html:131 templates/games/profile.html:27
+#: templates/games/profile.html:82
+msgid "Favorite Games"
+msgstr ""
+
+#: templates/admin/user_detail.html:160 templates/games/game_list.html:306
+#: templates/games/includes/game_card.html:24
+msgid "views"
+msgstr ""
+
+#: templates/admin/user_detail.html:165
+msgid "View Game"
+msgstr ""
+
+#: templates/admin/user_detail.html:175
+msgid "This user has not favorited any games yet."
+msgstr ""
+
+#: templates/admin/user_detail.html:186
+msgid "Recent Game History"
+msgstr ""
+
+#: templates/admin/user_detail.html:195
+msgid "Played On"
+msgstr ""
+
+#: templates/admin/user_detail.html:196
+msgid "Duration"
+msgstr ""
+
+#: templates/admin/user_detail.html:220
+msgid "minutes"
+msgstr ""
+
+#: templates/admin/user_detail.html:227 templates/games/profile.html:166
+msgid "Play Again"
+msgstr ""
+
+#: templates/admin/user_detail.html:238
+msgid "This user has not played any games yet."
+msgstr ""
+
+#: templates/admin/user_list.html:4 templates/admin/user_list.html:5
+msgid "User Management"
+msgstr ""
+
+#: templates/admin/user_list.html:14
+msgid "Search users..."
+msgstr ""
+
+#: templates/admin/user_list.html:63 templates/games/category_detail.html:170
+#: templates/games/includes/category_card.html:26
+msgid "View Details"
+msgstr ""
+
+#: templates/admin/user_list.html:67
+msgid "Edit in Django Admin"
+msgstr ""
+
+#: templates/admin/website_settings.html:25
+msgid "Basic Website Settings"
+msgstr ""
+
+#: templates/admin/website_settings.html:40
+msgid "General Information"
+msgstr ""
+
+#: templates/admin/website_settings.html:53
+msgid "The name of your website"
+msgstr ""
+
+#: templates/admin/website_settings.html:101
+msgid "Website Content"
+msgstr ""
+
+#: templates/admin/website_settings.html:120
+msgid "Logo"
+msgstr ""
+
+#: templates/admin/website_settings.html:167
+msgid "Copyright text displayed in the footer"
+msgstr ""
+
+#: templates/admin/website_settings.html:174
+msgid "SEO Settings"
+msgstr ""
+
+#: templates/admin/website_settings.html:187
+msgid "Keywords separated by commas"
+msgstr ""
+
+#: templates/admin/website_settings.html:207
+msgid "Social Media Links"
+msgstr ""
+
+#: templates/admin/website_settings.html:267
+msgid "Analytics"
+msgstr ""
+
+#: templates/admin/website_settings.html:280
+msgid "Paste your Google Analytics tracking code here"
+msgstr ""
+
+#: templates/base.html:10 templates/base.html:18 templates/base.html:25
+#: templates/base.html:48
+msgid "Play the best free HTML5 games online. New games added daily!"
+msgstr ""
+
+#: templates/base.html:11
+msgid "HTML5 games, free games, online games, browser games"
+msgstr ""
+
+#: templates/base.html:17 templates/base.html:24
+msgid "HTML5 Games - Play Free Online Games"
+msgstr ""
+
+#: templates/base.html:187 templates/base.html:356
+#: templates/games/category_detail.html:11
+msgid "Home"
+msgstr ""
+
+#: templates/base.html:191 templates/base.html:357
+#: templates/games/category_detail.html:12
+#: templates/games/category_list.html:133 templates/games/game_detail.html:443
+#: templates/games/game_list.html:446 templates/games/home.html:314
+msgid "Game Categories"
+msgstr ""
+
+#: templates/base.html:203 templates/base.html:359
+#: templates/games/home.html:343
+msgid "New Games"
+msgstr ""
+
+#: templates/base.html:209 templates/games/base.html:129
+msgid "Search games..."
+msgstr ""
+
+#: templates/base.html:281 templates/games/home.html:453
+msgid "Advertisement"
+msgstr ""
+
+#: templates/base.html:344 templates/games/base.html:188
+msgid "About Us"
+msgstr ""
+
+#: templates/base.html:345
+msgid ""
+"HTML5 Games is a platform providing high-quality HTML5 games, dedicated to "
+"offering the best gaming experience."
+msgstr ""
+
+#: templates/base.html:354 templates/games/base.html:206
+msgid "Quick Links"
+msgstr ""
+
+#: templates/base.html:364
+msgid "Help Center"
+msgstr ""
+
+#: templates/base.html:366
+msgid "FAQ"
+msgstr ""
+
+#: templates/base.html:367 templates/games/base.html:210
+msgid "Contact Us"
+msgstr ""
+
+#: templates/base.html:368
+msgid "Terms of Service"
+msgstr ""
+
+#: templates/base.html:369
+msgid "Privacy Policy"
+msgstr ""
+
+#: templates/base.html:373
+msgid "Subscribe to Our Newsletter"
+msgstr ""
+
+#: templates/base.html:374
+msgid "Get the latest games and offers"
+msgstr ""
+
+#: templates/base.html:377
+msgid "Your email address"
+msgstr ""
+
+#: templates/base.html:378
+msgid "Subscribe"
+msgstr ""
+
+#: templates/base.html:386
+msgid "All Rights Reserved"
+msgstr ""
+
+#: templates/games/auth/login.html:102
+msgid "Welcome to HTML5 Games"
+msgstr ""
+
+#: templates/games/auth/login.html:103
+msgid ""
+"Login to access thousands of free HTML5 games, track your favorites, and "
+"enjoy personalized game recommendations."
+msgstr ""
+
+#: templates/games/auth/login.html:110 templates/games/auth/register.html:107
+msgid "Access to all games"
+msgstr ""
+
+#: templates/games/auth/login.html:116 templates/games/auth/register.html:113
+msgid "Save your favorite games"
+msgstr ""
+
+#: templates/games/auth/login.html:122 templates/games/auth/register.html:119
+msgid "Track your game history"
+msgstr ""
+
+#: templates/games/auth/login.html:126 templates/games/auth/login.html:201
+msgid "Don't have an account?"
+msgstr ""
+
+#: templates/games/auth/login.html:127 templates/games/auth/login.html:202
+msgid "Register Now"
+msgstr ""
+
+#: templates/games/auth/login.html:135 templates/games/auth/login.html:188
+#: templates/games/auth/register.html:132
+msgid "Login"
+msgstr ""
+
+#: templates/games/auth/login.html:138 templates/games/auth/register.html:135
+#: templates/games/auth/register.html:235
+msgid "Register"
+msgstr ""
+
+#: templates/games/auth/login.html:145
+msgid "Login to Your Account"
+msgstr ""
+
+#: templates/games/auth/login.html:192
+msgid "Forgot Password?"
+msgstr ""
+
+#: templates/games/auth/login.html:197
+msgid "or"
+msgstr ""
+
+#: templates/games/auth/password_reset.html:4
+msgid "Password Reset"
+msgstr ""
+
+#: templates/games/auth/password_reset.html:53
+msgid "Reset Your Password"
+msgstr ""
+
+#: templates/games/auth/password_reset.html:54
+msgid ""
+"Enter your email address and we will send you a link to reset your password."
+msgstr ""
+
+#: templates/games/auth/password_reset.html:55
+#: templates/games/auth/password_reset.html:93
+msgid "Remember your password?"
+msgstr ""
+
+#: templates/games/auth/password_reset.html:56
+#: templates/games/auth/password_reset.html:94
+#: templates/games/auth/password_reset_done.html:53
+msgid "Back to Login"
+msgstr ""
+
+#: templates/games/auth/password_reset.html:62
+msgid "Forgot Your Password?"
+msgstr ""
+
+#: templates/games/auth/password_reset.html:63
+msgid ""
+"Enter your email address below and we will send you a link to reset your "
+"password."
+msgstr ""
+
+#: templates/games/auth/password_reset.html:77
+msgid "Email Address"
+msgstr ""
+
+#: templates/games/auth/password_reset.html:89
+msgid "Reset Password"
+msgstr ""
+
+#: templates/games/auth/password_reset_complete.html:4
+#: templates/games/auth/password_reset_complete.html:50
+msgid "Password Reset Complete"
+msgstr ""
+
+#: templates/games/auth/password_reset_complete.html:51
+msgid ""
+"Your password has been set. You may now proceed to log in with your new "
+"password."
+msgstr ""
+
+#: templates/games/auth/password_reset_complete.html:52
+#: templates/games/auth/register.html:124
+#: templates/games/auth/register.html:241
+msgid "Login Now"
+msgstr ""
+
+#: templates/games/auth/password_reset_confirm.html:4
+#: templates/games/auth/password_reset_confirm.html:34
+msgid "Set New Password"
+msgstr ""
+
+#: templates/games/auth/password_reset_confirm.html:37
+msgid ""
+"Please enter your new password twice so we can verify you typed it correctly."
+msgstr ""
+
+#: templates/games/auth/password_reset_confirm.html:43
+msgid "New Password"
+msgstr ""
+
+#: templates/games/auth/password_reset_confirm.html:56
+msgid "Confirm New Password"
+msgstr ""
+
+#: templates/games/auth/password_reset_confirm.html:68
+msgid "Change My Password"
+msgstr ""
+
+#: templates/games/auth/password_reset_confirm.html:73
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used. Please request a new password reset."
+msgstr ""
+
+#: templates/games/auth/password_reset_confirm.html:76
+msgid "Request New Reset Link"
+msgstr ""
+
+#: templates/games/auth/password_reset_done.html:4
+msgid "Password Reset Email Sent"
+msgstr ""
+
+#: templates/games/auth/password_reset_done.html:50
+msgid "Check Your Email"
+msgstr ""
+
+#: templates/games/auth/password_reset_done.html:51
+msgid ""
+"We have sent you an email with instructions on how to reset your password. "
+"Please check your inbox and follow the link provided."
+msgstr ""
+
+#: templates/games/auth/password_reset_done.html:52
+msgid ""
+"If you don't receive an email within a few minutes, please check your spam "
+"folder or try again."
+msgstr ""
+
+#: templates/games/auth/password_reset_email.html:4
+msgid ""
+"You're receiving this email because you requested a password reset for your "
+"user account at HTML5 Games."
+msgstr ""
+
+#: templates/games/auth/password_reset_email.html:6
+msgid "Please go to the following page and choose a new password:"
+msgstr ""
+
+#: templates/games/auth/password_reset_email.html:11
+msgid "Your username, in case you've forgotten:"
+msgstr ""
+
+#: templates/games/auth/password_reset_email.html:13
+msgid "Thanks for using our site!"
+msgstr ""
+
+#: templates/games/auth/password_reset_email.html:15
+msgid "The HTML5 Games Team"
+msgstr ""
+
+#: templates/games/auth/register.html:99
+msgid "Join HTML5 Games"
+msgstr ""
+
+#: templates/games/auth/register.html:100
+msgid ""
+"Create an account to access thousands of free HTML5 games, track your "
+"favorites, and enjoy personalized game recommendations."
+msgstr ""
+
+#: templates/games/auth/register.html:123
+#: templates/games/auth/register.html:240
+msgid "Already have an account?"
+msgstr ""
+
+#: templates/games/auth/register.html:142
+msgid "Create Your Account"
+msgstr ""
+
+#: templates/games/auth/register.html:231
+msgid "I agree to the Terms and Conditions"
+msgstr ""
+
+#: templates/games/base.html:132 templates/games/game_list.html:438
+msgid "Search"
+msgstr ""
+
+#: templates/games/category_detail.html:40
+#: templates/games/category_detail.html:73
+#: templates/games/category_detail.html:156
+#: templates/games/category_list.html:245
+msgid "games"
+msgstr ""
+
+#: templates/games/category_detail.html:44
+msgid "Last updated"
+msgstr ""
+
+#: templates/games/category_detail.html:46
+#: templates/games/category_detail.html:87 templates/games/profile.html:121
+#: templates/games/profile.html:177 templates/games/profile.html:244
+msgid "Browse Games"
+msgstr ""
+
+#: templates/games/category_detail.html:100
+msgid "Popular Games in"
+msgstr ""
+
+#: templates/games/category_detail.html:122
+#: templates/games/category_list.html:300 templates/games/home.html:297
+#: templates/games/home.html:378 templates/games/home.html:432
+msgid "Play Now"
+msgstr ""
+
+#: templates/games/category_detail.html:131
+msgid "View All Games"
+msgstr ""
+
+#: templates/games/category_detail.html:140
+msgid "Related Categories"
+msgstr ""
+
+#: templates/games/category_detail.html:183
+msgid "About"
+msgstr ""
+
+#: templates/games/category_detail.html:188
+msgid "This is a subcategory of"
+msgstr ""
+
+#: templates/games/category_list.html:125
+msgid "Welcome to our HTML5 Games platform!"
+msgstr ""
+
+#: templates/games/category_list.html:134
+msgid ""
+"Browse various types of exciting games and find your favorite game category"
+msgstr ""
+
+#: templates/games/category_list.html:141
+msgid "All"
+msgstr ""
+
+#: templates/games/category_list.html:151
+msgid "Filter Options"
+msgstr ""
+
+#: templates/games/category_list.html:196
+msgid "Release Date"
+msgstr ""
+
+#: templates/games/category_list.html:199
+msgid "All Time"
+msgstr ""
+
+#: templates/games/category_list.html:203
+msgid "This Week"
+msgstr ""
+
+#: templates/games/category_list.html:207
+msgid "This Month"
+msgstr ""
+
+#: templates/games/category_list.html:211
+msgid "This Year"
+msgstr ""
+
+#: templates/games/category_list.html:216
+msgid "Features"
+msgstr ""
+
+#: templates/games/category_list.html:219
+msgid "Multiplayer"
+msgstr ""
+
+#: templates/games/category_list.html:223
+msgid "Single Player"
+msgstr ""
+
+#: templates/games/category_list.html:227
+msgid "Touch Optimized"
+msgstr ""
+
+#: templates/games/category_list.html:231
+msgid "Fullscreen Support"
+msgstr ""
+
+#: templates/games/category_list.html:235
+msgid "Apply Filters"
+msgstr ""
+
+#: templates/games/category_list.html:236
+msgid "Reset"
+msgstr ""
+
+#: templates/games/category_list.html:245
+msgid "Showing"
+msgstr ""
+
+#: templates/games/category_list.html:245
+msgid "of"
+msgstr ""
+
+#: templates/games/category_list.html:248
+msgid "Sort by"
+msgstr ""
+
+#: templates/games/category_list.html:259
+msgid "Most Popular"
+msgstr ""
+
+#: templates/games/category_list.html:260
+msgid "Newest"
+msgstr ""
+
+#: templates/games/category_list.html:261
+msgid "Highest Rated"
+msgstr ""
+
+#: templates/games/category_list.html:262
+msgid "Name A-Z"
+msgstr ""
+
+#: templates/games/category_list.html:308
+msgid "No games found matching your criteria. Try adjusting your filters."
+msgstr ""
+
+#: templates/games/category_list.html:311
+msgid "Reset Filters"
+msgstr ""
+
+#: templates/games/category_list.html:323
+#: templates/games/category_list.html:327 templates/games/game_list.html:341
+#: templates/games/game_list.html:346
+msgid "Previous"
+msgstr ""
+
+#: templates/games/category_list.html:341
+#: templates/games/category_list.html:345 templates/games/game_list.html:363
+#: templates/games/game_list.html:368
+msgid "Next"
+msgstr ""
+
+#: templates/games/cms_plugins/category_list.html:18
+msgid "No categories found."
+msgstr ""
+
+#: templates/games/cms_plugins/game_list.html:18
+msgid "No games found."
+msgstr ""
+
+#: templates/games/game_detail.html:4 templates/games/game_detail.html:8
+#: templates/games/game_list.html:27 templates/games/game_list.html:202
+msgid "HTML5 Games"
+msgstr ""
+
+#: templates/games/game_detail.html:204 templates/games/game_detail.html:370
+#: templates/games/game_list.html:228 templates/games/game_list.html:397
+#: templates/games/game_list.html:422
+msgid "Sponsored content"
+msgstr ""
+
+#: templates/games/game_detail.html:217
+msgid "Favorite"
+msgstr ""
+
+#: templates/games/game_detail.html:248 templates/games/game_detail.html:587
+msgid "Fullscreen"
+msgstr ""
+
+#: templates/games/game_detail.html:264
+msgid "Rotate your device"
+msgstr ""
+
+#: templates/games/game_detail.html:265
+msgid ""
+"For the best gaming experience, please rotate your device to landscape mode."
+msgstr ""
+
+#: templates/games/game_detail.html:273
+msgid "Refresh Game"
+msgstr ""
+
+#: templates/games/game_detail.html:273
+msgid "Refresh"
+msgstr ""
+
+#: templates/games/game_detail.html:277
+msgid "Played"
+msgstr ""
+
+#: templates/games/game_detail.html:280
+msgid "Share"
+msgstr ""
+
+#: templates/games/game_detail.html:302
+msgid "Game Content"
+msgstr ""
+
+#: templates/games/game_detail.html:312
+msgid "Comments"
+msgstr ""
+
+#: templates/games/game_detail.html:315 templates/games/game_detail.html:462
+msgid "Add Comment"
+msgstr ""
+
+#: templates/games/game_detail.html:349
+msgid "No comments yet"
+msgstr ""
+
+#: templates/games/game_detail.html:382
+msgid "Related Games"
+msgstr ""
+
+#: templates/games/game_detail.html:471
+msgid "Excellent"
+msgstr ""
+
+#: templates/games/game_detail.html:472
+msgid "Very Good"
+msgstr ""
+
+#: templates/games/game_detail.html:473
+msgid "Good"
+msgstr ""
+
+#: templates/games/game_detail.html:474
+msgid "Fair"
+msgstr ""
+
+#: templates/games/game_detail.html:475
+msgid "Poor"
+msgstr ""
+
+#: templates/games/game_detail.html:479
+msgid "Comment"
+msgstr ""
+
+#: templates/games/game_detail.html:482
+msgid "Submit"
+msgstr ""
+
+#: templates/games/game_detail.html:567
+msgid "Exit Fullscreen"
+msgstr ""
+
+#: templates/games/game_list.html:8 templates/games/game_list.html:23
+#: templates/games/game_list.html:34 templates/games/game_list.html:242
+msgid "Search Results"
+msgstr ""
+
+#: templates/games/game_list.html:16 templates/games/game_list.html:24
+#: templates/games/game_list.html:35
+msgid "Search results for"
+msgstr ""
+
+#: templates/games/game_list.html:16 templates/games/game_list.html:24
+#: templates/games/game_list.html:35
+msgid ""
+"Play free HTML5 games online. Browse our collection of the best browser "
+"games that you can play directly in your web browser without download."
+msgstr ""
+
+#: templates/games/game_list.html:17
+msgid "HTML5 games, browser games, online games, free games"
+msgstr ""
+
+#: templates/games/game_list.html:252
+msgid "Sort by Popularity"
+msgstr ""
+
+#: templates/games/game_list.html:254
+msgid "Sort by Rating"
+msgstr ""
+
+#: templates/games/game_list.html:256
+msgid "Sort by Latest"
+msgstr ""
+
+#: templates/games/game_list.html:260
+msgid "Latest"
+msgstr ""
+
+#: templates/games/game_list.html:261
+msgid "Popular"
+msgstr ""
+
+#: templates/games/game_list.html:315
+#: templates/games/includes/game_card.html:33 templates/games/profile.html:108
+msgid "Play Game"
+msgstr ""
+
+#: templates/games/game_list.html:331
+msgid "Loading more games..."
+msgstr ""
+
+#: templates/games/game_list.html:377
+msgid "No games found related to"
+msgstr ""
+
+#: templates/games/game_list.html:379
+msgid "No games available"
+msgstr ""
+
+#: templates/games/game_list.html:433
+msgid "Search Games"
+msgstr ""
+
+#: templates/games/game_list.html:437
+msgid "Search..."
+msgstr ""
+
+#: templates/games/home.html:4
+msgid "HTML5 Games Platform"
+msgstr ""
+
+#: templates/games/home.html:6
+msgid ""
+"Play the best HTML5 games online for free. No download required. Enjoy "
+"thousands of games across various categories."
+msgstr ""
+
+#: templates/games/home.html:8
+msgid "HTML5 games, online games, free games, browser games, mobile games"
+msgstr ""
+
+#: templates/games/home.html:242
+msgid "Discover the Best HTML5 Games"
+msgstr ""
+
+#: templates/games/home.html:243
+msgid ""
+"Thousands of carefully selected games, play anytime, anywhere, no download "
+"required"
+msgstr ""
+
+#: templates/games/home.html:244
+msgid "Start Exploring"
+msgstr ""
+
+#: templates/games/home.html:250
+msgid "Game showcase"
+msgstr ""
+
+#: templates/games/home.html:304
+msgid "No popular games available at the moment. Check back soon!"
+msgstr ""
+
+#: templates/games/home.html:333
+msgid "No categories available at the moment. Check back soon!"
+msgstr ""
+
+#: templates/games/home.html:385
+msgid "No new games available at the moment. Check back soon!"
+msgstr ""
+
+#: templates/games/home.html:397
+msgid "Recommended Games"
+msgstr ""
+
+#: templates/games/home.html:439
+msgid "No recommended games available at the moment. Check back soon!"
+msgstr ""
+
+#: templates/games/home.html:449
+msgid "Sponsored Ad"
+msgstr ""
+
+#: templates/games/includes/category_card.html:27
+msgid "Play Games"
+msgstr ""
+
+#: templates/games/profile.html:4 templates/games/profile.html:26
+#: templates/games/profile.html:39
+msgid "Profile"
+msgstr ""
+
+#: templates/games/profile.html:20
+msgid "Member"
+msgstr ""
+
+#: templates/games/profile.html:28 templates/games/profile.html:132
+msgid "Game History"
+msgstr ""
+
+#: templates/games/profile.html:47 templates/games/profile.html:199
+msgid "Username"
+msgstr ""
+
+#: templates/games/profile.html:66
+msgid "Registration Date"
+msgstr ""
+
+#: templates/games/profile.html:120 templates/games/profile.html:243
+msgid "You have not favorited any games yet"
+msgstr ""
+
+#: templates/games/profile.html:142
+msgid "Play Time"
+msgstr ""
+
+#: templates/games/profile.html:176
+msgid "You have no game history yet"
+msgstr ""
+
+#: templates/games/profile.html:192
+msgid "Edit Profile"
+msgstr ""
+
+#: templates/games/profile.html:207
+msgid "Avatar"
+msgstr ""
+
+#: templates/menu/dropdown_menu.html:13
+msgid "No categories available"
+msgstr ""

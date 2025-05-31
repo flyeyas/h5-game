@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-{% load static i18n sekizai_tags cms_tags menu_tags language_tags %}
-{% cms_toolbar %}
+{% load static i18n %}
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
@@ -10,17 +9,19 @@
     <meta name="description" content="{% block meta_description %}{% trans 'Play the best free HTML5 games online. New games added daily!' %}{% endblock %}">
     <meta name="keywords" content="{% block meta_keywords %}{% trans 'HTML5 games, free games, online games, browser games' %}{% endblock %}">
     <meta name="author" content="HTML5 Games">
-    
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
     <meta property="og:title" content="{% block og_title %}{% trans 'HTML5 Games - Play Free Online Games' %}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{% trans 'Play the best free HTML5 games online. New games added daily!' %}{% endblock %}">
     <meta property="og:image" content="{% block og_image %}{% static 'img/logo.png' %}{% endblock %}">
-    
+    <meta property="og:site_name" content="{% trans 'HTML5 Games' %}">
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:url" content="{% block twitter_url %}{{ request.build_absolute_uri }}{% endblock %}">
     <meta property="twitter:title" content="{% block twitter_title %}{% trans 'HTML5 Games - Play Free Online Games' %}{% endblock %}">
     <meta property="twitter:description" content="{% block twitter_description %}{% trans 'Play the best free HTML5 games online. New games added daily!' %}{% endblock %}">
     <meta property="twitter:image" content="{% block twitter_image %}{% static 'img/logo.png' %}{% endblock %}">
@@ -30,15 +31,13 @@
     {% for lang_code, lang_name in languages %}
     <link rel="alternate" hreflang="{{ lang_code }}" href="{{ request.build_absolute_uri }}{% if lang_code != LANGUAGE_CODE %}?lang={{ lang_code }}{% endif %}">
     {% endfor %}
-    <link rel="canonical" href="{{ request.build_absolute_uri }}">
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    {% render_block "css" %}
-    {% block extra_css %}{% endblock %}
-    
-    <!-- 结构化数据 - 网站信息 -->
+    <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+
+    <!-- Additional Meta Tags -->
+    {% block extra_meta %}{% endblock %}
+
+    <!-- 结构化数据 -->
+    {% block structured_data %}
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -53,6 +52,13 @@
         }
     }
     </script>
+    {% endblock %}
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+
     
     <script>
     function incrementAdClick(adId) {
@@ -135,11 +141,20 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
+        /* 页脚广告区域样式 */
+        .footer-ads-section {
+            border-bottom: 1px solid #dee2e6;
+            margin-top: 50px;
+        }
+        .footer-ads-section .container {
+            max-width: 1200px;
+        }
+
         .footer {
             background-color: #343a40;
             color: white;
             padding: 40px 0 20px;
-            margin-top: 50px;
+            margin-top: 0;
         }
         .footer h5 {
             font-weight: 600;
@@ -164,9 +179,29 @@
             font-size: 1.2rem;
             margin-right: 15px;
         }
+
+        /* 侧边栏广告样式 */
+        .sidebar-ads-container {
+            margin-top: 20px;
+        }
+
+        .sidebar-ads-container .card {
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .sidebar-ads-container .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
         @media (max-width: 767.98px) {
             .navbar-brand img {
                 height: 30px;
+            }
+
+            .sidebar-ads-container {
+                margin-top: 30px;
             }
         }
     </style>
@@ -174,92 +209,78 @@
 <body>
     <!-- 导航栏 -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
+            <div class="container">
             <a class="navbar-brand" href="{% url 'games:home' %}">
                 <span class="h3 text-white">HTML5 Games</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'games:home' %}">{% trans 'Home' %}</a>
-                    </li>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'games:home' %}">{% trans 'Home' %}</a>
+                        </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown">
                             {% trans 'Game Categories' %}
                         </a>
                         <ul class="dropdown-menu">
-                            {% show_menu 0 1 100 100 "menu/dropdown_menu.html" %}
+                            {% for category in categories %}
+                                <li><a class="dropdown-item" href="{% url 'games:game_list_by_category' category.slug %}">{{ category.name }}</a></li>
+                            {% endfor %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'games:category_list' %}">{% trans 'All Categories' %}</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
+                        <li class="nav-item">
                         <a class="nav-link" href="{% url 'games:game_list' %}?sort=popular">{% trans 'Popular Games' %}</a>
-                    </li>
-                    <li class="nav-item">
+                        </li>
+                        <li class="nav-item">
                         <a class="nav-link" href="{% url 'games:game_list' %}?sort=newest">{% trans 'New Games' %}</a>
-                    </li>
-                </ul>
+                        </li>
+                    </ul>
                 <form class="d-flex me-3" action="{% url 'games:game_list' %}" method="get">
                     <div class="search-input-wrapper">
                         <i class="fas fa-search search-icon"></i>
                         <input class="form-control" type="search" name="q" placeholder="{% trans 'Search games...' %}" aria-label="Search">
                         <button class="btn btn-primary search-btn" type="submit"><i class="fas fa-search"></i></button>
                     </div>
-                </form>
+                    </form>
                 <div class="d-flex align-items-center">
-                    {% if user.is_authenticated %}
-                    <div class="dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            {{ user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'games:user_profile' %}">{% trans 'Profile' %}</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'games:logout' %}">{% trans 'Logout' %}</a></li>
-                        </ul>
-                    </div>
-                    {% else %}
-                    <a href="{% url 'games:login' %}" class="btn btn-outline-light nav-btn me-2">{% trans 'Login' %}</a>
-                    <a href="{% url 'games:register' %}" class="btn btn-primary nav-btn">{% trans 'Register' %}</a>
-                    {% endif %}
-                    
-                    {% if language_settings.show_switcher and active_languages.count > 1 %}
-                    <div class="dropdown ms-3">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-globe me-1"></i> {% trans 'Language' %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end language-menu">
-                            {% for language in active_languages %}
-                            <li>
-                                <form action="{% url 'set_language' %}" method="post" class="language-form">
-                                    {% csrf_token %}
-                                    <input name="next" type="hidden" value="{{ request.path }}">
-                                    <input name="language" type="hidden" value="{{ language.code }}">
-                                    <button type="submit" class="dropdown-item {% if language.code == LANGUAGE_CODE %}active{% endif %}">
-                                        {% if language.flag %}
-                                        <img src="{{ language.flag.url }}" alt="{{ language.name }}" width="16" height="12" class="me-2">
-                                        {% endif %}
-                                        {% if language.code == LANGUAGE_CODE %}<i class="fas fa-check me-2"></i>{% endif %}
-                                        {{ language.name }}
-                                    </button>
-                                </form>
-                            </li>
+                    <!-- Django Language Switcher -->
+                    {% if LANGUAGES|length > 1 %}
+                    <div class="dropdown me-3">
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle d-flex align-items-center" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe me-1"></i>
+                            <span>{{ LANGUAGE_CODE|upper }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            {% for lang_code, lang_name in LANGUAGES %}
+                                <li>
+                                    <form action="{% url 'set_language' %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input name="next" type="hidden" value="{{ request.path }}">
+                                        <input name="language" type="hidden" value="{{ lang_code }}">
+                                        <button type="submit" class="dropdown-item d-flex align-items-center {% if lang_code == LANGUAGE_CODE %}active{% endif %}" style="border: none; background: none; width: 100%; text-align: left;">
+                                            <span>{{ lang_name }}</span>
+                                        </button>
+                                    </form>
+                                </li>
                             {% endfor %}
                         </ul>
                     </div>
                     {% endif %}
                 </div>
+
+                </div>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
     <!-- 广告横幅 -->
     {% if header_ads %}
-    <div class="container py-2 text-center mt-3">
+    <div class="container py-3 text-center">
         {% for ad in header_ads %}
             {% if ad.html_code %}
                 {{ ad.html_code|safe }}
@@ -276,16 +297,20 @@
     </div>
     {% endif %}
 
-    <main class="{% block main_class %}py-4{% endblock %}">
+    <!-- Hero区域 (仅首页) -->
+    {% block hero %}{% endblock %}
+
+    <main class="{% block main_class %}py-3{% endblock %}">
         <div class="container">
             <div class="row">
-                <div class="{% if sidebar_ads %}col-lg-9{% else %}col-12{% endif %}">
+                <!-- 游戏详情页不显示侧边栏，因为广告已移动到页面内部 -->
+                <div class="{% if sidebar_ads and request.resolver_match.url_name != 'game_detail' %}col-lg-9{% else %}col-12{% endif %}">
                     {% block content %}{% endblock %}
                 </div>
-                
-                {% if sidebar_ads %}
+
+                {% if sidebar_ads and request.resolver_match.url_name != 'game_detail' %}
                 <div class="col-lg-3">
-                    <div class="sticky-top" style="top: 20px;">
+                    <div class="sidebar-ads-container">
                         {% for ad in sidebar_ads %}
                             <div class="card mb-3">
                                 <div class="card-body p-2">
@@ -335,11 +360,11 @@
         </div>
     </main>
 
-    <!-- 页脚 -->
-    <footer class="footer mt-5">
+    <!-- 页脚广告位 - 移动到页脚上方 -->
+    {% if footer_ads %}
+    <div class="footer-ads-section py-4 bg-light">
         <div class="container">
-            {% if footer_ads %}
-            <div class="row mb-4">
+            <div class="row">
                 <div class="col-12">
                     <div class="text-center">
                         {% for ad in footer_ads %}
@@ -358,7 +383,13 @@
                     </div>
                 </div>
             </div>
-            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 页脚 -->
+    <footer class="footer mt-0">
+        <div class="container">
             <div class="row">
                 <div class="col-md-4 mb-4">
                     <h5>{% trans 'About Us' %}</h5>
@@ -377,7 +408,7 @@
                         <li><a href="{% url 'games:category_list' %}">{% trans 'Game Categories' %}</a></li>
                         <li><a href="{% url 'games:game_list' %}?sort=popular">{% trans 'Popular Games' %}</a></li>
                         <li><a href="{% url 'games:game_list' %}?sort=newest">{% trans 'New Games' %}</a></li>
-                        <li><a href="{% url 'games:subscription' %}">{% trans 'Membership' %}</a></li>
+
                     </ul>
                 </div>
                 <div class="col-md-2 mb-4">
@@ -400,7 +431,7 @@
                     </form>
                 </div>
             </div>
-            <hr class="my-3 bg-light">
+
             <div class="row">
                 <div class="col-12 text-center">
                     <p class="mb-0">&copy; {% now "Y" %} HTML5 Games. {% trans 'All Rights Reserved' %}.</p>
@@ -411,10 +442,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/mobile-optimization.js' %}"></script>
-    <script src="{% static 'js/gesture-controls.js' %}"></script>
-    <script src="{% static 'js/fullscreen-enhancement.js' %}"></script>
-    {% render_block "js" %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -33,10 +33,10 @@
         <div class="card h-100">
             <div class="card-body text-center">
                 <div class="display-4 text-warning mb-2">
-                    <i class="fas fa-id-card"></i>
+                    <i class="fas fa-gamepad"></i>
                 </div>
-                <h5 class="card-title">{% trans 'Premium Members' %}</h5>
-                <h2 class="mb-0">{{ premium_members }}</h2>
+                <h5 class="card-title">{% trans 'Game Plays' %}</h5>
+                <h2 class="mb-0">{{ total_plays|default:"0" }}</h2>
             </div>
         </div>
     </div>
@@ -131,7 +131,7 @@
                                 <th>{% trans 'User' %}</th>
                                 <th>{% trans 'Email' %}</th>
                                 <th>{% trans 'Registered' %}</th>
-                                <th>{% trans 'Membership' %}</th>
+                                <!-- 会员功能已移除 -->
                             </tr>
                         </thead>
                         <tbody>
@@ -153,13 +153,7 @@
                                 </td>
                                 <td>{{ profile.user.email }}</td>
                                 <td>{{ profile.created_at|date:"M d, Y" }}</td>
-                                <td>
-                                    {% if profile.membership %}
-                                    <span class="badge bg-primary">{{ profile.membership.name }}</span>
-                                    {% else %}
-                                    <span class="badge bg-light text-dark">{% trans 'Free' %}</span>
-                                    {% endif %}
-                                </td>
+
                             </tr>
                             {% empty %}
                             <tr>
