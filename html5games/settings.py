@@ -183,6 +183,10 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
+        'detailed': {
+            'format': '{levelname} [{asctime}] {name} {pathname}:{lineno} - {message}',
+            'style': '{',
+        },
     },
     'handlers': {
         'file': {
@@ -196,12 +200,23 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
+        'debug_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
+            'formatter': 'detailed',
+        },
     },
     'loggers': {
         'django': {
             'handlers': ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
+        },
+        'games': {  # 游戏应用日志
+            'handlers': ['console', 'debug_file', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }

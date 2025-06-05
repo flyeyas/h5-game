@@ -1,0 +1,2225 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block page_title %}{% trans 'Game Management' %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<!-- SimpleMDE Markdown 编辑器 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+<style>
+        /* 游戏管理页面特定样式 */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        .table th {
+            font-weight: 600;
+            color: #495057;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .game-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .game-thumbnail-placeholder {
+            width: 60px;
+            height: 60px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 20px;
+        }
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .badge-active {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+        .badge-inactive {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+        .badge-pending {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+        .action-buttons .btn {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box .form-control {
+            padding-left: 35px;
+            border-radius: 20px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 10px;
+            color: #6c757d;
+        }
+        .filter-dropdown {
+            min-width: 200px;
+        }
+
+        /* 筛选按钮样式 - 使用统一的按钮系统 */
+        .pagination {
+            margin-bottom: 0;
+        }
+        .pagination .page-link {
+            color: #343a40;
+            padding: 8px 15px;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #343a40;
+            border-color: #343a40;
+        }
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .form-text {
+            font-size: 0.85rem;
+        }
+        .preview-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        @media (max-width: 991.98px) {
+            .sidebar {
+                width: 70px;
+                padding-top: 10px;
+            }
+            .sidebar-header {
+                padding: 0 10px 10px;
+            }
+            .sidebar-header img {
+                height: 30px;
+            }
+            .sidebar-header h4, .sidebar-header p {
+                display: none;
+            }
+            .menu-item {
+                padding: 10px;
+                justify-content: center;
+            }
+            .menu-item i {
+                margin-right: 0;
+            }
+            .menu-item span {
+                display: none;
+            }
+            .content {
+                margin-left: 70px;
+            }
+        }
+        @media (max-width: 767.98px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            .content {
+                margin-left: 0;
+            }
+            .mobile-toggle {
+                display: block !important;
+            }
+        }
+
+    /* 星级评分样式 - 按原型设计 */
+    .rating-stars {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .rating-stars i {
+        color: #ffc107;
+        font-size: 1rem;
+    }
+
+    .rating-stars i.far {
+        color: #e9ecef;
+    }
+
+    .rating-number {
+        margin-left: 8px;
+        font-weight: 500;
+        color: #495057;
+        font-size: 0.875rem;
+    }
+
+    /* 表格悬浮效果 - 按原型设计 */
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* 模态框样式 - 按原型设计 */
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .form-label {
+        font-weight: 500;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    
+    /* 添加游戏模态框样式 */
+    #addGameModal .modal-content {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    #addGameModal .modal-header {
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+    }
+    
+    #addGameModal .modal-body {
+        padding: 20px;
+    }
+    
+    #addGameModal .modal-footer {
+        border-radius: 0 0 10px 10px;
+        padding: 15px 20px;
+    }
+    
+    /* 表单控件样式 */
+    .form-control, .form-select {
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+        padding: 8px 12px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-invalid:focus, .form-select.is-invalid:focus {
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    /* 表单复选框和单选框样式 */
+    .form-check-input {
+        width: 1.1em;
+        height: 1.1em;
+        margin-top: 0.25em;
+    }
+    
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    /* 缩略图预览容器 */
+    #thumbnailPreview {
+        min-height: 100px;
+        border: 1px dashed #dee2e6;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+    
+    #thumbnailPreview:empty::before {
+        content: '{% trans "Preview will appear here" %}';
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    #thumbnailPreview img {
+        max-height: 150px;
+    }
+
+    /* 添加游戏模态框样式 - 按原型设计优化 */
+    #addGameModal .modal-content {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    #addGameModal .modal-header {
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    #addGameModal .modal-title {
+        font-weight: 600;
+        color: #343a40;
+    }
+
+    #addGameModal .modal-body {
+        padding: 25px;
+        background-color: #fff;
+    }
+
+    #addGameModal .modal-footer {
+        border-radius: 0 0 10px 10px;
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* 表单控件样式优化 */
+    #addGameModal .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    #addGameModal .form-control, 
+    #addGameModal .form-select {
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    #addGameModal .form-control:focus, 
+    #addGameModal .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.2);
+    }
+
+    #addGameModal .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    /* 表单布局优化 */
+    #addGameModal .row {
+        margin-bottom: 1rem;
+    }
+
+    /* 缩略图预览优化 */
+    #addGameModal #thumbnailPreview {
+        margin-top: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 10px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #addGameModal #thumbnailPreview img {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 5px;
+    }
+
+    /* 按钮样式优化 */
+    #addGameModal .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        font-weight: 500;
+        padding: 8px 16px;
+        transition: all 0.2s ease;
+    }
+
+    #addGameModal .btn-primary:hover {
+        background-color: #0069d9;
+        border-color: #0062cc;
+        transform: translateY(-1px);
+    }
+
+    #addGameModal .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        font-weight: 500;
+        padding: 8px 16px;
+        transition: all 0.2s ease;
+    }
+
+    #addGameModal .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+    }
+
+    /* 复选框和单选框样式优化 */
+    #addGameModal .form-check {
+        padding-left: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #addGameModal .form-check-input {
+        margin-top: 0.25rem;
+        margin-left: -1.75rem;
+    }
+
+    #addGameModal .form-check-label {
+        font-weight: normal;
+    }
+
+    /* 下拉框样式优化 */
+    #addGameModal .form-select {
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+        appearance: none;
+    }
+    
+    #addGameModal .form-select:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    #addGameModal .form-select option {
+        padding: 10px;
+        font-size: 0.95rem;
+    }
+
+    /* Markdown编辑器样式 */
+    #addGameModal .CodeMirror, 
+    #addGameModal .CodeMirror-scroll {
+        min-height: 150px;
+        max-height: 250px;
+        border-radius: 5px;
+    }
+    
+    #addGameModal .editor-toolbar {
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        border-color: #ced4da;
+    }
+    
+    #addGameModal .editor-toolbar a {
+        color: #495057 !important;
+    }
+    
+    #addGameModal .editor-toolbar a.active, 
+    #addGameModal .editor-toolbar a:hover {
+        background: #f8f9fa;
+        border-color: #ced4da;
+    }
+    
+    #addGameModal .CodeMirror {
+        border-color: #ced4da;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+    
+    #addGameModal .CodeMirror-focused {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.2);
+    }
+    
+    /* 查看游戏模态框样式 */
+    #viewGameModal .modal-content {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    #viewGameModal .modal-header {
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    #viewGameModal .modal-body {
+        padding: 25px;
+        background-color: #fff;
+    }
+    
+    #viewGameModal .modal-footer {
+        border-radius: 0 0 10px 10px;
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* 游戏详情样式 */
+    #viewGameModal .game-description {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #e9ecef;
+    }
+    
+    #viewGameModal .placeholder-image {
+        height: 200px;
+    }
+    
+    /* 游戏iframe容器样式 */
+    .game-iframe-container {
+        position: relative;
+        overflow: hidden;
+        padding-top: 56.25%; /* 16:9宽高比 */
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .game-iframe-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+    
+    /* 返回按钮样式 */
+    .back-to-details-btn {
+        transition: all 0.2s ease;
+    }
+    
+    .back-to-details-btn:hover {
+        transform: translateX(-3px);
+    }
+    
+    /* 播放按钮样式 */
+    .play-game-btn {
+        transition: all 0.2s ease;
+    }
+    
+    .play-game-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.25);
+    }
+    
+    /* 删除确认模态框样式 */
+    #deleteGameModal .modal-content {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    #deleteGameModal .modal-header {
+        border-bottom: none;
+    }
+    
+    #deleteGameModal .modal-footer {
+        border-top: 1px solid rgba(220, 53, 69, 0.1);
+    }
+    
+    /* 删除按钮样式和悬停效果 */
+    #deleteGameModal .delete-btn {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    #deleteGameModal .delete-btn:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+    
+    /* 删除按钮脉冲效果 */
+    .btn-pulse {
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+    
+    /* 删除图标动画 */
+    #deleteGameModal .fa-exclamation-triangle {
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 游戏管理工具栏 - 完全按原型设计 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control" placeholder="{% trans 'Search games...' %}" id="searchInput">
+                </div>
+            </div>
+            <div class="col-md-7 mb-3 mb-md-0">
+                <div class="d-flex flex-wrap">
+                    <div class="dropdown me-2 mb-2 mb-md-0">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-filter me-1"></i> {% trans 'Category' %}
+                        </button>
+                        <ul class="dropdown-menu filter-dropdown">
+                            <li><a class="dropdown-item" href="?">{% trans 'All Categories' %}</a></li>
+                            {% for category in categories %}
+                            <li><a class="dropdown-item" href="?category__id__exact={{ category.id }}">{{ category.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="dropdown me-2 mb-2 mb-md-0">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort me-1"></i> {% trans 'Status' %}
+                        </button>
+                        <ul class="dropdown-menu filter-dropdown">
+                            <li><a class="dropdown-item" href="?">{% trans 'All Status' %}</a></li>
+                            <li><a class="dropdown-item" href="?is_active__exact=1">{% trans 'Active' %}</a></li>
+                            <li><a class="dropdown-item" href="?is_active__exact=0">{% trans 'Inactive' %}</a></li>
+                            <li><a class="dropdown-item" href="?is_featured__exact=1">{% trans 'Featured' %}</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown mb-2 mb-md-0">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort-amount-down me-1"></i> {% trans 'Sort' %}
+                        </button>
+                        <ul class="dropdown-menu filter-dropdown">
+                            <li><a class="dropdown-item" href="?o=1">{% trans 'Latest Added' %}</a></li>
+                            <li><a class="dropdown-item" href="?o=2">{% trans 'Most Played' %}</a></li>
+                            <li><a class="dropdown-item" href="?o=3">{% trans 'Highest Rated' %}</a></li>
+                            <li><a class="dropdown-item" href="?o=4">{% trans 'Name A-Z' %}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 text-md-end">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGameModal">
+                    <i class="fas fa-plus me-1"></i> {% trans 'Add Game' %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 游戏列表 - 完全按原型设计 -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{% trans 'Game List' %}</span>
+        <span class="text-muted">{% blocktrans count counter=cl.result_count %}{{ counter }} game{% plural %}{{ counter }} games{% endblocktrans %}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">#</th>
+                        <th style="width: 80px;">{% trans 'Thumbnail' %}</th>
+                        <th>{% trans 'Game Name' %}</th>
+                        <th>{% trans 'Category' %}</th>
+                        <th>{% trans 'Date Added' %}</th>
+                        <th>{% trans 'Play Count' %}</th>
+                        <th>{% trans 'Rating' %}</th>
+                        <th>{% trans 'Status' %}</th>
+                        <th style="width: 150px;">{% trans 'Actions' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for game in results %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            {% if game.thumbnail %}
+                                <img src="{{ game.thumbnail.url }}" class="game-thumbnail" alt="{% trans 'Game thumbnail' %}">
+                            {% else %}
+                                <div class="game-thumbnail-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ game.title }}</strong>
+                            {% if game.is_featured %}
+                                <i class="fas fa-star text-warning ms-1" title="{% trans 'Featured' %}"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for category in game.categories.all %}
+                                {{ category.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                <span class="text-muted">-</span>
+                            {% endfor %}
+                        </td>
+                        <td>{{ game.created_at|date:"Y-m-d" }}</td>
+                        <td>{{ game.view_count|default:0 }}</td>
+                        <td>
+                            <div class="text-warning">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= game.rating_int %}
+                                        <i class="fas fa-star"></i>
+                                    {% elif forloop.counter == game.rating_int_plus_half %}
+                                        <i class="fas fa-star-half-alt"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="text-dark ms-1">{{ game.rating|floatformat:1 }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if game.is_active %}
+                                <span class="badge badge-status badge-active">{% trans 'Active' %}</span>
+                            {% else %}
+                                <span class="badge badge-status badge-inactive">{% trans 'Inactive' %}</span>
+                            {% endif %}
+                        </td>
+                        <td class="action-buttons">
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-game-btn" title="{% trans 'Edit' %}" data-game-id="{{ game.pk }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info view-game-btn" title="{% trans 'View' %}" data-game-id="{{ game.pk }}" data-game-slug="{{ game.slug }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-game-btn" title="{% trans 'Delete' %}" data-game-id="{{ game.pk }}" data-game-title="{{ game.title|escapejs }}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-gamepad fa-3x mb-3 opacity-50"></i>
+                                <h5>{% trans 'No games found' %}</h5>
+                                <p>{% trans 'No games match your current filters. Try adjusting your search criteria.' %}</p>
+                                <a href="{% url 'admin:games_game_add' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i> {% trans 'Add First Game' %}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted">
+                {% if page_obj %}
+                    {% trans 'Showing' %} {{ page_obj.start_index }} {% trans 'to' %} {{ page_obj.end_index }}{% if cl.result_count %}, {% trans 'total' %} {{ cl.result_count }} {% trans 'games' %}{% endif %}
+                {% else %}
+                    {% trans 'Showing' %} 0 {% trans 'to' %} 0{% if cl.result_count %}, {% trans 'total' %} {{ cl.result_count }} {% trans 'games' %}{% endif %}
+                {% endif %}
+            </div>
+            {% if paginator.num_pages > 1 %}
+            <nav>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.category__id__exact %}&category__id__exact={{ request.GET.category__id__exact }}{% endif %}{% if request.GET.is_active__exact %}&is_active__exact={{ request.GET.is_active__exact }}{% endif %}{% if request.GET.is_featured__exact %}&is_featured__exact={{ request.GET.is_featured__exact }}{% endif %}{% if request.GET.o %}&o={{ request.GET.o }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                        {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}{% if request.GET.category__id__exact %}&category__id__exact={{ request.GET.category__id__exact }}{% endif %}{% if request.GET.is_active__exact %}&is_active__exact={{ request.GET.is_active__exact }}{% endif %}{% if request.GET.is_featured__exact %}&is_featured__exact={{ request.GET.is_featured__exact }}{% endif %}{% if request.GET.o %}&o={{ request.GET.o }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.category__id__exact %}&category__id__exact={{ request.GET.category__id__exact }}{% endif %}{% if request.GET.is_active__exact %}&is_active__exact={{ request.GET.is_active__exact }}{% endif %}{% if request.GET.is_featured__exact %}&is_featured__exact={{ request.GET.is_featured__exact }}{% endif %}{% if request.GET.o %}&o={{ request.GET.o }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 添加游戏模态框 -->
+<div class="modal fade" id="addGameModal" tabindex="-1" aria-labelledby="addGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addGameModalLabel">{% trans 'Add New Game' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addGameForm" method="post" action="{% url 'admin:games_game_add' %}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_title" class="form-label">{% trans 'Game Title' %} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="id_title" name="title" required placeholder="{% trans 'Enter game title' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_categories" class="form-label">{% trans 'Category' %}</label>
+                                <select class="form-select" id="id_categories" name="categories">
+                                    <option value="" selected>{% trans 'Select category' %}</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_description" class="form-label">{% trans 'Game Description' %}</label>
+                        <textarea class="form-control markdown-editor" id="id_description" name="description" rows="5" placeholder="{% trans 'Enter game description' %}"></textarea>
+                        <div class="form-text">{% trans 'Supports Markdown formatting' %}</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_thumbnail" class="form-label">{% trans 'Game Thumbnail' %}</label>
+                                <input type="file" class="form-control" id="id_thumbnail" name="thumbnail" accept="image/*">
+                                <div class="form-text">{% trans 'Recommended size: 500x300 pixels, max file size: 2MB' %}</div>
+                                <div id="thumbnailPreview" class="mt-2"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_game_status" class="form-label">{% trans 'Game Status' %}</label>
+                                <select class="form-select" id="id_game_status" name="is_active">
+                                    <option value="1" selected>{% trans 'Active' %}</option>
+                                    <option value="0">{% trans 'Inactive' %}</option>
+                                    <option value="pending">{% trans 'Pending Review' %}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_game_url" class="form-label">{% trans 'Game iframe URL' %}</label>
+                        <input type="url" class="form-control" id="id_game_url" name="game_url" placeholder="https://...">
+                        <div class="form-text">{% trans 'Enter complete iframe URL, e.g.: https://example.com/games/game1.html' %}</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_game_width" class="form-label">{% trans 'iframe Width' %}</label>
+                                <input type="text" class="form-control" id="id_game_width" name="game_width" placeholder="{% trans 'e.g.: 800 or 100%' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_game_height" class="form-label">{% trans 'iframe Height' %}</label>
+                                <input type="text" class="form-control" id="id_game_height" name="game_height" placeholder="{% trans 'e.g.: 600' %}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans 'Game Tags' %}</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="id_tag_multiplayer" name="tags" value="multiplayer">
+                                <label class="form-check-label" for="id_tag_multiplayer">{% trans 'Multiplayer' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="id_tag_3d" name="tags" value="3d">
+                                <label class="form-check-label" for="id_tag_3d">{% trans '3D Game' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="id_tag_popular" name="tags" value="popular">
+                                <label class="form-check-label" for="id_tag_popular">{% trans 'Popular' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="id_tag_new" name="tags" value="new">
+                                <label class="form-check-label" for="id_tag_new">{% trans 'New Game' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="id_is_featured" name="is_featured" value="1">
+                                <label class="form-check-label" for="id_is_featured">{% trans 'Featured' %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" style="display:none;">
+                        <label for="id_slug" class="form-label">{% trans 'Slug' %}</label>
+                        <input type="text" class="form-control" id="id_slug" name="slug">
+                        <small class="form-text text-muted">{% trans 'Will be generated automatically from title' %}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans 'Save Game' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 查看游戏详情模态框 -->
+<div class="modal fade" id="viewGameModal" tabindex="-1" aria-labelledby="viewGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewGameModalLabel">{% trans 'Game Details' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3">{% trans 'Loading game details...' %}</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Close' %}</button>
+                <a href="#" class="btn btn-primary" id="viewFullPageLink" target="_blank">
+                    <i class="fas fa-external-link-alt me-1"></i> {% trans 'View Full Page' %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑游戏模态框 -->
+<div class="modal fade" id="editGameModal" tabindex="-1" aria-labelledby="editGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editGameModalLabel">{% trans 'Edit Game' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- 表单模板 - 用于重置表单 -->
+            <template class="form-template">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_game_id" name="game_id">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_title" class="form-label">{% trans 'Game Title' %} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit_title" name="title" required placeholder="{% trans 'Enter game title' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_categories" class="form-label">{% trans 'Category' %}</label>
+                                <select class="form-select" id="edit_categories" name="categories">
+                                    <option value="" selected>{% trans 'Select category' %}</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="edit_description" class="form-label">{% trans 'Game Description' %}</label>
+                        <textarea class="form-control markdown-editor" id="edit_description" name="description" rows="5" placeholder="{% trans 'Enter game description' %}"></textarea>
+                        <div class="form-text">{% trans 'Supports Markdown formatting' %}</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_thumbnail" class="form-label">{% trans 'Game Thumbnail' %}</label>
+                                <input type="file" class="form-control" id="edit_thumbnail" name="thumbnail" accept="image/*">
+                                <div class="form-text">{% trans 'Recommended size: 500x300 pixels, max file size: 2MB' %}</div>
+                                <div id="editThumbnailPreview" class="mt-2"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_game_status" class="form-label">{% trans 'Game Status' %}</label>
+                                <select class="form-select" id="edit_game_status" name="is_active">
+                                    <option value="1">{% trans 'Active' %}</option>
+                                    <option value="0">{% trans 'Inactive' %}</option>
+                                    <option value="pending">{% trans 'Pending Review' %}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="edit_game_url" class="form-label">{% trans 'Game iframe URL' %}</label>
+                        <input type="url" class="form-control" id="edit_game_url" name="game_url" placeholder="https://...">
+                        <div class="form-text">{% trans 'Enter complete iframe URL, e.g.: https://example.com/games/game1.html' %}</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_game_width" class="form-label">{% trans 'iframe Width' %}</label>
+                                <input type="text" class="form-control" id="edit_game_width" name="game_width" placeholder="{% trans 'e.g.: 800 or 100%' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_game_height" class="form-label">{% trans 'iframe Height' %}</label>
+                                <input type="text" class="form-control" id="edit_game_height" name="game_height" placeholder="{% trans 'e.g.: 600' %}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans 'Game Tags' %}</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_multiplayer" name="tags" value="multiplayer">
+                                <label class="form-check-label" for="edit_tag_multiplayer">{% trans 'Multiplayer' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_3d" name="tags" value="3d">
+                                <label class="form-check-label" for="edit_tag_3d">{% trans '3D Game' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_popular" name="tags" value="popular">
+                                <label class="form-check-label" for="edit_tag_popular">{% trans 'Popular' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_new" name="tags" value="new">
+                                <label class="form-check-label" for="edit_tag_new">{% trans 'New Game' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_is_featured" name="is_featured" value="1">
+                                <label class="form-check-label" for="edit_is_featured">{% trans 'Featured' %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" style="display:none;">
+                        <label for="edit_slug" class="form-label">{% trans 'Slug' %}</label>
+                        <input type="text" class="form-control" id="edit_slug" name="slug">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans 'Update Game' %}</button>
+                </div>
+            </template>
+            <form id="editGameForm" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_game_id" name="game_id">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_title" class="form-label">{% trans 'Game Title' %} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit_title" name="title" required placeholder="{% trans 'Enter game title' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_categories" class="form-label">{% trans 'Category' %}</label>
+                                <select class="form-select" id="edit_categories" name="categories">
+                                    <option value="" selected>{% trans 'Select category' %}</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="edit_description" class="form-label">{% trans 'Game Description' %}</label>
+                        <textarea class="form-control markdown-editor" id="edit_description" name="description" rows="5" placeholder="{% trans 'Enter game description' %}"></textarea>
+                        <div class="form-text">{% trans 'Supports Markdown formatting' %}</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_thumbnail" class="form-label">{% trans 'Game Thumbnail' %}</label>
+                                <input type="file" class="form-control" id="edit_thumbnail" name="thumbnail" accept="image/*">
+                                <div class="form-text">{% trans 'Recommended size: 500x300 pixels, max file size: 2MB' %}</div>
+                                <div id="editThumbnailPreview" class="mt-2"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_game_status" class="form-label">{% trans 'Game Status' %}</label>
+                                <select class="form-select" id="edit_game_status" name="is_active">
+                                    <option value="1">{% trans 'Active' %}</option>
+                                    <option value="0">{% trans 'Inactive' %}</option>
+                                    <option value="pending">{% trans 'Pending Review' %}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="edit_game_url" class="form-label">{% trans 'Game iframe URL' %}</label>
+                        <input type="url" class="form-control" id="edit_game_url" name="game_url" placeholder="https://...">
+                        <div class="form-text">{% trans 'Enter complete iframe URL, e.g.: https://example.com/games/game1.html' %}</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_game_width" class="form-label">{% trans 'iframe Width' %}</label>
+                                <input type="text" class="form-control" id="edit_game_width" name="game_width" placeholder="{% trans 'e.g.: 800 or 100%' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_game_height" class="form-label">{% trans 'iframe Height' %}</label>
+                                <input type="text" class="form-control" id="edit_game_height" name="game_height" placeholder="{% trans 'e.g.: 600' %}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans 'Game Tags' %}</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_multiplayer" name="tags" value="multiplayer">
+                                <label class="form-check-label" for="edit_tag_multiplayer">{% trans 'Multiplayer' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_3d" name="tags" value="3d">
+                                <label class="form-check-label" for="edit_tag_3d">{% trans '3D Game' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_popular" name="tags" value="popular">
+                                <label class="form-check-label" for="edit_tag_popular">{% trans 'Popular' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_tag_new" name="tags" value="new">
+                                <label class="form-check-label" for="edit_tag_new">{% trans 'New Game' %}</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_is_featured" name="is_featured" value="1">
+                                <label class="form-check-label" for="edit_is_featured">{% trans 'Featured' %}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" style="display:none;">
+                        <label for="edit_slug" class="form-label">{% trans 'Slug' %}</label>
+                        <input type="text" class="form-control" id="edit_slug" name="slug">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans 'Update Game' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 删除游戏确认模态框 -->
+<div class="modal fade" id="deleteGameModal" tabindex="-1" aria-labelledby="deleteGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteGameModalLabel">{% trans 'Confirm Deletion' %}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
+                    <p>{% trans 'Are you sure you want to delete the game' %} "<span id="deleteGameTitle" class="fw-bold"></span>"?</p>
+                    <p class="mb-0 text-danger">{% trans 'This action cannot be undone.' %}</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> {% trans 'Cancel' %}
+                </button>
+                <a href="#" id="confirmDeleteBtn" class="btn btn-danger delete-btn">
+                    <i class="fas fa-trash-alt me-1"></i> {% trans 'Delete' %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<!-- SimpleMDE Markdown 编辑器 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+<script>
+// 预定义翻译文本为JavaScript变量
+const translations = {
+    inactive: "{% trans 'Inactive' %}",
+    active: "{% trans 'Active' %}",
+    clickToToggleStatus: "{% trans 'Click to toggle status' %}",
+    areYouSureDelete: "{% trans 'Are you sure you want to delete this game?' %}",
+    areYouSureDeleteTitle: "{% trans 'Are you sure you want to delete' %}",
+    slugGenerationError: "{% trans 'Error generating slug' %}",
+    thumbnailPreviewError: "{% trans 'Error loading thumbnail preview' %}",
+    loadingGameData: "{% trans 'Loading game data...' %}",
+    errorLoadingGame: "{% trans 'Error loading game data' %}",
+    updatingGame: "{% trans 'Updating game...' %}",
+    loadingGameDetails: "{% trans 'Loading game details...' %}",
+    errorLoadingGameDetails: "{% trans 'Error loading game details' %}",
+    play: "{% trans 'Play Game' %}",
+    backToDetails: "{% trans 'Back to Details' %}",
+    categoryLabel: "{% trans 'Category:' %}",
+    tagsLabel: "{% trans 'Tags:' %}",
+    descriptionLabel: "{% trans 'Description:' %}",
+    noDescriptionAvailable: "{% trans 'No description available' %}",
+    addedOn: "{% trans 'Added on' %}",
+    plays: "{% trans 'plays' %}"
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 搜索功能 - 完全按原型
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const tableRows = document.querySelectorAll('tbody tr');
+
+            tableRows.forEach(row => {
+                const gameName = row.querySelector('td:nth-child(3)');
+                if (gameName) {
+                    const text = gameName.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+    }
+
+    // 表格行悬浮效果 - 完全按原型
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+            this.style.transform = 'translateY(-1px)';
+            this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            this.style.transition = 'all 0.3s ease';
+        });
+
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+            this.style.transform = '';
+            this.style.boxShadow = '';
+        });
+    });
+
+    // 操作按钮悬浮效果 - 完全按原型
+    const actionButtons = document.querySelectorAll('.action-buttons .btn');
+    actionButtons.forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+
+        btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+
+    // 删除确认 - 使用Bootstrap模态框替换原有的JavaScript确认对话框
+    const deleteButtons = document.querySelectorAll('.delete-game-btn');
+    const deleteModal = document.getElementById('deleteGameModal');
+    const deleteModalInstance = new bootstrap.Modal(deleteModal);
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const deleteGameTitle = document.getElementById('deleteGameTitle');
+    
+    // 获取当前URL中的语言前缀
+    function getLanguagePrefix() {
+        const urlPath = window.location.pathname;
+        const match = urlPath.match(/^\/([a-z]{2})\//);
+        return match ? `/${match[1]}` : '';
+    }
+    
+    deleteButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const gameId = this.dataset.gameId;
+            const gameTitle = this.dataset.gameTitle;
+            
+            // 设置模态框内容
+            deleteGameTitle.textContent = gameTitle;
+            
+            // 考虑语言前缀
+            const langPrefix = getLanguagePrefix();
+            confirmDeleteBtn.href = `${langPrefix}/admin/games/game/${gameId}/delete/`;
+            
+            // 显示模态框
+            deleteModalInstance.show();
+        });
+    });
+    
+    // 添加确认删除按钮的动画效果
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('mouseenter', function() {
+            this.classList.add('btn-pulse');
+        });
+        
+        confirmDeleteBtn.addEventListener('mouseleave', function() {
+            this.classList.remove('btn-pulse');
+        });
+    }
+
+    // 状态标签点击切换 - 完全按原型
+    const statusBadges = document.querySelectorAll('.badge-status');
+    statusBadges.forEach(badge => {
+        badge.addEventListener('click', function() {
+            const isActive = this.classList.contains('badge-active');
+            if (isActive) {
+                this.classList.remove('badge-active');
+                this.classList.add('badge-inactive');
+                this.textContent = translations.inactive;
+            } else {
+                this.classList.remove('badge-inactive');
+                this.classList.add('badge-active');
+                this.textContent = translations.active;
+            }
+        });
+
+        badge.style.cursor = 'pointer';
+        badge.title = translations.clickToToggleStatus;
+    });
+
+    // 筛选下拉菜单高亮当前选项
+    const currentUrl = window.location.href;
+    const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item');
+    dropdownItems.forEach(item => {
+        if (currentUrl.includes(item.getAttribute('href'))) {
+            item.classList.add('active');
+        }
+    });
+
+    // 表格排序功能
+    const tableHeaders = document.querySelectorAll('th');
+    tableHeaders.forEach(header => {
+        if (header.textContent.trim() && !header.querySelector('input')) {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function() {
+                // 简单的客户端排序示例
+                console.log('Sort by:', this.textContent);
+            });
+        }
+    });
+    
+    // 缩略图预览功能
+    const thumbnailInput = document.getElementById('id_thumbnail');
+    const thumbnailPreview = document.getElementById('thumbnailPreview');
+    if (thumbnailInput && thumbnailPreview) {
+        thumbnailInput.addEventListener('change', function() {
+            thumbnailPreview.innerHTML = '';
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('preview-image');
+                    thumbnailPreview.appendChild(img);
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+    
+    // 自动生成slug功能
+    const titleInput = document.getElementById('id_title');
+    const slugInput = document.getElementById('id_slug');
+    if (titleInput && slugInput) {
+        titleInput.addEventListener('input', function() {
+            // 将标题转换为slug格式：小写，空格替换为连字符，移除特殊字符
+            const slug = this.value
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w\-]+/g, '')
+                .replace(/\-\-+/g, '-')
+                .replace(/^-+/, '')
+                .replace(/-+$/, '');
+            
+            slugInput.value = slug;
+        });
+    }
+    
+    // 初始化Markdown编辑器
+    let markdownEditor = null;
+    const initMarkdownEditor = function() {
+        const editorElement = document.querySelector('.markdown-editor');
+        if (editorElement && typeof SimpleMDE !== 'undefined') {
+            markdownEditor = new SimpleMDE({
+                element: editorElement,
+                spellChecker: false,
+                status: false,
+                toolbar: [
+                    'bold', 'italic', 'heading', '|',
+                    'unordered-list', 'ordered-list', '|',
+                    'link', 'image', '|',
+                    'preview', 'guide'
+                ],
+                placeholder: "{% trans 'Enter game description with Markdown support...' %}",
+                autosave: {
+                    enabled: false
+                }
+            });
+        }
+    };
+    
+    // 页面加载时初始化编辑器
+    initMarkdownEditor();
+    
+    // 表单验证
+    const addGameForm = document.getElementById('addGameForm');
+    if (addGameForm) {
+        addGameForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // 阻止表单默认提交
+            
+            let isValid = true;
+            
+            // 检查必填字段
+            const requiredFields = this.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            // 检查至少有一个游戏源：URL或文件
+            const gameUrl = document.getElementById('id_game_url');
+            const gameFile = document.getElementById('id_game_file');
+            
+            if ((!gameUrl.value || !gameUrl.value.trim()) && 
+                (!gameFile || !gameFile.files || gameFile.files.length === 0)) {
+                gameUrl.classList.add('is-invalid');
+                if (gameFile) gameFile.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                gameUrl.classList.remove('is-invalid');
+                if (gameFile) gameFile.classList.remove('is-invalid');
+            }
+            
+            // 如果使用了Markdown编辑器，将其内容同步到textarea
+            if (markdownEditor) {
+                markdownEditor.codemirror.save();
+            }
+            
+            if (isValid) {
+                // 使用FormData收集表单数据
+                const formData = new FormData(this);
+                
+                // 设置提交按钮为加载状态
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Saving..." %}';
+                
+                // 发送AJAX请求
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin' // 包含cookies
+                })
+                .then(response => {
+                    console.log(`Response status: ${response.status}`);
+                    console.log(`Response headers:`, response.headers);
+                    
+                    if (response.redirected) {
+                        // 成功后重定向到管理页面
+                        console.log('Redirected to:', response.url);
+                        window.location.href = response.url;
+                    } else if (response.ok) {
+                        // 刷新当前页面
+                        console.log('Update successful, refreshing page');
+                        window.location.reload();
+                    } else {
+                        // 显示错误信息
+                        console.error('Server error response:', response.status);
+                        
+                        return response.text().then(html => {
+                            console.log('Error response body:', html.substring(0, 500) + '...');
+                            
+                            // 如果Django返回的是错误页面，则提取错误信息
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = html;
+                            
+                            // 查找错误信息
+                            const errorLists = tempDiv.querySelectorAll('.errorlist');
+                            if (errorLists.length > 0) {
+                                console.log('Found error lists:', errorLists.length);
+                                
+                                // 处理字段错误
+                                errorLists.forEach(errorList => {
+                                    const fieldName = errorList.closest('.form-row, .fieldWrapper')?.querySelector('label')?.getAttribute('for');
+                                    console.log('Field with error:', fieldName);
+                                    
+                                    const fieldInput = document.getElementById(fieldName);
+                                    if (fieldInput) {
+                                        fieldInput.classList.add('is-invalid');
+                                        
+                                        // 添加错误反馈
+                                        const feedback = document.createElement('div');
+                                        feedback.className = 'invalid-feedback';
+                                        feedback.textContent = errorList.textContent.trim();
+                                        console.log('Error message:', errorList.textContent.trim());
+                                        
+                                        // 移除任何现有的反馈
+                                        const existingFeedback = fieldInput.parentNode.querySelector('.invalid-feedback');
+                                        if (existingFeedback) {
+                                            existingFeedback.remove();
+                                        }
+                                        
+                                        fieldInput.parentNode.appendChild(feedback);
+                                    } else {
+                                        console.error('Field input not found:', fieldName);
+                                    }
+                                });
+                            } else {
+                                // 一般错误
+                                console.error('No specific error lists found, showing general error');
+                                alert('Error updating game. Please check all fields and try again.');
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(`${translations.errorUpdatingGame}: ${error.message}`);
+                })
+                .finally(() => {
+                    // 恢复提交按钮状态
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                });
+            }
+        });
+    }
+
+    // 模态框相关功能
+    const addGameModal = document.getElementById('addGameModal');
+    if (addGameModal) {
+        // 模态框显示前重置表单
+        addGameModal.addEventListener('show.bs.modal', function() {
+            // 重置表单
+            const form = document.getElementById('addGameForm');
+            if (form) form.reset();
+            
+            // 重置缩略图预览
+            if (thumbnailPreview) {
+                thumbnailPreview.innerHTML = '<div class="text-center text-muted"><i class="fas fa-image fa-3x mb-2"></i><p>{% trans "Image preview will appear here" %}</p></div>';
+            }
+            
+            // 确保分类下拉框显示为默认选择状态
+            const categorySelect = document.getElementById('id_categories');
+            if (categorySelect) {
+                categorySelect.selectedIndex = 0;
+            }
+        });
+        
+        // 模态框完全显示后初始化Markdown编辑器
+        addGameModal.addEventListener('shown.bs.modal', function() {
+            // 销毁现有编辑器实例（如果存在）
+            if (markdownEditor) {
+                markdownEditor.toTextArea();
+                markdownEditor = null;
+            }
+            // 重新初始化编辑器
+            setTimeout(initMarkdownEditor, 100);
+        });
+        
+        // 模态框隐藏后清理资源
+        addGameModal.addEventListener('hidden.bs.modal', function() {
+            const form = this.querySelector('form');
+            if (form) {
+                form.reset();
+                
+                // 清除所有错误提示
+                form.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+                
+                // 清除所有错误消息
+                form.querySelectorAll('.invalid-feedback').forEach(el => {
+                    el.remove();
+                });
+                
+                // 清除缩略图预览
+                if (thumbnailPreview) {
+                    thumbnailPreview.innerHTML = '';
+                }
+                
+                // 销毁Markdown编辑器
+                if (markdownEditor) {
+                    markdownEditor.toTextArea();
+                    markdownEditor = null;
+                }
+            }
+        });
+    }
+
+    // 初始化编辑游戏模态框
+    let editMarkdownEditor = null;
+    const editGameModal = document.getElementById('editGameModal');
+    const editGameButtons = document.querySelectorAll('.edit-game-btn');
+    
+    // 初始化编辑模态框中的Markdown编辑器
+    const initEditMarkdownEditor = function() {
+        const editorElement = document.getElementById('edit_description');
+        if (editorElement && typeof SimpleMDE !== 'undefined') {
+            editMarkdownEditor = new SimpleMDE({
+                element: editorElement,
+                spellChecker: false,
+                status: false,
+                toolbar: [
+                    'bold', 'italic', 'heading', '|',
+                    'unordered-list', 'ordered-list', '|',
+                    'link', 'image', '|',
+                    'preview', 'guide'
+                ],
+                placeholder: "{% trans 'Enter game description with Markdown support...' %}",
+                autosave: {
+                    enabled: false
+                }
+            });
+        }
+    };
+    
+    // 编辑按钮点击事件
+    editGameButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gameId = this.dataset.gameId;
+            loadGameData(gameId);
+        });
+    });
+    
+    // 辅助函数：安全设置元素值
+    function safeSetValue(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.value = value || '';
+            return true;
+        }
+        return false;
+    }
+
+    // 辅助函数：安全设置复选框状态
+    function safeSetChecked(elementId, checked) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.checked = !!checked;
+            return true;
+        }
+        return false;
+    }
+
+    // 加载游戏数据
+    function loadGameData(gameId) {
+        // 显示加载中状态
+        const modalBody = document.querySelector('#editGameModal .modal-body');
+        modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">${translations.loadingGameData}</p></div>`;
+        
+        // 打开模态框
+        const modal = new bootstrap.Modal(document.getElementById('editGameModal'));
+        modal.show();
+        
+        // 获取语言前缀
+        const langPrefix = getLanguagePrefix();
+        
+        // 获取游戏数据
+        const apiUrl = `${langPrefix}/api/games/${gameId}/edit-json/`;
+        
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+            
+            // 检查内容类型
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(translations.unexpectedResponse);
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            try {
+                // 获取表单元素
+                const form = document.getElementById('editGameForm');
+                if (!form) {
+                    throw new Error('Form element not found - cannot populate form');
+                }
+                
+                // 使用最初的表单模板重置表单内容
+                const modalFormTemplate = document.querySelector('#editGameModal template.form-template');
+                if (modalFormTemplate) {
+                    // 使用模板重置表单内容
+                    form.innerHTML = modalFormTemplate.innerHTML;
+                } else {
+                    // 如果没有模板，则重置表单
+                    form.reset();
+                }
+                
+                // 保存原始CSRF令牌
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]');
+                const csrfValue = csrfToken ? csrfToken.value : null;
+                
+                // 填充表单字段，使用安全设置函数
+                safeSetValue('edit_game_id', data.id);
+                safeSetValue('edit_title', data.title);
+                safeSetValue('edit_slug', data.slug);
+                
+                // 设置分类
+                const categorySelect = document.getElementById('edit_categories');
+                if (categorySelect && data.categories && data.categories.length > 0) {
+                    for (let i = 0; i < categorySelect.options.length; i++) {
+                        if (categorySelect.options[i].value == data.categories[0].id) {
+                            categorySelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                
+                // 设置描述
+                safeSetValue('edit_description', data.description);
+                
+                // 设置游戏状态
+                const statusSelect = document.getElementById('edit_game_status');
+                if (statusSelect) {
+                    for (let i = 0; i < statusSelect.options.length; i++) {
+                        if (statusSelect.options[i].value == (data.is_active ? "1" : "0")) {
+                            statusSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                
+                // 设置游戏URL和尺寸
+                safeSetValue('edit_game_url', data.game_url || '');
+                safeSetValue('edit_game_width', data.game_width || '');
+                safeSetValue('edit_game_height', data.game_height || '');
+                
+                // 设置标签和特色状态
+                if (data.tags) {
+                    safeSetChecked('edit_tag_multiplayer', data.tags.includes('multiplayer'));
+                    safeSetChecked('edit_tag_3d', data.tags.includes('3d'));
+                    safeSetChecked('edit_tag_popular', data.tags.includes('popular'));
+                    safeSetChecked('edit_tag_new', data.tags.includes('new'));
+                }
+                
+                safeSetChecked('edit_is_featured', data.is_featured);
+                
+                // 设置缩略图预览
+                const thumbnailPreview = document.getElementById('editThumbnailPreview');
+                if (thumbnailPreview) {
+                    if (data.thumbnail_url) {
+                        thumbnailPreview.innerHTML = `<img src="${data.thumbnail_url}" class="img-fluid rounded" alt="Thumbnail">`;
+                    } else {
+                        thumbnailPreview.innerHTML = '<div class="text-center text-muted"><i class="fas fa-image fa-3x mb-2"></i><p>{% trans "No image" %}</p></div>';
+                    }
+                }
+                
+                // 恢复CSRF令牌
+                if (csrfValue) {
+                    const newCsrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]');
+                    if (newCsrfToken) {
+                        newCsrfToken.value = csrfValue;
+                    }
+                }
+                
+                // 设置表单提交URL
+                form.action = `${langPrefix}/admin/games/game/${data.id}/change/`;
+                
+                // 初始化Markdown编辑器
+                setTimeout(initEditMarkdownEditor, 100);
+            } catch (error) {
+                modalBody.innerHTML = `<div class="alert alert-danger">${translations.errorLoadingGame}</div>`;
+            }
+        })
+        .catch(error => {
+            modalBody.innerHTML = `<div class="alert alert-danger">${translations.errorLoadingGame}</div>`;
+        });
+    }
+    
+    // 编辑游戏表单提交处理
+    const editGameForm = document.getElementById('editGameForm');
+    if (editGameForm) {
+        editGameForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            let isValid = true;
+            
+            // 检查必填字段
+            const requiredFields = this.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            // 如果使用了Markdown编辑器，将其内容同步到textarea
+            if (editMarkdownEditor) {
+                editMarkdownEditor.codemirror.save();
+            }
+            
+            if (isValid) {
+                // 设置表单操作为直接提交到游戏编辑URL
+                const gameId = document.getElementById('edit_game_id').value;
+                const langPrefix = getLanguagePrefix();
+                this.action = `${langPrefix}/admin/games/game/${gameId}/change/`;
+                this.method = 'post';
+                
+                // 使用FormData收集表单数据
+                const formData = new FormData(this);
+                
+                // 设置提交按钮为加载状态
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${translations.updatingGame}`;
+                
+                // 发送AJAX请求
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin' // 包含cookies
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        // 成功后重定向到管理页面
+                        window.location.href = response.url;
+                    } else if (response.ok) {
+                        // 刷新当前页面
+                        window.location.reload();
+                    } else {
+                        // 显示错误信息
+                        return response.text().then(html => {
+                            // 如果Django返回的是错误页面，则提取错误信息
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = html;
+                            
+                            // 查找错误信息
+                            const errorLists = tempDiv.querySelectorAll('.errorlist');
+                            if (errorLists.length > 0) {
+                                // 处理字段错误
+                                errorLists.forEach(errorList => {
+                                    const fieldName = errorList.closest('.form-row, .fieldWrapper')?.querySelector('label')?.getAttribute('for');
+                                    const fieldInput = document.getElementById(fieldName);
+                                    if (fieldInput) {
+                                        fieldInput.classList.add('is-invalid');
+                                        
+                                        // 添加错误反馈
+                                        const feedback = document.createElement('div');
+                                        feedback.className = 'invalid-feedback';
+                                        feedback.textContent = errorList.textContent.trim();
+                                        
+                                        // 移除任何现有的反馈
+                                        const existingFeedback = fieldInput.parentNode.querySelector('.invalid-feedback');
+                                        if (existingFeedback) {
+                                            existingFeedback.remove();
+                                        }
+                                        
+                                        fieldInput.parentNode.appendChild(feedback);
+                                    }
+                                });
+                            } else {
+                                // 一般错误
+                                alert('{% trans "Error updating game. Please check all fields and try again." %}');
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    alert('{% trans "Network error. Please try again." %}');
+                })
+                .finally(() => {
+                    // 恢复提交按钮状态
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                });
+            }
+        });
+    }
+    
+    // 缩略图预览功能（编辑模态框）
+    const editThumbnailInput = document.getElementById('edit_thumbnail');
+    const editThumbnailPreview = document.getElementById('editThumbnailPreview');
+    if (editThumbnailInput && editThumbnailPreview) {
+        editThumbnailInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editThumbnailPreview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="Thumbnail">`;
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+    
+    // 编辑模态框相关事件
+    if (editGameModal) {
+        // 模态框隐藏后清理资源
+        editGameModal.addEventListener('hidden.bs.modal', function() {
+            // 销毁Markdown编辑器
+            if (editMarkdownEditor) {
+                editMarkdownEditor.toTextArea();
+                editMarkdownEditor = null;
+            }
+        });
+    }
+
+    // 查看游戏按钮点击事件
+    const viewGameButtons = document.querySelectorAll('.view-game-btn');
+    viewGameButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gameId = this.dataset.gameId;
+            const gameSlug = this.dataset.gameSlug;
+            loadGameDetailsData(gameId, gameSlug);
+        });
+    });
+    
+    // 加载游戏详情数据
+    function loadGameDetailsData(gameId, gameSlug) {
+        // 显示加载中状态
+        const modalBody = document.querySelector('#viewGameModal .modal-body');
+        modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">${translations.loadingGameDetails}</p></div>`;
+        
+        // 设置全页面链接
+        const langPrefix = getLanguagePrefix();
+        const fullPageLink = document.getElementById('viewFullPageLink');
+        if (fullPageLink && gameSlug) {
+            fullPageLink.href = `${langPrefix}/games/${gameSlug}/`;
+        }
+        
+        // 打开模态框
+        const modal = new bootstrap.Modal(document.getElementById('viewGameModal'));
+        modal.show();
+        
+        // 获取游戏数据
+        const apiUrl = `${langPrefix}/api/games/${gameId}/edit-json/`;
+        
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            try {
+                // 构建游戏详情HTML
+                let gameDetailsHtml = `
+                    <div class="row">
+                        <div class="col-md-4 mb-4 mb-md-0">
+                            ${data.thumbnail_url ? 
+                                `<img src="${data.thumbnail_url}" class="img-fluid rounded shadow" alt="${data.title}">` : 
+                                `<div class="placeholder-image bg-light rounded d-flex align-items-center justify-content-center py-5"><i class="fas fa-image fa-3x text-muted"></i></div>`
+                            }
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-warning">
+                                        ${renderStarRating(data.rating || 0)}
+                                        <span class="text-dark ms-1">${(data.rating || 0).toFixed(1)}</span>
+                                    </div>
+                                    <div>
+                                        <span class="badge ${data.is_active ? 'badge-active' : 'badge-inactive'} badge-status">
+                                            ${data.is_active ? translations.active : translations.inactive}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h4 class="mb-3">${data.title || ''}
+                                ${data.is_featured ? '<i class="fas fa-star text-warning ms-1" title="' + '{% trans "Featured" %}' + '"></i>' : ''}
+                            </h4>
+                            <p class="text-muted mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i> ${translations.addedOn} ${formatDate(data.created_at)}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-play-circle me-2"></i> ${data.view_count || 0} ${translations.plays}
+                            </p>
+                            
+                            ${data.categories && data.categories.length > 0 ? `
+                            <div class="mb-3">
+                                <strong>${translations.categoryLabel}</strong> 
+                                <span class="ms-2">${data.categories.map(cat => cat.name).join(', ')}</span>
+                            </div>` : ''}
+                            
+                            ${data.tags && data.tags.length > 0 ? `
+                            <div class="mb-3">
+                                <strong>${translations.tagsLabel}</strong>
+                                <div class="mt-1">
+                                    ${data.tags.map(tag => `<span class="badge bg-light text-dark me-1 mb-1 p-2">${tag}</span>`).join('')}
+                                </div>
+                            </div>` : ''}
+                            
+                            <div class="mb-3">
+                                <strong>${translations.descriptionLabel}</strong>
+                                <div class="mt-2 game-description">
+                                    ${data.description ? `<p>${data.description}</p>` : '<p class="text-muted">' + translations.noDescriptionAvailable + '</p>'}
+                                </div>
+                            </div>
+                            
+                            ${data.game_url ? `
+                            <div class="mt-4">
+                                <button class="btn btn-primary play-game-btn" data-game-url="${data.game_url}" data-game-id="${data.id}">
+                                    <i class="fas fa-play me-1"></i> ${translations.play}
+                                </button>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // 更新模态框内容
+                modalBody.innerHTML = gameDetailsHtml;
+                
+                // 设置播放游戏按钮点击事件
+                const playGameBtn = modalBody.querySelector('.play-game-btn');
+                if (playGameBtn) {
+                    playGameBtn.addEventListener('click', function() {
+                        const gameUrl = this.dataset.gameUrl;
+                        const gameId = this.dataset.gameId;
+                        
+                        // 记录游戏播放并在模态框中显示游戏
+                        recordGamePlay(gameId, () => {
+                            showGameIframe(gameUrl, data.game_width || '100%', data.game_height || '600px');
+                        });
+                    });
+                }
+            } catch (error) {
+                modalBody.innerHTML = `<div class="alert alert-danger">${translations.errorLoadingGameDetails}</div>`;
+                console.error('Error displaying game details:', error);
+            }
+        })
+        .catch(error => {
+            modalBody.innerHTML = `<div class="alert alert-danger">${translations.errorLoadingGameDetails}</div>`;
+            console.error('Error fetching game details:', error);
+        });
+    }
+    
+    // 辅助函数：渲染星级评分
+    function renderStarRating(rating) {
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5;
+        const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+        
+        let starsHtml = '';
+        
+        // 渲染满星
+        for (let i = 0; i < fullStars; i++) {
+            starsHtml += '<i class="fas fa-star"></i>';
+        }
+        
+        // 渲染半星
+        if (halfStar) {
+            starsHtml += '<i class="fas fa-star-half-alt"></i>';
+        }
+        
+        // 渲染空星
+        for (let i = 0; i < emptyStars; i++) {
+            starsHtml += '<i class="far fa-star"></i>';
+        }
+        
+        return starsHtml;
+    }
+    
+    // 辅助函数：格式化日期
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        return date.toLocaleDateString();
+    }
+    
+    // 记录游戏播放
+    function recordGamePlay(gameId, callback) {
+        // 直接执行回调，不调用API，因为可能没有实现
+        if (callback && typeof callback === 'function') {
+            callback();
+            return;
+        }
+        
+        /* 以下代码暂时注释掉，因为可能没有实现相应的API
+        const langPrefix = getLanguagePrefix();
+        const apiUrl = `${langPrefix}/api/games/${gameId}/play/`;
+        
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+        })
+        .catch(error => {
+            console.error('Error recording game play:', error);
+            // 即使记录失败也继续显示游戏
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+        });
+        */
+    }
+    
+    // 获取CSRF令牌
+    function getCsrfToken() {
+        return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+    }
+    
+    // 在模态框中显示游戏iframe
+    function showGameIframe(gameUrl, width, height) {
+        const modalBody = document.querySelector('#viewGameModal .modal-body');
+        
+        // 保存原有内容
+        const originalContent = modalBody.innerHTML;
+        
+        // 显示游戏iframe和返回按钮
+        modalBody.innerHTML = `
+            <div class="text-end mb-3">
+                <button class="btn btn-sm btn-outline-secondary back-to-details-btn">
+                    <i class="fas fa-arrow-left me-1"></i> ${translations.backToDetails}
+                </button>
+            </div>
+            <div class="game-iframe-container">
+                <iframe src="${gameUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>
+            </div>
+        `;
+        
+        // 返回按钮点击事件
+        const backBtn = modalBody.querySelector('.back-to-details-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                modalBody.innerHTML = originalContent;
+                
+                // 重新绑定播放按钮事件
+                const playGameBtn = modalBody.querySelector('.play-game-btn');
+                if (playGameBtn) {
+                    const gameUrl = playGameBtn.dataset.gameUrl;
+                    const gameId = playGameBtn.dataset.gameId;
+                    
+                    playGameBtn.addEventListener('click', function() {
+                        recordGamePlay(gameId, () => {
+                            showGameIframe(gameUrl, width, height);
+                        });
+                    });
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
