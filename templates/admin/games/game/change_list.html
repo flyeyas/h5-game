@@ -739,6 +739,7 @@
                             {% else %}
                                 <span class="badge badge-status badge-inactive">{% trans 'Inactive' %}</span>
                             {% endif %}
+                            <!-- 状态标签可点击，点击后会通过API切换游戏的激活状态 -->
                         </td>
                         <td class="action-buttons">
                             <button type="button" class="btn btn-sm btn-outline-primary edit-game-btn" title="{% trans 'Edit' %}" data-game-id="{{ game.pk }}">
@@ -1357,16 +1358,65 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusBadges = document.querySelectorAll('.badge-status');
     statusBadges.forEach(badge => {
         badge.addEventListener('click', function() {
-            const isActive = this.classList.contains('badge-active');
-            if (isActive) {
-                this.classList.remove('badge-active');
-                this.classList.add('badge-inactive');
-                this.textContent = translations.inactive;
-            } else {
-                this.classList.remove('badge-inactive');
-                this.classList.add('badge-active');
-                this.textContent = translations.active;
-            }
+            // 获取游戏ID - 需要从父级表格行获取
+            const row = this.closest('tr');
+            if (!row) return;
+            
+            // 从操作按钮中获取游戏ID
+            const actionButton = row.querySelector('.delete-game-btn, .edit-game-btn, .view-game-btn');
+            if (!actionButton) return;
+            
+            const gameId = actionButton.dataset.gameId;
+            if (!gameId) return;
+            
+            // 设置加载状态
+            const originalText = this.textContent;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            
+            // 获取语言前缀
+            const langPrefix = getLanguagePrefix();
+            
+            // 调用API进行状态切换
+            fetch(`${langPrefix}/api/games/${gameId}/toggle-status/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // 更新状态标签
+                    if (data.is_active) {
+                        this.classList.remove('badge-inactive');
+                        this.classList.add('badge-active');
+                        this.textContent = translations.active;
+                    } else {
+                        this.classList.remove('badge-active');
+                        this.classList.add('badge-inactive');
+                        this.textContent = translations.inactive;
+                    }
+                } else {
+                    // 恢复原状态
+                    this.textContent = originalText;
+                    console.error('Error toggling status:', data.error);
+                    alert(data.message || 'Error toggling status');
+                }
+            })
+            .catch(error => {
+                // 恢复原状态
+                this.textContent = originalText;
+                console.error('Error:', error);
+                alert(error.message);
+            });
         });
 
         badge.style.cursor = 'pointer';

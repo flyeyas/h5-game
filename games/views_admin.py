@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from .models import Game
 import logging
 import traceback
@@ -84,3 +85,41 @@ def game_edit_json(request, game_id):
         }, status=500)
         response["Content-Type"] = "application/json; charset=utf-8"
         return response 
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+@csrf_exempt
+def toggle_game_status(request, game_id):
+    """
+    切换游戏的激活状态
+    """
+    try:
+        logger.info(f"Toggle game status for ID: {game_id}, User: {request.user.username}")
+        
+        game = get_object_or_404(Game, pk=game_id)
+        logger.debug(f"Game found: {game.title} (ID: {game_id}), current status: {game.is_active}")
+        
+        # 切换状态
+        game.is_active = not game.is_active
+        game.save(update_fields=['is_active'])
+        
+        logger.info(f"Game status toggled for ID: {game_id}, new status: {game.is_active}")
+        
+        return JsonResponse({
+            'success': True,
+            'game_id': game.id,
+            'is_active': game.is_active,
+            'status_text': _('Active') if game.is_active else _('Inactive')
+        })
+        
+    except Exception as e:
+        logger.error(f"Error toggling game status for ID {game_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while toggling game status',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500) 
