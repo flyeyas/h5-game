@@ -90,6 +90,7 @@ class CategoryAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'parent')
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
+    change_list_template = 'admin/games/category/change_list.html'
     fieldsets = (
         (None, {
             'fields': ('name', 'slug', 'description', 'parent', 'order', 'is_active')

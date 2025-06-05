@@ -1,0 +1,76 @@
+/* category_modal.css - 分类添加模态框样式 */
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.form-text {
+    font-size: 0.85rem;
+}
+
+.badge-status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.badge-active {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.badge-inactive {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+/* 弹窗成功提示样式 */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    background-color: #28a745;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.toast .toast-body {
+    display: flex;
+    align-items: center;
+}
+
+.toast .btn-close {
+    color: white;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: 15px;
+}
+
+/* 响应式设计 */
+@media (max-width: 767.98px) {
+    .col-md-6 {
+        margin-bottom: 15px;
+    }
+} 

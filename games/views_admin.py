@@ -1,10 +1,11 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext_lazy as _
-from .models import Game
+from django.urls import reverse
+from .models import Game, Category
 import logging
 import traceback
 import json
@@ -123,3 +124,340 @@ def toggle_game_status(request, game_id):
             'message': str(e),
             'type': type(e).__name__
         }, status=500) 
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def add_category_modal(request):
+    """
+    通过模态框添加分类
+    """
+    try:
+        logger.info(f"Adding category via modal form, User: {request.user.username}")
+        
+        # 获取表单数据
+        name = request.POST.get('name')
+        slug = request.POST.get('slug')
+        description = request.POST.get('description', '')
+        parent_id = request.POST.get('parent')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # 验证必填字段
+        if not name or not slug:
+            logger.warning("Category creation failed: Name or slug is missing")
+            return JsonResponse({
+                'success': False,
+                'message': _('Name and slug are required')
+            }, status=400)
+        
+        # 验证slug唯一性
+        if Category.objects.filter(slug=slug).exists():
+            logger.warning(f"Category creation failed: Slug '{slug}' already exists")
+            return JsonResponse({
+                'success': False,
+                'message': _('A category with this slug already exists')
+            }, status=400)
+        
+        # 处理父级分类
+        parent = None
+        if parent_id and parent_id != '0':
+            parent = get_object_or_404(Category, pk=parent_id)
+        
+        # 创建新分类
+        category = Category.objects.create(
+            name=name,
+            slug=slug,
+            description=description,
+            parent=parent,
+            order=order,
+            is_active=is_active
+        )
+        
+        logger.info(f"Category created successfully: {category.name} (ID: {category.id})")
+        
+        # 如果是AJAX请求，返回JSON响应
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': _('Category added successfully'),
+                'category': {
+                    'id': category.id,
+                    'name': category.name,
+                    'slug': category.slug,
+                    'parent': category.parent.name if category.parent else None,
+                    'order': category.order,
+                    'is_active': category.is_active
+                }
+            })
+        
+        # 否则重定向回分类列表页面
+        return HttpResponseRedirect(reverse('admin:games_category_changelist'))
+        
+    except Exception as e:
+        logger.error(f"Error adding category: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': _('An error occurred while adding the category'),
+                'error': str(e)
+            }, status=500)
+        
+        # 重定向回分类列表页面，并显示错误消息
+        return HttpResponseRedirect(reverse('admin:games_category_changelist')) 
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["GET"])
+def get_category_data(request, category_id):
+    """
+    获取分类数据的JSON API，用于编辑分类模态框
+    """
+    try:
+        logger.info(f"Fetching category data for ID: {category_id}, User: {request.user.username}")
+        
+        category = get_object_or_404(Category, pk=category_id)
+        logger.debug(f"Category found: {category.name} (ID: {category_id})")
+        
+        # 准备分类数据的JSON响应
+        data = {
+            'id': category.id,
+            'name': category.name,
+            'slug': category.slug,
+            'description': category.description,
+            'parent_id': category.parent.id if category.parent else 0,
+            'order': category.order,
+            'is_active': category.is_active
+        }
+        
+        logger.info(f"Successfully prepared category data for ID: {category_id}")
+        
+        return JsonResponse(data)
+    
+    except Exception as e:
+        logger.error(f"Error fetching category data for ID {category_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        return JsonResponse({
+            'error': 'An error occurred while fetching category data',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500)
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def edit_category_modal(request, category_id):
+    """
+    通过模态框编辑分类
+    """
+    try:
+        logger.info(f"Editing category via modal form, ID: {category_id}, User: {request.user.username}")
+        
+        # 获取分类对象
+        category = get_object_or_404(Category, pk=category_id)
+        
+        # 获取表单数据
+        name = request.POST.get('name')
+        slug = request.POST.get('slug')
+        description = request.POST.get('description', '')
+        parent_id = request.POST.get('parent')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # 验证必填字段
+        if not name or not slug:
+            logger.warning("Category update failed: Name or slug is missing")
+            return JsonResponse({
+                'success': False,
+                'message': _('Name and slug are required')
+            }, status=400)
+        
+        # 验证slug唯一性（排除当前分类）
+        if Category.objects.filter(slug=slug).exclude(pk=category_id).exists():
+            logger.warning(f"Category update failed: Slug '{slug}' already exists")
+            return JsonResponse({
+                'success': False,
+                'message': _('A category with this slug already exists')
+            }, status=400)
+        
+        # 处理父级分类
+        parent = None
+        if parent_id and parent_id != '0':
+            # 确保不会将分类设置为自己的子分类
+            if int(parent_id) == category.id:
+                logger.warning(f"Category update failed: Cannot set category as its own parent")
+                return JsonResponse({
+                    'success': False,
+                    'message': _('A category cannot be its own parent')
+                }, status=400)
+            parent = get_object_or_404(Category, pk=parent_id)
+        
+        # 更新分类
+        category.name = name
+        category.slug = slug
+        category.description = description
+        category.parent = parent
+        category.order = order
+        category.is_active = is_active
+        category.save()
+        
+        logger.info(f"Category updated successfully: {category.name} (ID: {category.id})")
+        
+        # 如果是AJAX请求，返回JSON响应
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': _('Category updated successfully'),
+                'category': {
+                    'id': category.id,
+                    'name': category.name,
+                    'slug': category.slug,
+                    'parent': category.parent.name if category.parent else None,
+                    'order': category.order,
+                    'is_active': category.is_active
+                }
+            })
+        
+        # 否则重定向回分类列表页面
+        return HttpResponseRedirect(reverse('admin:games_category_changelist'))
+        
+    except Exception as e:
+        logger.error(f"Error updating category: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': _('An error occurred while updating the category'),
+                'error': str(e)
+            }, status=500)
+        
+        # 重定向回分类列表页面，并显示错误消息
+        return HttpResponseRedirect(reverse('admin:games_category_changelist')) 
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["GET"])
+def view_category_modal(request, category_id):
+    """
+    获取分类详情的JSON API，用于查看分类模态框
+    """
+    try:
+        logger.info(f"Viewing category details, ID: {category_id}, User: {request.user.username}")
+        
+        category = get_object_or_404(Category, pk=category_id)
+        logger.debug(f"Category found: {category.name} (ID: {category_id})")
+        
+        # 准备分类数据的JSON响应
+        data = {
+            'id': category.id,
+            'name': category.name,
+            'slug': category.slug,
+            'description': category.description,
+            'parent': category.parent.name if category.parent else None,
+            'parent_id': category.parent.id if category.parent else 0,
+            'order': category.order,
+            'is_active': category.is_active,
+            'created_at': category.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': category.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'game_count': category.games.count(),
+            'icon_class': category.icon_class
+        }
+        
+        # 添加图片URL，如果存在
+        if category.image:
+            data['image_url'] = category.image.url
+        else:
+            data['image_url'] = None
+        
+        # 获取该分类下的游戏列表（最多10个）
+        games = category.games.all()[:10]
+        data['games'] = [{
+            'id': game.id,
+            'title': game.title,
+            'slug': game.slug,
+            'is_active': game.is_active
+        } for game in games]
+        
+        logger.info(f"Successfully prepared category details for ID: {category_id}")
+        
+        return JsonResponse(data)
+    
+    except Exception as e:
+        logger.error(f"Error fetching category details for ID {category_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        return JsonResponse({
+            'error': 'An error occurred while fetching category details',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500) 
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def delete_category_modal(request, category_id):
+    """
+    通过模态框删除分类
+    """
+    try:
+        logger.info(f"Deleting category, ID: {category_id}, User: {request.user.username}")
+        
+        category = get_object_or_404(Category, pk=category_id)
+        logger.debug(f"Category found: {category.name} (ID: {category_id})")
+        
+        # 检查是否有游戏使用此分类
+        game_count = category.games.count()
+        if game_count > 0:
+            logger.warning(f"Cannot delete category: {category.name} (ID: {category_id}) - has {game_count} games")
+            return JsonResponse({
+                'success': False,
+                'message': _('Cannot delete category that has games. Remove games from this category first.'),
+                'game_count': game_count
+            }, status=400)
+        
+        # 检查是否有子分类
+        children_count = Category.objects.filter(parent=category).count()
+        if children_count > 0:
+            logger.warning(f"Cannot delete category: {category.name} (ID: {category_id}) - has {children_count} children")
+            return JsonResponse({
+                'success': False,
+                'message': _('Cannot delete category that has subcategories. Remove subcategories first.'),
+                'children_count': children_count
+            }, status=400)
+        
+        # 获取名称以便在日志中使用
+        category_name = category.name
+        category_id_log = category.id
+        
+        # 删除分类
+        category.delete()
+        
+        logger.info(f"Category deleted successfully: {category_name} (ID: {category_id_log})")
+        
+        # 如果是AJAX请求，返回JSON响应
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': _('Category deleted successfully')
+            })
+        
+        # 否则重定向回分类列表页面
+        return HttpResponseRedirect(reverse('admin:games_category_changelist'))
+        
+    except Exception as e:
+        logger.error(f"Error deleting category: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': _('An error occurred while deleting the category'),
+                'error': str(e)
+            }, status=500)
+        
+        # 重定向回分类列表页面，并显示错误消息
+        return HttpResponseRedirect(reverse('admin:games_category_changelist')) 
