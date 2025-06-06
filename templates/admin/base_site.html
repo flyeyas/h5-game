@@ -5,12 +5,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ title }} | {% trans 'HTML5 Games Admin' %}{% endblock %}</title>
+    <title>{% block title %}{{ title }} | {% trans 'GameHub' %}{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 自定义管理页面CSS -->
+    <link rel="stylesheet" href="{% static 'admin/css/custom_admin.css' %}">
     
     <style>
         /* 完全按照原型设计的Django Admin样式 */
@@ -517,7 +519,7 @@
                 <i class="fas fa-gamepad"></i>
                 <span>GameHub</span>
             </div>
-            <h4>{% trans 'Admin Panel' %}</h4>
+            <h4>{% trans 'GameHub' %}</h4>
             <p>{% trans 'Welcome back, Admin' %}</p>
         </div>
         <div class="sidebar-menu">
@@ -560,7 +562,7 @@
                 <button class="btn btn-link d-md-none mobile-toggle me-3" style="display: none;" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <span class="navbar-brand">{% block page_title %}{% trans 'Admin Panel' %}{% endblock %}</span>
+                <span class="navbar-brand">{% block page_title %}{% trans 'GameHub' %}{% endblock %}</span>
             </div>
             <div class="d-flex align-items-center">
                 {% if user.is_authenticated %}
@@ -574,7 +576,7 @@
                         <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>{% trans 'Profile' %}</a></li>
                         <li><a class="dropdown-item" href="{% url 'admin:password_change' %}"><i class="fas fa-cog me-2"></i>{% trans 'Change Password' %}</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'admin:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans 'Logout' %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'custom_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans 'Logout' %}</a></li>
                     </ul>
                 </div>
                 {% endif %}

@@ -9,6 +9,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import translate_url
 from django.conf import settings
 from django.views.i18n import set_language
+from django.contrib.auth import logout
+from django.utils.translation import get_language
 
 
 class HomeView(TemplateView):
@@ -243,3 +245,12 @@ def custom_set_language(request):
                 pass
     
     return response
+
+def custom_logout(request):
+    """
+    自定义登出视图，支持GET方法
+    """
+    logout(request)
+    # 重定向到首页，保持当前语言设置
+    lang_code = get_language()
+    return redirect(f'/{lang_code}/')

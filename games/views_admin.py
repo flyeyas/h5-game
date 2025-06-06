@@ -5,6 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 from .models import Game, Category
 import logging
 import traceback
@@ -461,3 +463,67 @@ def delete_category_modal(request, category_id):
         
         # 重定向回分类列表页面，并显示错误消息
         return HttpResponseRedirect(reverse('admin:games_category_changelist')) 
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def add_user_modal(request):
+    """
+    通过模态框添加用户
+    """
+    try:
+        logger.info(f"Adding user via modal form, User: {request.user.username}")
+        
+        # 检查是否是AJAX请求
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        # 创建UserCreationForm实例
+        form = UserCreationForm(request.POST)
+        
+        # 验证表单
+        if form.is_valid():
+            # 保存用户
+            user = form.save()
+            logger.info(f"User created successfully: {user.username} (ID: {user.id})")
+            
+            # 如果是AJAX请求，返回成功消息
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': _('User added successfully'),
+                    'redirect_url': reverse('admin:auth_user_changelist')
+                })
+            
+            # 否则重定向到用户列表页面
+            return HttpResponseRedirect(reverse('admin:auth_user_changelist'))
+        else:
+            # 表单验证失败
+            logger.warning(f"User creation failed: {form.errors}")
+            
+            # 如果是AJAX请求，返回错误信息
+            if is_ajax:
+                # 返回表单错误
+                return render(request, 'admin/auth/user/add_form.html', {
+                    'form': form,
+                })
+            
+            # 否则重定向回添加用户页面
+            return render(request, 'admin/auth/user/add.html', {
+                'form': form,
+            })
+            
+    except Exception as e:
+        logger.error(f"Error adding user: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # 如果是AJAX请求，返回错误信息
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'error': 'An error occurred while adding user',
+                'message': str(e),
+                'type': type(e).__name__
+            }, status=500)
+        
+        # 否则重定向回添加用户页面
+        return HttpResponseRedirect(reverse('admin:auth_user_add')) 

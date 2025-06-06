@@ -1,0 +1,166 @@
+{% extends "admin/object_history.html" %}
+{% load i18n admin_urls static %}
+
+{% block page_title %}{% trans 'User History' %}{% endblock %}
+
+{% block content %}
+<div class="history-container">
+  <div class="history-header">
+    <h2>{% trans 'User Change History' %}: {{ object.username }}</h2>
+    <div>
+      <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}" class="btn btn-primary">
+        <i class="fas fa-edit"></i> {% trans 'Edit User' %}
+      </a>
+      <a href="{% url 'admin:auth_user_changelist' %}" class="btn btn-secondary ml-2">
+        <i class="fas fa-list"></i> {% trans 'User List' %}
+      </a>
+    </div>
+  </div>
+
+  <div class="user-info mb-4">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{% trans 'User Information' %}</h5>
+            <table class="table table-sm">
+              <tr>
+                <th>{% trans 'Username' %}:</th>
+                <td>{{ object.username }}</td>
+              </tr>
+              <tr>
+                <th>{% trans 'Email' %}:</th>
+                <td>{{ object.email|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>{% trans 'First name' %}:</th>
+                <td>{{ object.first_name|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>{% trans 'Last name' %}:</th>
+                <td>{{ object.last_name|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>{% trans 'Status' %}:</th>
+                <td>
+                  {% if object.is_active %}
+                    <span class="badge badge-success">{% trans 'Active' %}</span>
+                  {% else %}
+                    <span class="badge badge-danger">{% trans 'Inactive' %}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>{% trans 'Staff status' %}:</th>
+                <td>
+                  {% if object.is_staff %}
+                    <span class="badge badge-info">{% trans 'Staff' %}</span>
+                  {% else %}
+                    <span class="badge badge-secondary">{% trans 'Regular user' %}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>{% trans 'Date joined' %}:</th>
+                <td>{{ object.date_joined|date:"Y-m-d H:i" }}</td>
+              </tr>
+              <tr>
+                <th>{% trans 'Last login' %}:</th>
+                <td>{{ object.last_login|date:"Y-m-d H:i"|default:"-" }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{% trans 'Groups and Permissions' %}</h5>
+            <h6>{% trans 'Groups' %}:</h6>
+            <ul class="list-group mb-3">
+              {% for group in object.groups.all %}
+                <li class="list-group-item">{{ group.name }}</li>
+              {% empty %}
+                <li class="list-group-item text-muted">{% trans 'No groups' %}</li>
+              {% endfor %}
+            </ul>
+            <h6>{% trans 'User permissions' %}:</h6>
+            <p>
+              {% if object.user_permissions.count > 0 %}
+                <span class="badge badge-pill badge-primary">{{ object.user_permissions.count }} {% trans 'permissions' %}</span>
+              {% else %}
+                <span class="text-muted">{% trans 'No specific permissions' %}</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if action_list %}
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th class="history-date">{% trans 'Date/time' %}</th>
+          <th class="history-user">{% trans 'Admin' %}</th>
+          <th class="history-action">{% trans 'Action' %}</th>
+          <th>{% trans 'Details' %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for action in action_list %}
+          <tr>
+            <td class="history-date">{{ action.action_time|date:"Y-m-d H:i:s" }}</td>
+            <td class="history-user">
+              {% if action.user %}
+                {{ action.user.get_username }}
+                {% if action.user.get_full_name %}({{ action.user.get_full_name }}){% endif %}
+              {% else %}
+                {% trans 'System' %}
+              {% endif %}
+            </td>
+            <td class="history-action">
+              {% if action.action_flag == 1 %}
+                <span class="history-badge history-badge-add">{% trans 'Added' %}</span>
+              {% elif action.action_flag == 2 %}
+                <span class="history-badge history-badge-change">{% trans 'Changed' %}</span>
+              {% elif action.action_flag == 3 %}
+                <span class="history-badge history-badge-delete">{% trans 'Deleted' %}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if action.action_flag == 1 %}
+                {% trans 'User created' %}
+              {% elif action.action_flag == 2 %}
+                <div class="history-details">
+                  <ul>
+                    {% for field, values in action.get_change_message_dict.items %}
+                      <li>
+                        <span class="history-field">{{ field }}:</span>
+                        {% if values.old %}
+                          <span class="history-old-value">{{ values.old }}</span> →
+                        {% endif %}
+                        <span class="history-new-value">{{ values.new }}</span>
+                      </li>
+                    {% empty %}
+                      <li>{{ action.change_message }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% elif action.action_flag == 3 %}
+                {% trans 'User deleted' %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="history-empty">
+      <i class="fas fa-history"></i>
+      <p>{% trans "This user doesn't have a change history. It probably wasn't added via this admin site." %}</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %} 

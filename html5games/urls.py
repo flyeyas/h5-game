@@ -22,7 +22,7 @@ from django.contrib.sitemaps.views import sitemap
 from games.sitemaps import GameSitemap, CategorySitemap, StaticSitemap
 from games import views as games_views
 from games.admin import admin_site
-from games.views_admin import game_edit_json, toggle_game_status
+from games.views_admin import game_edit_json, toggle_game_status, add_user_modal
 
 # 站点地图配置
 sitemaps = {
@@ -41,10 +41,14 @@ urlpatterns = [
 
 # 国际化URL
 urlpatterns += i18n_patterns(
+    # 自定义登出视图，支持GET方法
+    path('admin/logout/', games_views.custom_logout, name='custom_logout'),
     # 游戏编辑API - 使用api前缀避免被admin捕获
     path('api/games/<int:game_id>/edit-json/', game_edit_json, name='game_edit_json'),
     # 游戏状态切换API
     path('api/games/<int:game_id>/toggle-status/', toggle_game_status, name='toggle_game_status'),
+    # 用户添加模态框API
+    path('api/users/add-modal/', add_user_modal, name='add_user_modal'),
     # 使用自定义admin站点 (基于Django admin二次开发)
     path('admin/', admin_site.urls),
     # 保留Django默认admin作为备用

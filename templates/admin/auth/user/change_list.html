@@ -1,0 +1,709 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/changelists.css" %}">
+  {% if cl.formset %}
+    <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  {% endif %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+    }
+    
+    .admin-card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      background-color: white;
+    }
+    
+    .admin-card-header {
+      background-color: white;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding: 15px 20px;
+      font-weight: 600;
+    }
+    
+    .table th {
+      font-weight: 600;
+      color: #495057;
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+    }
+    
+    .table td {
+      vertical-align: middle;
+      border-bottom: 1px solid #f2f2f2;
+    }
+    
+    .badge-status {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      display: inline-block;
+    }
+    
+    .badge-active {
+      background-color: rgba(40, 167, 69, 0.1);
+      color: #28a745;
+    }
+    
+    .badge-inactive {
+      background-color: rgba(108, 117, 125, 0.1);
+      color: #6c757d;
+    }
+    
+    .action-buttons .btn {
+      padding: 5px 10px;
+      font-size: 0.85rem;
+    }
+    
+    .search-box {
+      position: relative;
+    }
+    
+    .search-box .form-control {
+      padding-left: 35px;
+      border-radius: 20px;
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 10px;
+      color: #6c757d;
+    }
+    
+    /* 自定义下拉菜单样式 */
+    .custom-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .custom-dropdown-toggle {
+      white-space: nowrap;
+    }
+    
+    .custom-dropdown-menu {
+      position: fixed; /* 使用fixed而不是absolute，确保总是位于页面最上层 */
+      list-style: none;
+      padding: 0.5rem 0;
+      margin: 0;
+      background-color: #fff;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 4px;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      z-index: 9999; /* 确保在所有内容之上 */
+      min-width: 180px;
+    }
+    
+    .custom-dropdown-menu li {
+      padding: 0;
+    }
+    
+    .custom-dropdown-menu li a {
+      display: block;
+      padding: 0.5rem 1.5rem;
+      color: #212529;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    
+    .custom-dropdown-menu li a:hover {
+      background-color: #f8f9fa;
+      color: #16181b;
+    }
+    
+    .pagination {
+      margin-bottom: 0;
+      justify-content: center;
+    }
+    
+    .pagination .page-link {
+      color: #343a40;
+      padding: 8px 15px;
+    }
+    
+    .pagination .page-item.active .page-link {
+      background-color: #343a40;
+      border-color: #343a40;
+    }
+    
+    .card-body {
+      padding: 15px 20px;
+    }
+    
+    .card-footer {
+      background-color: white;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      padding: 15px;
+    }
+    
+    /* 隐藏原始的Django Admin操作选择器 */
+    .actions {
+      display: none;
+    }
+    
+    /* 模态框样式 */
+    .modal-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .modal-footer {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    
+    .form-text {
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 767.98px) {
+      .col-md-2, .col-md-3, .col-md-7 {
+        margin-bottom: 15px;
+      }
+      
+      .d-flex.flex-wrap {
+        justify-content: space-between;
+      }
+      
+      .custom-dropdown {
+        width: 48%;
+        margin-right: 0 !important;
+      }
+      
+      .custom-dropdown button {
+        width: 100%;
+      }
+      
+      .table-responsive {
+        overflow-x: auto;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media }}
+{% endblock %}
+
+{% block page_title %}{% trans 'User Management System' %}{% endblock %}
+
+{% block content %}
+  <!-- 添加用户模态框 -->
+  <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addUserModalLabel">{% trans 'Add user' %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="addUserForm" method="post" action="/en/api/users/add-modal/">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="alert alert-info">
+              {% trans 'After you\'ve created a user, you\'ll be able to edit more user options.' %}
+            </div>
+            <div id="form-errors" class="alert alert-danger" style="display: none;"></div>
+            <div class="form-group mb-3">
+              <label for="id_username" class="form-label">{% trans 'Username:' %}</label>
+              <input type="text" name="username" class="form-control" maxlength="150" id="id_username" required>
+              <div class="form-text">{% trans 'Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.' %}</div>
+            </div>
+            
+            <div class="form-group mb-3">
+              <label class="form-label">{% trans 'Password-based authentication:' %}</label>
+              <div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="password_enabled" id="id_password_enabled_1" value="enabled" checked>
+                  <label class="form-check-label" for="id_password_enabled_1">{% trans 'Enabled' %}</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="password_enabled" id="id_password_enabled_0" value="disabled">
+                  <label class="form-check-label" for="id_password_enabled_0">{% trans 'Disabled' %}</label>
+                </div>
+              </div>
+              <div class="form-text">{% trans 'Whether the user will be able to authenticate using a password or not. If disabled, they may still be able to authenticate using other backends, such as Single Sign-On or LDAP.' %}</div>
+            </div>
+            
+            <div class="form-group mb-3">
+              <label for="id_password1" class="form-label">{% trans 'Password:' %}</label>
+              <input type="password" name="password1" class="form-control" id="id_password1" required autocomplete="new-password">
+              <ul class="form-text list-unstyled">
+                <li>{% trans 'Your password can\'t be too similar to your other personal information.' %}</li>
+                <li>{% trans 'Your password must contain at least 8 characters.' %}</li>
+                <li>{% trans 'Your password can\'t be a commonly used password.' %}</li>
+                <li>{% trans 'Your password can\'t be entirely numeric.' %}</li>
+              </ul>
+            </div>
+            
+            <div class="form-group mb-3">
+              <label for="id_password2" class="form-label">{% trans 'Password confirmation:' %}</label>
+              <input type="password" name="password2" class="form-control" id="id_password2" required autocomplete="new-password">
+              <div class="form-text">{% trans 'Enter the same password as before, for verification.' %}</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+            <button type="submit" class="btn btn-primary">{% trans 'Save' %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除用户确认模态框 -->
+  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteUserModalLabel">{% trans 'Confirm Deletion' %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="deleteUserForm" method="post">
+            {% csrf_token %}
+            <div class="alert alert-danger">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              {% trans 'Are you sure you want to delete the user' %} <strong id="deleteUserName"></strong>?
+            </div>
+            <p>{% trans 'This action cannot be undone. All data associated with this user will be permanently deleted.' %}</p>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+          <button type="submit" form="deleteUserForm" class="btn btn-danger">{% trans 'Delete User' %}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card mb-4">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-3 mb-3 mb-md-0">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <form id="changelist-search" method="get">
+              <input type="text" name="q" class="form-control" placeholder="{% trans 'Search users...' %}" value="{{ cl.query }}" id="searchbar">
+              <input type="submit" style="display: none;">
+            </form>
+          </div>
+        </div>
+        <div class="col-md-7 mb-3 mb-md-0">
+          <div class="d-flex flex-wrap">
+            <div class="custom-dropdown me-2 mb-2 mb-md-0">
+              <button class="btn btn-outline-secondary custom-dropdown-toggle" type="button" id="staffDropdown">
+                <i class="fas fa-filter me-1"></i> {% trans 'Staff status' %}
+              </button>
+              <ul class="custom-dropdown-menu" id="staffDropdownMenu" style="display: none;">
+                <li><a href="?">{% trans 'All' %}</a></li>
+                <li><a href="?is_staff__exact=1">{% trans 'Yes' %}</a></li>
+                <li><a href="?is_staff__exact=0">{% trans 'No' %}</a></li>
+              </ul>
+            </div>
+            <div class="custom-dropdown me-2 mb-2 mb-md-0">
+              <button class="btn btn-outline-secondary custom-dropdown-toggle" type="button" id="superuserDropdown">
+                <i class="fas fa-filter me-1"></i> {% trans 'Superuser status' %}
+              </button>
+              <ul class="custom-dropdown-menu" id="superuserDropdownMenu" style="display: none;">
+                <li><a href="?">{% trans 'All' %}</a></li>
+                <li><a href="?is_superuser__exact=1">{% trans 'Yes' %}</a></li>
+                <li><a href="?is_superuser__exact=0">{% trans 'No' %}</a></li>
+              </ul>
+            </div>
+            <div class="custom-dropdown mb-2 mb-md-0">
+              <button class="btn btn-outline-secondary custom-dropdown-toggle" type="button" id="activeDropdown">
+                <i class="fas fa-filter me-1"></i> {% trans 'Active' %}
+              </button>
+              <ul class="custom-dropdown-menu" id="activeDropdownMenu" style="display: none;">
+                <li><a href="?">{% trans 'All' %}</a></li>
+                <li><a href="?is_active__exact=1">{% trans 'Yes' %}</a></li>
+                <li><a href="?is_active__exact=0">{% trans 'No' %}</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 text-md-end">
+          {% if has_add_permission %}
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-plus me-1"></i> {% trans 'Add user' %}
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <div class="admin-card-header d-flex justify-content-between align-items-center">
+      <span>{% trans 'User list' %}</span>
+      <span class="text-muted">{% trans 'Total' %} {{ cl.result_count }} {% trans 'users' %}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <form id="changelist-form" method="post"{% if cl.formset and cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>{% csrf_token %}
+          {% if cl.formset %}
+            <div>{{ cl.formset.management_form }}</div>
+          {% endif %}
+          
+          {% comment %}隐藏Django原始的动作选择器但保留表单功能{% endcomment %}
+          <div class="actions" style="display:none;">
+            {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+          </div>
+          
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th style="width: 30px;"><input type="checkbox" id="action-toggle"></th>
+                <th>{% trans 'Username' %}</th>
+                <th>{% trans 'Email address' %}</th>
+                <th>{% trans 'Full name' %}</th>
+                <th>{% trans 'Staff status' %}</th>
+                <th>{% trans 'Superuser' %}</th>
+                <th>{% trans 'Active' %}</th>
+                <th style="width: 150px;">{% trans 'Actions' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for result in cl.result_list %}
+                {% if result.form.errors %}
+                  <tr class="{% cycle 'row1' 'row2' %}"><td colspan="8">{{ result.form.errors }}</td></tr>
+                {% endif %}
+                <tr class="{% cycle 'row1' 'row2' %}">
+                  <td>
+                    {% if cl.formset and cl.result_has_allowable_actions %}
+                      {{ result.form.action_checkbox }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if result.form.id %}
+                      {{ result.form.id }}
+                    {% endif %}
+                    <a href="{% url 'admin:auth_user_change' result.pk %}">{{ result.username }}</a>
+                  </td>
+                  <td>{{ result.email|default:"-" }}</td>
+                  <td>
+                    {% if result.first_name or result.last_name %}
+                      {{ result.first_name }} {{ result.last_name }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if result.is_staff %}
+                      <span class="badge badge-status badge-active">{% trans 'Yes' %}</span>
+                    {% else %}
+                      <span class="badge badge-status badge-inactive">{% trans 'No' %}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if result.is_superuser %}
+                      <span class="badge badge-status badge-active">{% trans 'Yes' %}</span>
+                    {% else %}
+                      <span class="badge badge-status badge-inactive">{% trans 'No' %}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if result.is_active %}
+                      <span class="badge badge-status badge-active">{% trans 'Yes' %}</span>
+                    {% else %}
+                      <span class="badge badge-status badge-inactive">{% trans 'No' %}</span>
+                    {% endif %}
+                  </td>
+                  <td class="action-buttons">
+                    <a href="{% url 'admin:auth_user_change' result.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-user-btn" 
+                            data-user-id="{{ result.pk }}" 
+                            data-user-name="{{ result.username }}"
+                            data-delete-url="{% url 'admin:auth_user_delete' result.pk %}">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <a href="{% url 'admin:auth_user_history' result.pk %}" class="btn btn-sm btn-outline-info">
+                      <i class="fas fa-history"></i>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          
+          {% comment %}原始分页控件保留但仅作为隐藏字段使用{% endcomment %}
+          <div style="display:none;">
+            {% block pagination %}{% pagination cl %}{% endblock %}
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="card-footer">
+      {% if cl.result_count %}
+        <div class="pagination">
+          {% if cl.has_previous %}
+            <a href="?p={{ cl.previous_page_number }}{% if cl.query %}&q={{ cl.query }}{% endif %}" class="page-link">&laquo;</a>
+          {% endif %}
+          
+          {% for page_num in cl.page_range %}
+            {% if page_num == cl.page_number %}
+              <span class="page-link active">{{ page_num }}</span>
+            {% else %}
+              <a href="?p={{ page_num }}{% if cl.query %}&q={{ cl.query }}{% endif %}" class="page-link">{{ page_num }}</a>
+            {% endif %}
+          {% endfor %}
+          
+          {% if cl.has_next %}
+            <a href="?p={{ cl.next_page_number }}{% if cl.query %}&q={{ cl.query }}{% endif %}" class="page-link">&raquo;</a>
+          {% endif %}
+        </div>
+        {% if cl.result_count != 1 %}
+          <p class="paginator-info text-center">{% blocktrans with cl.result_count as counter %}{{ counter }} users{% endblocktrans %}</p>
+        {% else %}
+          <p class="paginator-info text-center">{% blocktrans with cl.result_count as counter %}{{ counter }} user{% endblocktrans %}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 处理全选/取消全选
+    const actionToggle = document.getElementById('action-toggle');
+    if (actionToggle) {
+      actionToggle.addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('input[name="_selected_action"]');
+        checkboxes.forEach(function(checkbox) {
+          checkbox.checked = actionToggle.checked;
+        });
+      });
+    }
+    
+    // 处理下拉菜单的显示和隐藏
+    const dropdowns = ['staff', 'superuser', 'active'];
+    
+    dropdowns.forEach(function(dropdown) {
+      const button = document.getElementById(dropdown + 'Dropdown');
+      const menu = document.getElementById(dropdown + 'DropdownMenu');
+      
+      if (button && menu) {
+        button.addEventListener('click', function(e) {
+          e.stopPropagation();
+          
+          // 隐藏其他菜单
+          dropdowns.forEach(function(otherDropdown) {
+            if (otherDropdown !== dropdown) {
+              const otherMenu = document.getElementById(otherDropdown + 'DropdownMenu');
+              if (otherMenu) {
+                otherMenu.style.display = 'none';
+              }
+            }
+          });
+          
+          // 切换当前菜单
+          if (menu.style.display === 'none') {
+            menu.style.display = 'block';
+            
+            // 设置菜单位置
+            const rect = button.getBoundingClientRect();
+            menu.style.top = (rect.bottom + window.scrollY) + 'px';
+            menu.style.left = (rect.left + window.scrollX) + 'px';
+          } else {
+            menu.style.display = 'none';
+          }
+        });
+      }
+    });
+    
+    // 点击页面其他地方时隐藏所有菜单
+    document.addEventListener('click', function() {
+      dropdowns.forEach(function(dropdown) {
+        const menu = document.getElementById(dropdown + 'DropdownMenu');
+        if (menu) {
+          menu.style.display = 'none';
+        }
+      });
+    });
+    
+    // 阻止菜单内部点击事件冒泡
+    dropdowns.forEach(function(dropdown) {
+      const menu = document.getElementById(dropdown + 'DropdownMenu');
+      if (menu) {
+        menu.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+      }
+    });
+    
+    // 处理删除用户按钮点击事件
+    const deleteUserBtns = document.querySelectorAll('.delete-user-btn');
+    const deleteUserModal = document.getElementById('deleteUserModal');
+    const deleteUserForm = document.getElementById('deleteUserForm');
+    const deleteUserName = document.getElementById('deleteUserName');
+    
+    if (deleteUserBtns.length > 0 && deleteUserModal && deleteUserForm && deleteUserName) {
+      deleteUserBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // 设置用户名和删除表单的提交URL
+          const userName = this.getAttribute('data-user-name');
+          const deleteUrl = this.getAttribute('data-delete-url');
+          
+          deleteUserName.textContent = userName;
+          deleteUserForm.action = deleteUrl;
+          
+          // 显示模态框
+          const modal = new bootstrap.Modal(deleteUserModal);
+          modal.show();
+        });
+      });
+    }
+    
+    // 添加用户表单提交处理
+    const addUserForm = document.getElementById('addUserForm');
+    if (addUserForm) {
+      addUserForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 清除之前的错误信息
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        const formErrorsDiv = document.getElementById('form-errors');
+        formErrorsDiv.style.display = 'none';
+        formErrorsDiv.innerHTML = '';
+        
+        const formData = new FormData(addUserForm);
+        
+        fetch(addUserForm.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            if (response.status === 404) {
+              throw new Error('{% trans "API endpoint not found. Please contact administrator." %}');
+            }
+            return response.text().then(text => {
+              throw new Error(text || '{% trans "An error occurred while processing your request." %}');
+            });
+          }
+          
+          if (response.redirected) {
+            // 如果服务器重定向，表示成功创建用户
+            window.location.href = response.url;
+            return null;
+          } else {
+            // 否则获取响应内容以检查错误
+            return response.text();
+          }
+        })
+        .then(html => {
+          if (html) {
+            try {
+              // 尝试解析JSON响应
+              const jsonResponse = JSON.parse(html);
+              if (jsonResponse.success) {
+                // 创建成功，关闭模态框并刷新页面
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                modal.hide();
+                
+                // 添加成功消息
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.role = 'alert';
+                alertDiv.innerHTML = `
+                  <strong>{% trans "Success!" %}</strong> ${jsonResponse.message || '{% trans "User created successfully." %}'}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                
+                // 在页面顶部插入成功消息
+                const container = document.querySelector('.admin-card.mb-4');
+                container.parentNode.insertBefore(alertDiv, container);
+                
+                // 刷新用户列表
+                setTimeout(() => {
+                  window.location.reload();
+                }, 1500);
+                
+                return;
+              }
+            } catch (e) {
+              // 不是JSON响应，继续处理HTML
+            }
+            
+            // 解析返回的HTML以查找错误信息
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const errorList = doc.querySelectorAll('.errorlist');
+            
+            if (errorList.length > 0) {
+              // 显示错误信息
+              errorList.forEach(errorEl => {
+                const fieldContainer = errorEl.closest('.form-group');
+                if (fieldContainer) {
+                  const label = fieldContainer.querySelector('label');
+                  const fieldName = label ? label.getAttribute('for').replace('id_', '') : '';
+                  const input = document.getElementById('id_' + fieldName);
+                  const errorMessages = Array.from(errorEl.querySelectorAll('li')).map(li => li.textContent);
+                  
+                  if (input) {
+                    input.classList.add('is-invalid');
+                    
+                    const feedbackDiv = document.createElement('div');
+                    feedbackDiv.className = 'invalid-feedback';
+                    feedbackDiv.innerHTML = errorMessages.join('<br>');
+                    
+                    input.parentNode.appendChild(feedbackDiv);
+                  }
+                } else {
+                  // 如果找不到特定字段，则显示一般错误
+                  const errorMessages = Array.from(errorEl.querySelectorAll('li')).map(li => li.textContent);
+                  formErrorsDiv.innerHTML += errorMessages.join('<br>');
+                  formErrorsDiv.style.display = 'block';
+                }
+              });
+            } else {
+              // 如果没有错误列表但有响应，可能是成功创建了用户
+              const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+              modal.hide();
+              
+              // 刷新页面以显示新用户
+              window.location.reload();
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          formErrorsDiv.innerHTML = error.message || '{% trans "An unexpected error occurred. Please try again." %}';
+          formErrorsDiv.style.display = 'block';
+        });
+      });
+    }
+  });
+</script>
+{% endblock %} 

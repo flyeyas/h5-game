@@ -9,6 +9,9 @@ app_name = 'games'
 urlpatterns = [
     # 游戏前台视图
     path('', views.HomeView.as_view(), name='home'),
+    path('games/', views.GameListView.as_view(), name='game_list'),
+    path('games/category/<slug:category_slug>/', views.GameListView.as_view(), name='game_list_by_category'),
+    path('categories/', views.CategoryListView.as_view(), name='category_list'),
     path('game/<slug:game_slug>/', views.GameDetailView.as_view(), name='game_detail'),
     path('category/<slug:category_slug>/', CategoryDetailView.as_view(), name='category_detail'),
     

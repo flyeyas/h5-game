@@ -1,0 +1,136 @@
+/* 密码修改页面样式 */
+.module {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  padding: 25px;
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+#content h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 10px;
+}
+
+.aligned p {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.form-row {
+  margin-bottom: 1.5rem;
+  padding: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.form-row:hover {
+  background-color: #f8f9fa;
+}
+
+.form-row label {
+  font-weight: 500;
+  color: #495057;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.form-row input[type="password"] {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 10px 12px;
+  width: 100%;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-size: 1rem;
+}
+
+.form-row input[type="password"]:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  outline: 0;
+}
+
+/* 帮助文本样式 */
+.help, .helptext {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 5px;
+}
+
+/* 密码要求列表样式 */
+.form-row ul {
+  background-color: #f8f9fa;
+  border-left: 4px solid #6c757d;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 0 5px 5px 0;
+}
+
+.form-row ul li {
+  margin-bottom: 5px;
+  color: #495057;
+}
+
+/* 按钮样式 */
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.submit-row input[type="submit"] {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+  padding: 10px 20px;
+  transition: background-color 0.3s, border-color 0.3s;
+  cursor: pointer;
+}
+
+.submit-row input[type="submit"]:hover {
+  background-color: #0069d9;
+  border-color: #0062cc;
+}
+
+/* 密码字段设置 */
+fieldset > div:first-of-type {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+fieldset > div:first-of-type h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 10px;
+}
+
+.password-auth-options {
+  display: flex;
+  gap: 20px;
+}
+
+.password-auth-option {
+  display: flex;
+  align-items: center;
+}
+
+.password-auth-option input[type="radio"] {
+  margin-right: 5px;
+}
+
+fieldset > div:first-of-type p {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #6c757d;
+} 

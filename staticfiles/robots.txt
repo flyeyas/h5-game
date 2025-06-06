@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /i18n/
+
+# 站点地图
+Sitemap: https://example.com/sitemap.xml

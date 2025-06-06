@@ -1,0 +1,198 @@
+{% load i18n static %}
+{% load form_tags %}
+
+<!DOCTYPE html>
+<html lang="{% get_current_language as LANGUAGE_CODE %}{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans 'Log in' %} | {% trans 'HTML5 Games Admin' %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+        }
+        .login-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .login-header {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .login-header img {
+            height: 50px;
+            margin-bottom: 15px;
+        }
+        .login-header h3 {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        .login-body {
+            padding: 30px;
+        }
+        .form-control {
+            padding: 12px 15px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ced4da;
+            margin-bottom: 5px;
+        }
+        .form-label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .input-group-text {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 8px 0 0 8px;
+            border-right: none;
+        }
+        .input-group .form-control {
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 0;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            border: none;
+            padding: 12px 20px;
+            font-weight: 600;
+            width: 100%;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-login:hover {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+        }
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+        }
+        .footer-text a {
+            color: #343a40;
+            text-decoration: none;
+        }
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+        .form-check {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .form-check-input {
+            margin-right: 5px;
+        }
+        .errornote {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="{% static 'admin/img/logo.png' %}" alt="GameHub Logo" onerror="this.src='https://via.placeholder.com/150x50/343a40/ffffff?text=GameHub'">
+                <h3>{% trans '管理员登录' %}</h3>
+            </div>
+            <div class="login-body">
+                {% if form.errors and not form.non_field_errors %}
+                    <div class="errornote">
+                        {% if form.errors.items|length == 1 %}{% trans "请更正下面的错误." %}{% else %}{% trans "请更正下面的错误." %}{% endif %}
+                    </div>
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                    <div class="errornote">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">{{ form.username.label }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            {{ form.username|add_class:"form-control"|attr:"placeholder:请输入管理员用户名" }}
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="errornote">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">{{ form.password.label }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            {{ form.password|add_class:"form-control"|attr:"placeholder:请输入密码" }}
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="errornote">{{ form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <div class="mb-3 form-check">
+                        <div>
+                            <input type="checkbox" name="remember_me" id="rememberMe" class="form-check-input">
+                            <label class="form-check-label" for="rememberMe">{% trans '记住我' %}</label>
+                        </div>
+                        {% if password_reset_url %}
+                        <a href="{{ password_reset_url }}" class="float-end">{% trans '忘记密码？' %}</a>
+                        {% endif %}
+                    </div>
+
+                    <input type="submit" class="btn-login" value="{% trans '登录' %}">
+                </form>
+            </div>
+        </div>
+        <div class="footer-text">
+            <p>© {% now "Y" %} GameHub 管理系统. {% trans '保留所有权利' %}.</p>
+            <p><a href="/"><i class="fas fa-arrow-left me-1"></i>{% trans '返回前台首页' %}</a></p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
