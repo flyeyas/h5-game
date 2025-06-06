@@ -623,19 +623,4 @@ body.change-form.app-auth.model-user.change-form h1 {
 .breadcrumbs a:hover {
     color: #ec6ead;
     text-decoration: underline;
-}
-
-/* 密码修改页面特定样式 */
-.auth-user-password-change #content-main > form div:first-child div:first-child fieldset > div:first-child input[type="text"] {
-    display: none !important;
-}
-
-/* 隐藏密码修改页面上方的用户名输入框 */
-#content-main input[value="testuser2"] {
-    display: none !important;
-}
-
-/* 确保在所有情况下都隐藏用户名输入框 */
-body.app-auth.model-user.change-form #content-main > form > div > div > fieldset > div:first-child > input[type="text"] {
-    display: none !important;
 } 
