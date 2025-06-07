@@ -1,0 +1,571 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/changelists.css" %}">
+  {% if cl.formset %}
+    <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  {% endif %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+    }
+    
+    .admin-card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      background-color: white;
+    }
+    
+    .admin-card-header {
+      background-color: white;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding: 15px 20px;
+      font-weight: 600;
+    }
+    
+    .table th {
+      font-weight: 600;
+      color: #495057;
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+    }
+    
+    .table td {
+      vertical-align: middle;
+      border-bottom: 1px solid #f2f2f2;
+    }
+    
+    .badge-status {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      display: inline-block;
+    }
+    
+    .badge-active {
+      background-color: rgba(40, 167, 69, 0.1);
+      color: #28a745;
+    }
+    
+    .badge-inactive {
+      background-color: rgba(108, 117, 125, 0.1);
+      color: #6c757d;
+    }
+    
+    .action-buttons .btn {
+      padding: 5px 10px;
+      font-size: 0.85rem;
+    }
+    
+    .search-box {
+      position: relative;
+    }
+    
+    .search-box .form-control {
+      padding-left: 35px;
+      border-radius: 20px;
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 10px;
+      color: #6c757d;
+    }
+    
+    /* 自定义下拉菜单样式 */
+    .custom-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .custom-dropdown-toggle {
+      white-space: nowrap;
+    }
+    
+    .custom-dropdown-menu {
+      position: fixed; /* 使用fixed而不是absolute，确保总是位于页面最上层 */
+      list-style: none;
+      padding: 0.5rem 0;
+      margin: 0;
+      background-color: #fff;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 4px;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      z-index: 9999; /* 确保在所有内容之上 */
+      min-width: 180px;
+    }
+    
+    .custom-dropdown-menu li {
+      padding: 0;
+    }
+    
+    .custom-dropdown-menu li a {
+      display: block;
+      padding: 0.5rem 1.5rem;
+      color: #212529;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    
+    .custom-dropdown-menu li a:hover {
+      background-color: #f8f9fa;
+      color: #16181b;
+    }
+    
+    .pagination {
+      margin-bottom: 0;
+    }
+    
+    .pagination .page-item .page-link {
+      border-radius: 4px;
+      margin: 0 2px;
+      color: #495057;
+      border-color: #dee2e6;
+      font-size: 0.875rem;
+      padding: 0.25rem 0.5rem;
+      box-shadow: none;
+      min-width: 32px;
+      text-align: center;
+    }
+    
+    .pagination .page-item.active .page-link {
+      background-color: #007bff;
+      border-color: #007bff;
+      color: white;
+      font-weight: 500;
+    }
+    
+    .pagination .page-item .page-link:hover {
+      background-color: #e9ecef;
+      border-color: #dee2e6;
+      color: #007bff;
+    }
+    
+    .pagination .page-item.disabled .page-link {
+      color: #adb5bd;
+      background-color: #f8f9fa;
+      border-color: #dee2e6;
+      pointer-events: none;
+    }
+    
+    .card-body {
+      padding: 15px 20px;
+    }
+    
+    .card-footer {
+      background-color: white;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      padding: 15px;
+    }
+    
+    /* 隐藏原始的Django Admin操作选择器 */
+    .actions {
+      display: none;
+    }
+    
+    /* 模态框样式 */
+    .modal-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .modal-footer {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    
+    .form-text {
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 767.98px) {
+      .col-md-2, .col-md-3, .col-md-7 {
+        margin-bottom: 15px;
+      }
+      
+      .d-flex.flex-wrap {
+        justify-content: space-between;
+      }
+      
+      .custom-dropdown {
+        width: 48%;
+        margin-right: 0 !important;
+      }
+      
+      .custom-dropdown button {
+        width: 100%;
+      }
+      
+      .table-responsive {
+        overflow-x: auto;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media }}
+{% endblock %}
+
+{% block page_title %}{% trans 'Advertisement Management System' %}{% endblock %}
+
+{% block content %}
+  <!-- 添加广告模态框 -->
+  <div class="modal fade" id="addAdvertisementModal" tabindex="-1" aria-labelledby="addAdvertisementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addAdvertisementModalLabel">{% trans 'Add Advertisement' %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="addAdvertisementForm" method="post" action="{% url 'admin:games_advertisement_add' %}">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="alert alert-info">
+              {% trans 'After adding an advertisement, you can edit more advertisement options.' %}
+            </div>
+            <div id="form-errors" class="alert alert-danger" style="display: none;"></div>
+            <div class="form-group mb-3">
+              <label for="id_name" class="form-label">{% trans 'Advertisement Name:' %}</label>
+              <input type="text" name="name" class="form-control" maxlength="150" id="id_name" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="id_position" class="form-label">{% trans 'Position:' %}</label>
+              <select name="position" class="form-select" id="id_position" required>
+                <option value="header">{% trans 'Header' %}</option>
+                <option value="sidebar">{% trans 'Sidebar' %}</option>
+                <option value="game_between">{% trans 'Between Games' %}</option>
+                <option value="footer">{% trans 'Footer' %}</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label for="id_is_active" class="form-label">{% trans 'Active:' %}</label>
+              <div>
+                <div class="form-check form-switch">
+                  <input type="checkbox" name="is_active" class="form-check-input" id="id_is_active" checked>
+                  <label class="form-check-label" for="id_is_active">{% trans 'Active' %}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+            <button type="submit" class="btn btn-primary">{% trans 'Save' %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+    <div class="container-fluid py-3">
+      <div class="admin-card mb-4">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-3 mb-3 mb-md-0">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <form id="changelist-search" method="get">
+                <input type="text" name="q" class="form-control" placeholder="{% trans 'Search advertisements...' %}" value="{{ cl.query }}" id="searchInput">
+                <input type="submit" style="display: none;">
+              </form>
+            </div>
+          </div>
+          <div class="col-md-7 mb-3 mb-md-0">
+                      <div class="d-flex flex-wrap">
+            <div class="custom-dropdown me-2 mb-2 mb-md-0">
+              <button class="btn btn-outline-secondary custom-dropdown-toggle" type="button" id="filterActiveBtn">
+                <i class="fas fa-filter me-1"></i> {% trans 'Active' %}
+              </button>
+            </div>
+            <div class="custom-dropdown me-2 mb-2 mb-md-0">
+              <button class="btn btn-outline-secondary custom-dropdown-toggle" type="button" id="filterPositionBtn">
+                <i class="fas fa-filter me-1"></i> {% trans 'Position' %}
+              </button>
+            </div>
+          </div>
+          </div>
+          <div class="col-md-2 text-md-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdvertisementModal">
+              <i class="fas fa-plus me-1"></i> {% trans 'Add Ad' %}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="admin-card">
+          <div class="admin-card-header d-flex justify-content-between align-items-center">
+            <div>{% trans 'Advertisement List' %}</div>
+            <div class="text-muted small">{% trans 'Total' %} {{ cl.result_count }} {% trans 'advertisements' %}</div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th>{% trans 'Select' %}</th>
+                    <th>{% trans 'Name' %}</th>
+                    <th>{% trans 'Position' %}</th>
+                    <th>{% trans 'Active' %}</th>
+                    <th>{% trans 'Start Date' %}</th>
+                    <th>{% trans 'End Date' %}</th>
+                    <th>{% trans 'Actions' %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for result in cl.result_list %}
+                  <tr>
+                    <td><input type="checkbox" class="form-check-input" name="_selected_action" value="{{ result.pk }}"></td>
+                    <td>
+                      <a href="{% url 'admin:games_advertisement_change' result.pk %}">{{ result.name }}</a>
+                    </td>
+                    <td>
+                      {% if result.position == 'header' %}
+                        {% trans 'Header' %}
+                      {% elif result.position == 'sidebar' %}
+                        {% trans 'Sidebar' %}
+                      {% elif result.position == 'game_between' %}
+                        {% trans 'Between Games' %}
+                      {% elif result.position == 'footer' %}
+                        {% trans 'Footer' %}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if result.is_active %}
+                      <span class="badge-status badge-active">{% trans 'Yes' %}</span>
+                      {% else %}
+                      <span class="badge-status badge-inactive">{% trans 'No' %}</span>
+                      {% endif %}
+                    </td>
+                    <td>{% if result.start_date %}{{ result.start_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+                    <td>{% if result.end_date %}{{ result.end_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+                    <td>
+                      <div class="action-buttons">
+                        <a href="{% url 'admin:games_advertisement_change' result.pk %}" class="btn btn-sm btn-outline-primary" title="{% trans 'Edit' %}">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger deleteBtn" data-id="{{ result.pk }}" title="{% trans 'Delete' %}">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <a href="{% url 'admin:games_advertisement_history' result.pk %}" class="btn btn-sm btn-outline-info" title="{% trans 'History' %}">
+                          <i class="fas fa-history"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <div>{% if cl.result_count > 0 %}{{ cl.result_count }} {% trans 'item' %}{{ cl.result_count|pluralize }}{% endif %}</div>
+            <nav aria-label="Page navigation">
+              {% if cl.result_count > 0 %}
+              <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page=1" aria-label="First">
+                    <span aria-hidden="true"><i class="fas fa-angle-double-left"></i></span>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true"><i class="fas fa-angle-left"></i></span>
+                  </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" aria-label="First">
+                    <span aria-hidden="true"><i class="fas fa-angle-double-left"></i></span>
+                  </a>
+                </li>
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true"><i class="fas fa-angle-left"></i></span>
+                  </a>
+                </li>
+                {% endif %}
+                
+                {% for i in paginator.page_range %}
+                {% if i == page_obj.number %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true"><i class="fas fa-angle-right"></i></span>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ paginator.num_pages }}" aria-label="Last">
+                    <span aria-hidden="true"><i class="fas fa-angle-double-right"></i></span>
+                  </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true"><i class="fas fa-angle-right"></i></span>
+                  </a>
+                </li>
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" aria-label="Last">
+                    <span aria-hidden="true"><i class="fas fa-angle-double-right"></i></span>
+                  </a>
+                </li>
+                {% endif %}
+              </ul>
+              {% endif %}
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 确认删除模态框 -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">{% trans 'Confirm Deletion' %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>{% trans 'Are you sure you want to delete this advertisement? This action cannot be undone.' %}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+          <form id="deleteForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_selected">
+            <input type="hidden" name="_selected_action" id="deleteItemId" value="">
+            <button type="submit" class="btn btn-danger">{% trans 'Delete' %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extrajs %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 搜索功能
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('keyup', function(e) {
+          if (e.key === 'Enter') {
+            window.location.href = '?q=' + encodeURIComponent(this.value);
+          }
+        });
+      }
+      
+      // 激活状态筛选
+      const filterActiveBtn = document.querySelector('.custom-dropdown-toggle#filterActiveBtn');
+      if (filterActiveBtn) {
+        filterActiveBtn.addEventListener('click', function() {
+          const menu = document.createElement('ul');
+          menu.classList.add('custom-dropdown-menu');
+          menu.innerHTML = `
+            <li><a href="?">{% trans 'All' %}</a></li>
+            <li><a href="?is_active__exact=1">{% trans 'Yes' %}</a></li>
+            <li><a href="?is_active__exact=0">{% trans 'No' %}</a></li>
+          `;
+          
+          // 显示下拉菜单
+          document.body.appendChild(menu);
+          const rect = this.getBoundingClientRect();
+          menu.style.top = (rect.bottom + window.scrollY) + 'px';
+          menu.style.left = rect.left + 'px';
+          
+          // 点击其他地方关闭菜单
+          const closeMenu = function() {
+            document.body.removeChild(menu);
+            document.removeEventListener('click', closeMenu);
+          };
+          
+          setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+          }, 10);
+        });
+      }
+      
+      // 广告位置筛选
+      const filterPositionBtn = document.querySelector('.custom-dropdown-toggle#filterPositionBtn');
+      if (filterPositionBtn) {
+        filterPositionBtn.addEventListener('click', function() {
+          const menu = document.createElement('ul');
+          menu.classList.add('custom-dropdown-menu');
+          menu.innerHTML = `
+            <li><a href="?">{% trans 'All' %}</a></li>
+            <li><a href="?position__exact=header">{% trans 'Header' %}</a></li>
+            <li><a href="?position__exact=sidebar">{% trans 'Sidebar' %}</a></li>
+            <li><a href="?position__exact=game_between">{% trans 'Between Games' %}</a></li>
+            <li><a href="?position__exact=footer">{% trans 'Footer' %}</a></li>
+          `;
+          
+          // 显示下拉菜单
+          document.body.appendChild(menu);
+          const rect = this.getBoundingClientRect();
+          menu.style.top = (rect.bottom + window.scrollY) + 'px';
+          menu.style.left = rect.left + 'px';
+          
+          // 点击其他地方关闭菜单
+          const closeMenu = function() {
+            document.body.removeChild(menu);
+            document.removeEventListener('click', closeMenu);
+          };
+          
+          setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+          }, 10);
+        });
+      }
+      
+      // 删除广告
+      const deleteBtns = document.querySelectorAll('.deleteBtn');
+      const deleteForm = document.getElementById('deleteForm');
+      const deleteItemId = document.getElementById('deleteItemId');
+      
+      deleteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          deleteItemId.value = id;
+          deleteForm.action = '{% url "admin:games_advertisement_changelist" %}';
+          
+          // 显示确认模态框
+          const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+          deleteModal.show();
+        });
+      });
+    });
+  </script>
+{% endblock %} 

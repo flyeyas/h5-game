@@ -61,30 +61,30 @@ class Game(models.Model):
 
 
 class Advertisement(models.Model):
-    """广告模型"""
+    """Advertisement model"""
     POSITION_CHOICES = (
-        ('header', _('页面顶部')),
-        ('sidebar', _('侧边栏')),
-        ('game_between', _('游戏间隙')),
-        ('footer', _('页面底部')),
+        ('header', _('Header')),
+        ('sidebar', _('Sidebar')),
+        ('game_between', _('Between Games')),
+        ('footer', _('Footer')),
     )
     
-    name = models.CharField(_('广告名称'), max_length=100)
-    position = models.CharField(_('广告位置'), max_length=20, choices=POSITION_CHOICES)
-    image = models.ImageField(verbose_name=_('广告图片'), upload_to='ads/', null=True, blank=True)
-    url = models.URLField(_('广告链接'))
-    html_code = models.TextField(_('HTML代码'), blank=True, help_text=_('如果使用第三方广告代码，请填写此字段'))
-    is_active = models.BooleanField(_('是否激活'), default=True)
-    start_date = models.DateTimeField(_('开始日期'), null=True, blank=True)
-    end_date = models.DateTimeField(_('结束日期'), null=True, blank=True)
-    click_count = models.PositiveIntegerField(_('点击次数'), default=0)
-    view_count = models.PositiveIntegerField(_('展示次数'), default=0)
-    created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('更新时间'), auto_now=True)
+    name = models.CharField(_('Advertisement Name'), max_length=100)
+    position = models.CharField(_('Position'), max_length=20, choices=POSITION_CHOICES)
+    image = models.ImageField(verbose_name=_('Advertisement Image'), upload_to='ads/', null=True, blank=True)
+    url = models.URLField(_('Advertisement URL'))
+    html_code = models.TextField(_('HTML Code'), blank=True, help_text=_('Fill this field if using third-party advertisement code'))
+    is_active = models.BooleanField(_('Active'), default=True)
+    start_date = models.DateTimeField(_('Start Date'), null=True, blank=True)
+    end_date = models.DateTimeField(_('End Date'), null=True, blank=True)
+    click_count = models.PositiveIntegerField(_('Click Count'), default=0)
+    view_count = models.PositiveIntegerField(_('View Count'), default=0)
+    created_at = models.DateTimeField(_('Created At'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Updated At'), auto_now=True)
     
     class Meta:
-        verbose_name = _('广告')
-        verbose_name_plural = _('广告')
+        verbose_name = _('Advertisement')
+        verbose_name_plural = _('Advertisements')
         ordering = ['-created_at']
     
     def __str__(self):
