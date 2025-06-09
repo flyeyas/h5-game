@@ -8,156 +8,150 @@
 <!-- SimpleMDE Markdown 编辑器 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
 <style>
-    /* 分类管理页面特定样式 */
-    .card {
-        border: none;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-    .card-header {
-        background-color: white;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        padding: 15px 20px;
-        font-weight: 600;
-    }
-    .table th {
-        font-weight: 600;
-        color: #495057;
-    }
-    .table td {
-        vertical-align: middle;
-    }
-    .category-icon {
-        width: 40px;
-        height: 40px;
-        object-fit: cover;
-        border-radius: 5px;
-    }
-    .category-icon-placeholder {
-        width: 40px;
-        height: 40px;
-        background-color: #e9ecef;
-        border-radius: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #6c757d;
-        font-size: 20px;
-    }
-    .badge-status {
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-weight: 500;
-    }
-    .badge-active {
-        background-color: rgba(40, 167, 69, 0.1);
-        color: #28a745;
-    }
-    .badge-inactive {
-        background-color: rgba(108, 117, 125, 0.1);
-        color: #6c757d;
-    }
-    .badge-pending {
-        background-color: rgba(255, 193, 7, 0.1);
-        color: #ffc107;
-    }
-    .action-buttons .btn {
-        padding: 5px 10px;
-        font-size: 0.85rem;
-    }
-    .search-box {
-        position: relative;
-    }
-    .search-box .form-control {
-        padding-left: 35px;
-        border-radius: 20px;
-    }
-    .search-box i {
-        position: absolute;
-        left: 12px;
-        top: 10px;
-        color: #6c757d;
-    }
-    .filter-dropdown {
-        min-width: 200px;
-    }
-
-    /* 筛选按钮样式 - 使用统一的按钮系统 */
-    .pagination {
-        margin-bottom: 0;
-    }
-    .pagination .page-link {
-        color: #343a40;
-        padding: 8px 15px;
-    }
-    .pagination .page-item.active .page-link {
-        background-color: #343a40;
-        border-color: #343a40;
-    }
-    .modal-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
-    }
-    .modal-footer {
-        background-color: #f8f9fa;
-        border-top: 1px solid #e9ecef;
-    }
-    .form-label {
-        font-weight: 500;
-    }
-    .form-text {
-        font-size: 0.85rem;
-    }
-    .preview-image {
-        max-width: 100%;
-        height: auto;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-    @media (max-width: 991.98px) {
-        .sidebar {
-            width: 70px;
-            padding-top: 10px;
+        /* 分类管理页面特定样式 */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
-        .sidebar-header {
-            padding: 0 10px 10px;
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 15px 20px;
+            font-weight: 600;
         }
-        .sidebar-header img {
-            height: 30px;
+        .table th {
+            font-weight: 600;
+            color: #495057;
         }
-        .sidebar-header h4, .sidebar-header p {
-            display: none;
+        .table td {
+            vertical-align: middle;
         }
-        .menu-item {
-            padding: 10px;
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-size: 16px;
         }
-        .menu-item i {
-            margin-right: 0;
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 500;
         }
-        .menu-item span {
-            display: none;
+        .badge-active {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
         }
-        .content {
-            margin-left: 70px;
+        .badge-inactive {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
         }
-    }
-    @media (max-width: 767.98px) {
-        .sidebar {
-            width: 0;
-            padding: 0;
-            overflow: hidden;
+        .badge-pending {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
         }
-        .content {
-            margin-left: 0;
+        .action-buttons .btn {
+            padding: 5px 10px;
+            font-size: 0.85rem;
         }
-        .mobile-toggle {
-            display: block !important;
+        .search-box {
+            position: relative;
         }
-    }
+        .search-box .form-control {
+            padding-left: 35px;
+            border-radius: 20px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 10px;
+            color: #6c757d;
+        }
+        .filter-dropdown {
+            min-width: 200px;
+        }
 
-    /* 表格悬浮效果 - 按原型设计 */
+        /* 筛选按钮样式 - 使用统一的按钮系统 */
+        .pagination {
+            margin-bottom: 0;
+        }
+        .pagination .page-link {
+            color: #343a40;
+            padding: 8px 15px;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #343a40;
+            border-color: #343a40;
+        }
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .form-text {
+            font-size: 0.85rem;
+        }
+        .preview-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        @media (max-width: 991.98px) {
+            .sidebar {
+                width: 70px;
+                padding-top: 10px;
+            }
+            .sidebar-header {
+                padding: 0 10px 10px;
+            }
+            .sidebar-header img {
+                height: 30px;
+            }
+            .sidebar-header h4, .sidebar-header p {
+                display: none;
+            }
+            .menu-item {
+                padding: 10px;
+                justify-content: center;
+            }
+            .menu-item i {
+                margin-right: 0;
+            }
+            .menu-item span {
+                display: none;
+            }
+            .content {
+                margin-left: 70px;
+            }
+        }
+        @media (max-width: 767.98px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            .content {
+                margin-left: 0;
+            }
+            .mobile-toggle {
+                display: block !important;
+            }
+        }
+
+    /* 表格悬浮效果 */
     .table tbody tr {
         transition: all 0.2s ease;
     }
@@ -168,53 +162,6 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    /* 模态框样式 - 按原型设计 */
-    .modal-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .modal-footer {
-        background-color: #f8f9fa;
-        border-top: 1px solid #e9ecef;
-    }
-
-    .form-label {
-        font-weight: 500;
-    }
-
-    .form-text {
-        font-size: 0.85rem;
-    }
-
-    .preview-image {
-        max-width: 100%;
-        height: auto;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-    
-    /* 添加分类模态框样式 */
-    #addCategoryModal .modal-content {
-        border: none;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    #addCategoryModal .modal-header {
-        border-radius: 10px 10px 0 0;
-        padding: 15px 20px;
-    }
-    
-    #addCategoryModal .modal-body {
-        padding: 20px;
-    }
-    
-    #addCategoryModal .modal-footer {
-        border-radius: 0 0 10px 10px;
-        padding: 15px 20px;
-    }
-    
     /* 表单控件样式 */
     .form-control, .form-select {
         border-radius: 5px;
@@ -222,7 +169,12 @@
         padding: 8px 12px;
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
-
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
     /* 分页组件样式更新 */
     .pagination {
       margin-bottom: 0;
@@ -288,14 +240,17 @@
             <div class="col-md-3 mb-3 mb-md-0">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" class="form-control" placeholder="{% trans 'Search categories...' %}" id="searchInput">
+                    <form id="changelist-search" method="get">
+                        <input type="text" name="q" class="form-control" placeholder="{% trans 'Search categories...' %}" value="{{ cl.query }}" id="searchbar">
+                        <input type="submit" style="display: none;">
+                    </form>
                 </div>
             </div>
             <div class="col-md-7 mb-3 mb-md-0">
                 <div class="d-flex flex-wrap">
                     <div class="dropdown me-2 mb-2 mb-md-0">
                         <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-filter me-1"></i> {% trans 'Status' %}
+                            <i class="fas fa-sort me-1"></i> {% trans 'Status' %}
                         </button>
                         <ul class="dropdown-menu filter-dropdown">
                             <li><a class="dropdown-item" href="?">{% trans 'All Status' %}</a></li>
@@ -317,7 +272,7 @@
             </div>
             <div class="col-md-2 text-md-end">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                    <i class="fas fa-plus me-1"></i> {% trans 'Add category' %}
+                    <i class="fas fa-plus me-1"></i> {% trans 'Add Category' %}
                 </button>
             </div>
         </div>
@@ -327,7 +282,7 @@
 <!-- 分类列表 -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span>{% trans 'Category list' %}</span>
+        <span>{% trans 'Category List' %}</span>
         <span class="text-muted">{% blocktrans count counter=cl.result_count %}{{ counter }} category{% plural %}{{ counter }} categories{% endblocktrans %}</span>
     </div>
     <div class="card-body p-0">
@@ -335,46 +290,62 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th style="width: 40px;">
-                            <input type="checkbox" class="form-check-input" id="selectAll">
-                        </th>
-                        <th style="width: 60px;">#</th>
-                        <th>{% trans 'Category name' %}</th>
+                        <th style="width: 40px;">{% trans 'Select' %}</th>
+                        <th style="width: 60px;">{% trans 'Icon' %}</th>
+                        <th>{% trans 'Category Name' %}</th>
                         <th>{% trans 'Description' %}</th>
-                        <th>{% trans 'Parent category' %}</th>
+                        <th>{% trans 'Parent Category' %}</th>
                         <th>{% trans 'Order' %}</th>
                         <th>{% trans 'Status' %}</th>
                         <th style="width: 150px;">{% trans 'Actions' %}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for result in cl.result_list %}
+                    {% for category in results %}
                     <tr>
                         <td>
-                            <input type="checkbox" class="form-check-input" value="{{ result.pk }}">
+                            <input type="checkbox" class="form-check-input" value="{{ category.pk }}">
                         </td>
-                        <td>{{ forloop.counter }}</td>
                         <td>
-                            <a href="#" class="edit-category-btn" data-category-id="{{ result.pk }}"><strong>{{ result }}</strong></a>
+                            {% if category.icon_class %}
+                                <div class="category-icon">
+                                    <i class="{{ category.icon_class }}"></i>
+                                </div>
+                            {% else %}
+                                <div class="category-icon">
+                                    <i class="fas fa-folder"></i>
+                                </div>
+                            {% endif %}
                         </td>
-                        <td>{{ result.description|truncatechars:50|default:'' }}</td>
-                        <td>{{ result.parent|default:'-' }}</td>
-                        <td>{{ result.order|default:'0' }}</td>
                         <td>
-                            <span class="badge badge-status {% if result.is_active %}badge-active{% else %}badge-inactive{% endif %} category-status-toggle" data-category-id="{{ result.pk }}" style="cursor: pointer;">
-                                {% if result.is_active %}{% trans 'Active' %}{% else %}{% trans 'Inactive' %}{% endif %}
-                            </span>
+                            <a href="{% url 'admin:games_category_change' category.pk %}"><strong>{{ category.name }}</strong></a>
+                        </td>
+                        <td>{{ category.description|truncatechars:50 }}</td>
+                        <td>
+                            {% if category.parent %}
+                                {{ category.parent.name }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ category.order }}</td>
+                        <td>
+                            {% if category.is_active %}
+                                <span class="badge badge-status badge-active">{% trans 'Active' %}</span>
+                            {% else %}
+                                <span class="badge badge-status badge-inactive">{% trans 'Inactive' %}</span>
+                            {% endif %}
                         </td>
                         <td class="action-buttons">
                             <div class="d-flex">
-                                <a href="#" class="btn btn-sm btn-outline-primary me-1 edit-category-btn" data-category-id="{{ result.pk }}" title="{% trans 'Edit' %}">
+                                <a href="{% url 'admin:games_category_change' category.pk %}" class="btn btn-sm btn-outline-primary me-1" title="{% trans 'Edit' %}">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger me-1 delete-category-btn" data-category-id="{{ result.pk }}" data-category-name="{{ result }}" title="{% trans 'Delete' %}">
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-category-btn me-1" title="{% trans 'Delete' %}" data-category-id="{{ category.pk }}" data-category-title="{{ category.name|escapejs }}">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
-                                <a href="#" class="btn btn-sm btn-outline-secondary view-category-btn" data-category-id="{{ result.pk }}" title="{% trans 'View' %}">
-                                    <i class="fas fa-eye"></i>
+                                <a href="{% url 'admin:games_category_history' category.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'History' %}">
+                                    <i class="fas fa-history"></i>
                                 </a>
                             </div>
                         </td>
@@ -386,9 +357,9 @@
                                 <i class="fas fa-folder-open fa-3x mb-3 opacity-50"></i>
                                 <h5>{% trans 'No categories found' %}</h5>
                                 <p>{% trans 'No categories match your current filters. Try adjusting your search criteria.' %}</p>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                                <a href="{% url 'admin:games_category_add' %}" class="btn btn-primary">
                                     <i class="fas fa-plus me-1"></i> {% trans 'Add First Category' %}
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -409,39 +380,45 @@
         {% if cl.result_count != 0 %}
         <nav aria-label="Page navigation">
             <ul class="pagination pagination-sm mb-0">
-                <li class="page-item {% if cl.page_num == 1 %}disabled{% endif %}">
-                    <a class="page-link" href="?p=1{% if cl.query %}&q={{ cl.query }}{% endif %}" tabindex="-1" {% if cl.page_num == 1 %}aria-disabled="true"{% endif %}>
-                        <i class="fas fa-angle-double-left"></i>
-                    </a>
-                </li>
-                <li class="page-item {% if cl.page_num == 1 %}disabled{% endif %}">
-                    <a class="page-link" href="?p={{ cl.page_num|add:'-1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" tabindex="-1" {% if cl.page_num == 1 %}aria-disabled="true"{% endif %}>
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ cl.get_query_string }}">
                         <i class="fas fa-angle-left"></i>
                     </a>
                 </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% endif %}
                 
-                {% for page_num in cl.paginator.page_range %}
-                    {% if cl.page_num == page_num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
-                    {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="?p={{ page_num }}{% if cl.query %}&q={{ cl.query }}{% endif %}">{{ page_num }}</a>
-                        </li>
+                {% for i in paginator.page_range %}
+                    {% if page_obj.number == i %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }}</span>
+                    </li>
+                    {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{{ cl.get_query_string }}">{{ i }}</a>
+                    </li>
                     {% endif %}
                 {% endfor %}
                 
-                <li class="page-item {% if cl.page_num >= cl.paginator.num_pages %}disabled{% endif %}">
-                    <a class="page-link" href="?p={{ cl.page_num|add:'1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" {% if cl.page_num >= cl.paginator.num_pages %}aria-disabled="true"{% endif %}>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ cl.get_query_string }}">
                         <i class="fas fa-angle-right"></i>
                     </a>
                 </li>
-                <li class="page-item {% if cl.page_num >= cl.paginator.num_pages %}disabled{% endif %}">
-                    <a class="page-link" href="?p={{ cl.paginator.num_pages }}{% if cl.query %}&q={{ cl.query }}{% endif %}" {% if cl.page_num >= cl.paginator.num_pages %}aria-disabled="true"{% endif %}>
-                        <i class="fas fa-angle-double-right"></i>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-angle-right"></i>
                     </a>
                 </li>
+                {% endif %}
             </ul>
         </nav>
         {% endif %}
@@ -726,102 +703,159 @@
   <script src="{% static 'admin/js/category_modal.js' %}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // 搜索功能
-      const searchInput = document.getElementById('searchInput');
-      if (searchInput) {
-        searchInput.addEventListener('keyup', function(e) {
-          if (e.key === 'Enter') {
-            window.location.href = '?q=' + encodeURIComponent(this.value);
+      // 自定义下拉菜单功能
+      const statusDropdown = document.getElementById('statusDropdown');
+      const statusDropdownMenu = document.getElementById('statusDropdownMenu');
+      const sortDropdown = document.getElementById('sortDropdown');
+      const sortDropdownMenu = document.getElementById('sortDropdownMenu');
+      
+      // 状态下拉菜单切换
+      statusDropdown.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 关闭其他下拉菜单
+        sortDropdownMenu.style.display = 'none';
+        
+        if (statusDropdownMenu.style.display === 'none') {
+          // 获取按钮位置
+          const rect = this.getBoundingClientRect();
+          
+          // 设置菜单位置
+          statusDropdownMenu.style.top = (rect.bottom + window.scrollY) + 'px';
+          statusDropdownMenu.style.left = (rect.left + window.scrollX) + 'px';
+          statusDropdownMenu.style.minWidth = this.offsetWidth + 'px';
+          
+          // 显示菜单
+          statusDropdownMenu.style.display = 'block';
+        } else {
+          statusDropdownMenu.style.display = 'none';
+        }
+      });
+      
+      // 排序下拉菜单切换
+      sortDropdown.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 关闭其他下拉菜单
+        statusDropdownMenu.style.display = 'none';
+        
+        if (sortDropdownMenu.style.display === 'none') {
+          // 获取按钮位置
+          const rect = this.getBoundingClientRect();
+          
+          // 设置菜单位置
+          sortDropdownMenu.style.top = (rect.bottom + window.scrollY) + 'px';
+          sortDropdownMenu.style.left = (rect.left + window.scrollX) + 'px';
+          sortDropdownMenu.style.minWidth = this.offsetWidth + 'px';
+          
+          // 显示菜单
+          sortDropdownMenu.style.display = 'block';
+        } else {
+          sortDropdownMenu.style.display = 'none';
+        }
+      });
+      
+      // 点击页面其他区域关闭下拉菜单
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+          statusDropdownMenu.style.display = 'none';
+          sortDropdownMenu.style.display = 'none';
+        }
+      });
+      
+      // 为分页器添加Bootstrap样式
+      const pagination = document.querySelector('.pagination');
+      if (pagination) {
+        pagination.classList.add('justify-content-center', 'mb-0');
+        
+        // 添加样式到分页链接
+        const paginationLinks = pagination.querySelectorAll('a, span.this-page');
+        paginationLinks.forEach(link => {
+          if (link.classList.contains('this-page')) {
+            // 当前页
+            const li = document.createElement('li');
+            li.className = 'page-item active';
+            
+            const span = document.createElement('span');
+            span.className = 'page-link';
+            span.textContent = link.textContent;
+            
+            li.appendChild(span);
+            link.parentNode.replaceChild(li, link);
+          } else {
+            // 其他链接
+            const li = document.createElement('li');
+            li.className = 'page-item';
+            
+            const newLink = document.createElement('a');
+            newLink.className = 'page-link';
+            newLink.href = link.getAttribute('href') || '#';
+            newLink.textContent = link.textContent;
+            
+            li.appendChild(newLink);
+            link.parentNode.replaceChild(li, link);
           }
         });
       }
       
-      // 状态切换功能
-      const statusToggles = document.querySelectorAll('.category-status-toggle');
-      statusToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-          const categoryId = this.getAttribute('data-category-id');
-          const isActive = this.classList.contains('badge-active');
-          
-          // 先切换UI样式
-          if (isActive) {
-            this.classList.remove('badge-active');
-            this.classList.add('badge-inactive');
-            this.textContent = '{% trans "Inactive" %}';
-          } else {
-            this.classList.remove('badge-inactive');
-            this.classList.add('badge-active');
-            this.textContent = '{% trans "Active" %}';
+      // 移除中文分类计数文本
+      const allParagraphs = document.querySelectorAll('p');
+      allParagraphs.forEach(p => {
+        if (p.textContent.includes('游戏分类')) {
+          p.remove();
+        }
+      });
+
+      // 添加AJAX表单提交处理
+      const addCategoryForm = document.getElementById('addCategoryForm');
+      const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+      const modal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+      
+      if (addCategoryForm && saveCategoryBtn) {
+        saveCategoryBtn.addEventListener('click', function() {
+          // 验证表单
+          if (!addCategoryForm.checkValidity()) {
+            addCategoryForm.classList.add('was-validated');
+            return;
           }
           
-          // 发送AJAX请求更新状态
-          fetch('/admin/games/category/' + categoryId + '/toggle-status/', {
+          // 使用Fetch API提交表单
+          const formData = new FormData(addCategoryForm);
+          
+          fetch(addCategoryForm.action, {
             method: 'POST',
+            body: formData,
             headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ is_active: !isActive })
+              'X-Requested-With': 'XMLHttpRequest'
+            }
           })
           .then(response => response.json())
           .then(data => {
             if (data.success) {
-              showToast('success', data.message || '{% trans "Status updated successfully" %}');
+              // 显示成功消息
+              showToast('success', data.message || '{% trans "Category added successfully" %}');
+              
+              // 关闭模态框
+              modal.hide();
+              
+              // 重置表单
+              addCategoryForm.reset();
+              addCategoryForm.classList.remove('was-validated');
+              
+              // 刷新页面以显示新添加的分类
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
             } else {
-              // 如果失败，回滚UI状态
-              if (isActive) {
-                this.classList.remove('badge-inactive');
-                this.classList.add('badge-active');
-                this.textContent = '{% trans "Active" %}';
-              } else {
-                this.classList.remove('badge-active');
-                this.classList.add('badge-inactive');
-                this.textContent = '{% trans "Inactive" %}';
-              }
-              showToast('danger', data.message || '{% trans "Failed to update status" %}');
+              // 显示错误消息
+              showToast('danger', data.message || '{% trans "Failed to add category" %}');
             }
           })
           .catch(error => {
             console.error('Error:', error);
-            // 回滚UI状态
-            if (isActive) {
-              this.classList.remove('badge-inactive');
-              this.classList.add('badge-active');
-              this.textContent = '{% trans "Active" %}';
-            } else {
-              this.classList.remove('badge-active');
-              this.classList.add('badge-inactive');
-              this.textContent = '{% trans "Inactive" %}';
-            }
             showToast('danger', '{% trans "An error occurred while processing your request" %}');
-          });
-        });
-      });
-      
-      // 获取CSRF Token
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-      
-      // 多选功能
-      const selectAllCheckbox = document.querySelector('th input[type="checkbox"]');
-      const itemCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-      
-      if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-          itemCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
           });
         });
       }
@@ -829,40 +863,24 @@
       // 显示提示消息
       function showToast(type, message) {
         const toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) return;
         
         const toast = document.createElement('div');
-        toast.className = `toast bg-${type} text-white show`;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-        
+        toast.className = `toast bg-${type} text-white`;
         toast.innerHTML = `
-          <div class="toast-header bg-${type} text-white">
-            <strong class="me-auto">{% trans 'Notification' %}</strong>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-          </div>
           <div class="toast-body">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
             ${message}
           </div>
+          <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
         `;
         
         toastContainer.appendChild(toast);
         
-        // 创建Bootstrap Toast实例并显示
-        const bsToast = new bootstrap.Toast(toast, {
-          autohide: true,
-          delay: 3000
-        });
-        bsToast.show();
-        
-        // 3秒后移除
+        // 3秒后自动移除
         setTimeout(() => {
           toast.remove();
         }, 3000);
       }
-      
-      // 将原有的下拉菜单功能和分页器功能移除，使用Bootstrap原生功能
     });
   </script>
 {% endblock %} 

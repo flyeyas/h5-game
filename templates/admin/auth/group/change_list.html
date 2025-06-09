@@ -1,94 +1,178 @@
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls static admin_list %}
 
-{% block title %}{% if cl.formset and cl.formset.errors %}{% translate "Error:" %} {% endif %}{{ block.super }} - {% translate "Group Management" %}{% endblock %}
+{% block page_title %}{% trans 'Group Management System' %}{% endblock %}
+
 {% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static "admin/css/changelists.css" %}">
-  {% if cl.formset %}
-    <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
-  {% endif %}
-  {% if cl.formset or action_form %}
-    <script src="{% url 'admin:jsi18n' %}"></script>
-  {% endif %}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-  {{ media.css }}
-  {% if not actions_on_top and not actions_on_bottom %}
-    <style>
-      #changelist table thead th:first-child {width: inherit}
-    </style>
-  {% endif %}
+{{ block.super }}
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f8f9fa;
+    /* 群组管理页面特定样式 */
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
     }
-    
-    .admin-card {
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-      background-color: white;
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding: 15px 20px;
+        font-weight: 600;
     }
-    
-    .admin-card-header {
-      background-color: white;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      padding: 15px 20px;
-      font-weight: 600;
-    }
-    
     .table th {
-      font-weight: 600;
-      color: #495057;
-      background-color: #f8f9fa;
-      border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
     }
-    
     .table td {
-      vertical-align: middle;
-      border-bottom: 1px solid #f2f2f2;
+        vertical-align: middle;
     }
-    
     .badge-status {
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-weight: 500;
-      display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: 500;
     }
-    
     .badge-active {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
     }
-    
     .badge-inactive {
-      background-color: rgba(108, 117, 125, 0.1);
-      color: #6c757d;
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
     }
-    
     .action-buttons .btn {
-      padding: 4px 8px;
-      font-size: 0.8rem;
+        padding: 5px 10px;
+        font-size: 0.85rem;
     }
-    
-    /* 添加按钮间距 */
-    .action-buttons .btn {
-      margin-right: 4px;
+    .search-box {
+        position: relative;
     }
-    
-    .action-buttons .btn:last-child {
-      margin-right: 0;
+    .search-box .form-control {
+        padding-left: 35px;
+        border-radius: 20px;
     }
-    
-    .action-buttons .d-flex {
-      flex-wrap: nowrap;
-      justify-content: flex-start;
+    .search-box i {
+        position: absolute;
+        left: 12px;
+        top: 10px;
+        color: #6c757d;
     }
-    
-    /* 分页组件样式 */
+    .filter-dropdown {
+        min-width: 200px;
+    }
+
+    /* 筛选按钮样式 - 使用统一的按钮系统 */
+    .pagination {
+        margin-bottom: 0;
+    }
+    .pagination .page-link {
+        color: #343a40;
+        padding: 8px 15px;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .modal-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .form-text {
+        font-size: 0.85rem;
+    }
+    .preview-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    @media (max-width: 991.98px) {
+        .sidebar {
+            width: 70px;
+            padding-top: 10px;
+        }
+        .sidebar-header {
+            padding: 0 10px 10px;
+        }
+        .sidebar-header img {
+            height: 30px;
+        }
+        .sidebar-header h4, .sidebar-header p {
+            display: none;
+        }
+        .menu-item {
+            padding: 10px;
+            justify-content: center;
+        }
+        .menu-item i {
+            margin-right: 0;
+        }
+        .menu-item span {
+            display: none;
+        }
+        .content {
+            margin-left: 70px;
+        }
+    }
+    @media (max-width: 767.98px) {
+        .sidebar {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .content {
+            margin-left: 0;
+        }
+        .mobile-toggle {
+            display: block !important;
+        }
+    }
+
+    /* 表格悬浮效果 - 按原型设计 */
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* 模态框样式 - 按原型设计 */
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .form-label {
+        font-weight: 500;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+    }
+
+    /* 表单控件样式 */
+    .form-control, .form-select {
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+        padding: 8px 12px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    /* 分页组件样式更新 */
     .pagination {
       margin-bottom: 0;
     }
@@ -103,6 +187,7 @@
       box-shadow: none;
       min-width: 32px;
       text-align: center;
+      background-color: #fff;
     }
     
     .pagination .page-item.active .page-link {
@@ -124,501 +209,350 @@
       border-color: #dee2e6;
       pointer-events: none;
     }
-    
-    .search-box {
-      position: relative;
-    }
-    
-    .search-box .form-control {
-      padding-left: 35px;
-      border-radius: 20px;
-    }
-    
-    .search-box i {
-      position: absolute;
-      left: 12px;
-      top: 10px;
-      color: #6c757d;
-    }
-    
-    /* 自定义下拉菜单样式 */
-    .custom-dropdown {
-      position: relative;
-      display: inline-block;
-    }
-    
-    .custom-dropdown-toggle {
-      white-space: nowrap;
-    }
-    
-    .custom-dropdown-menu {
-      position: fixed;
-      list-style: none;
-      padding: 0.5rem 0;
-      margin: 0;
-      background-color: #fff;
-      border: 1px solid rgba(0,0,0,0.15);
-      border-radius: 4px;
-      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-      z-index: 9999;
-      min-width: 180px;
-    }
-    
-    .custom-dropdown-menu li {
-      padding: 0;
-    }
-    
-    .custom-dropdown-menu li a {
-      display: block;
-      padding: 0.5rem 1.5rem;
-      color: #212529;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    
-    .custom-dropdown-menu li a:hover {
-      background-color: #f8f9fa;
-      color: #16181b;
-    }
-    
-    .card-body {
-      padding: 15px 20px;
-    }
-    
+
+    /* 卡片页脚样式更新 */
     .card-footer {
-      background-color: white;
-      border-top: 1px solid rgba(0,0,0,0.05);
-      padding: 15px;
+        background-color: #fff;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 0.75rem 1.25rem;
+    }
+    
+    /* 图标样式调整 */
+    .page-link .fas {
+        font-size: 0.75rem;
     }
     
     /* 隐藏原始的Django Admin操作选择器 */
     .actions {
-      display: none;
-    }
-    
-    /* 模态框样式 */
-    .modal-header {
-      background-color: #f8f9fa;
-      border-bottom: 1px solid #dee2e6;
-    }
-    
-    .modal-footer {
-      background-color: #f8f9fa;
-      border-top: 1px solid #dee2e6;
-    }
-    
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    
-    .form-group label {
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-    
-    .form-text {
-      color: #6c757d;
-      font-size: 0.875rem;
-    }
-    
-    /* 响应式设计 */
-    @media (max-width: 767.98px) {
-      .col-md-2, .col-md-3, .col-md-7 {
-        margin-bottom: 15px;
-      }
-      
-      .d-flex.flex-wrap {
-        justify-content: space-between;
-      }
-      
-      .custom-dropdown {
-        width: 48%;
-        margin-right: 0 !important;
-      }
-      
-      .custom-dropdown button {
-        width: 100%;
-      }
-      
-      .table-responsive {
-        overflow-x: auto;
-      }
+        display: none;
     }
   </style>
 {% endblock %}
 
 {% block extrahead %}
-{{ block.super }}
-{{ media.js }}
-<script src="{% static 'admin/js/filters.js' %}" defer></script>
-{% endblock %}
-
-{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list custom-group-list{% endblock %}
-
-{% block page_title %}{% trans 'Group Management System' %}{% endblock %}
-
-{% if not is_popup %}
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
-&rsaquo; <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{{ cl.opts.app_config.verbose_name }}</a>
-&rsaquo; <strong>{{ cl.opts.verbose_name_plural|capfirst }}</strong>
-</div>
-{% endblock %}
-{% endif %}
-
-{% block coltype %}{% endblock %}
-
-{% block object-tools %}
-<ul class="object-tools">
-  {% block object-tools-items %}
-    {% change_list_object_tools %}
-  {% endblock %}
-</ul>
+  {{ block.super }}
+  {{ media }}
 {% endblock %}
 
 {% block content %}
-  <div id="content-main">
-    
-    {% if cl.formset and cl.formset.errors %}
-        <p class="errornote">
-        {% blocktranslate count counter=cl.formset.total_error_count %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
-        </p>
-        {{ cl.formset.non_form_errors }}
-    {% endif %}
-    
-    <div class="admin-card mb-4">
-      <div class="card-body">
+<!-- 群组管理工具栏 -->
+<div class="card mb-4">
+    <div class="card-body">
         <div class="row align-items-center">
-          <div class="col-md-3 mb-3 mb-md-0">
-            <div class="search-box">
-              <i class="fas fa-search"></i>
-              <form id="changelist-search" method="get">
-                <input type="text" name="q" class="form-control" placeholder="{% trans 'Search groups...' %}" value="{{ cl.query }}" id="searchbar">
-                <input type="submit" style="display: none;">
-              </form>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <form id="changelist-search" method="get">
+                        <input type="text" name="q" class="form-control" placeholder="{% trans 'Search groups...' %}" value="{{ cl.query }}" id="searchbar">
+                        <input type="submit" style="display: none;">
+                    </form>
+                </div>
             </div>
-          </div>
-          <div class="col-md-7 mb-3 mb-md-0">
-            <div class="d-flex flex-wrap">
-              <div class="custom-dropdown me-2 mb-2 mb-md-0">
-                <button class="btn btn-outline-secondary custom-dropdown-toggle" type="button" id="permissionsDropdown">
-                  <i class="fas fa-filter me-1"></i> {% trans 'Permissions' %}
-                </button>
-                <ul class="custom-dropdown-menu" id="permissionsDropdownMenu" style="display: none;">
-                  <li><a href=".">{% trans 'All' %}</a></li>
-                  <li><a href="?permissions__isnull=False">{% trans 'With permissions' %}</a></li>
-                  <li><a href="?permissions__isnull=True">{% trans 'Without permissions' %}</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-2 text-md-end">
-            {% if has_add_permission %}
-            <a href="{% url 'admin:auth_group_add' %}" class="btn btn-primary">
-              <i class="fas fa-plus me-1"></i> {% trans 'Add group' %}
-            </a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="admin-card">
-      <div class="admin-card-header d-flex justify-content-between align-items-center">
-        <span>{% trans 'Group list' %}</span>
-        <span class="text-muted">{% trans 'Total' %} {{ cl.result_count }} {% trans 'groups' %}</span>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <form id="changelist-form" method="post"{% if cl.formset and cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>{% csrf_token %}
-            {% if cl.formset %}
-              <div>{{ cl.formset.management_form }}</div>
-            {% endif %}
-            
-            {% comment %}隐藏Django原始的动作选择器但保留表单功能{% endcomment %}
-            <div class="actions" style="display:none;">
-              {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
-            </div>
-            
-            <table class="table table-hover mb-0">
-              <thead>
-                <tr>
-                  <th style="width: 30px;"><input type="checkbox" id="action-toggle"></th>
-                  <th>{% trans 'Name' %}</th>
-                  <th>{% trans 'Permissions' %}</th>
-                  <th style="width: 120px; min-width: 120px;">{% trans 'Actions' %}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for result in cl.result_list %}
-                  {% if result.form.errors %}
-                    <tr class="{% cycle 'row1' 'row2' %}"><td colspan="4">{{ result.form.errors }}</td></tr>
-                  {% endif %}
-                  <tr class="{% cycle 'row1' 'row2' %}">
-                    <td>
-                      {% if cl.formset and cl.result_has_allowable_actions %}
-                        {{ result.form.action_checkbox }}
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if result.form.id %}
-                        {{ result.form.id }}
-                      {% endif %}
-                      <a href="{% url 'admin:auth_group_change' result.pk %}">{{ result.name }}</a>
-                    </td>
-                    <td>
-                      <span class="badge badge-status badge-active">{{ result.permissions.count }} {% trans 'permissions' %}</span>
-                    </td>
-                    <td class="action-buttons">
-                      <div class="d-flex">
-                        <a href="{% url 'admin:auth_group_change' result.pk %}" class="btn btn-sm btn-outline-primary" style="margin-right: 5px;" title="{% trans 'Edit' %}">
-                          <i class="fas fa-edit"></i>
-                        </a>
-                        <button type="button" class="btn btn-sm btn-outline-danger delete-btn" style="margin-right: 5px;" title="{% trans 'Delete' %}" data-group-name="{{ result.name }}" data-group-id="{{ result.pk }}">
-                          <i class="fas fa-trash"></i>
+            <div class="col-md-7 mb-3 mb-md-0">
+                <div class="d-flex flex-wrap">
+                    <div class="dropdown me-2 mb-2 mb-md-0">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-filter me-1"></i> {% trans 'Permissions' %}
                         </button>
-                        <a href="{% url 'admin:auth_group_history' result.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'History' %}">
-                          <i class="fas fa-history"></i>
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            
-            {% block pagination %}
-            <div class="admin-card mt-3">
-              <div class="card-footer d-flex justify-content-between align-items-center">
-                <div class="text-muted">
-                  {% if cl.result_count == 1 %}
-                    {% blocktrans %}{{ cl.result_count }} {{ cl.opts.verbose_name }}{% endblocktrans %}
-                  {% else %}
-                    {% blocktrans %}{{ cl.result_count }} {{ cl.opts.verbose_name_plural }}{% endblocktrans %}
-                  {% endif %}
+                        <ul class="dropdown-menu filter-dropdown">
+                            <li><a class="dropdown-item" href=".">{% trans 'All' %}</a></li>
+                            <li><a class="dropdown-item" href="?permissions__isnull=False">{% trans 'With permissions' %}</a></li>
+                            <li><a class="dropdown-item" href="?permissions__isnull=True">{% trans 'Without permissions' %}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 text-md-end">
+                {% if has_add_permission %}
+                <a href="{% url 'admin:auth_group_add' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> {% trans 'Add Group' %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 群组列表 -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{% trans 'Group List' %}</span>
+        <span class="text-muted">{% blocktrans count counter=cl.result_count %}{{ counter }} group{% plural %}{{ counter }} groups{% endblocktrans %}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <form id="changelist-form" method="post"{% if cl.formset and cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>{% csrf_token %}
+                {% if cl.formset %}
+                    <div>{{ cl.formset.management_form }}</div>
+                {% endif %}
+                
+                {% comment %}隐藏Django原始的动作选择器但保留表单功能{% endcomment %}
+                <div class="actions" style="display:none;">
+                    {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
                 </div>
                 
-                {% if cl.result_count != 0 %}
-                <nav aria-label="Page navigation">
-                  <ul class="pagination pagination-sm mb-0">
-                    {% if cl.page_num > 1 %}
-                      <li class="page-item">
-                        <a class="page-link" href="?p=1{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'First page' %}">
-                          <i class="fas fa-angle-double-left"></i>
-                        </a>
-                      </li>
-                      <li class="page-item">
-                        <a class="page-link" href="?p={{ cl.page_num|add:'-1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'Previous page' %}">
-                          <i class="fas fa-angle-left"></i>
-                        </a>
-                      </li>
-                    {% else %}
-                      <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                          <i class="fas fa-angle-double-left"></i>
-                        </a>
-                      </li>
-                      <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                          <i class="fas fa-angle-left"></i>
-                        </a>
-                      </li>
-                    {% endif %}
-                    
-                    {% for page_num in cl.paginator.page_range %}
-                      {% if cl.page_num == page_num %}
-                        <li class="page-item active">
-                          <span class="page-link">{{ page_num }}</span>
-                        </li>
-                      {% else %}
-                        <li class="page-item">
-                          <a class="page-link" href="?p={{ page_num }}{% if cl.query %}&q={{ cl.query }}{% endif %}">{{ page_num }}</a>
-                        </li>
-                      {% endif %}
-                    {% endfor %}
-                    
-                    {% if cl.page_num < cl.paginator.num_pages %}
-                      <li class="page-item">
-                        <a class="page-link" href="?p={{ cl.page_num|add:'1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'Next page' %}">
-                          <i class="fas fa-angle-right"></i>
-                        </a>
-                      </li>
-                      <li class="page-item">
-                        <a class="page-link" href="?p={{ cl.paginator.num_pages }}{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'Last page' %}">
-                          <i class="fas fa-angle-double-right"></i>
-                        </a>
-                      </li>
-                    {% else %}
-                      <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                          <i class="fas fa-angle-right"></i>
-                        </a>
-                      </li>
-                      <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                          <i class="fas fa-angle-double-right"></i>
-                        </a>
-                      </li>
-                    {% endif %}
-                  </ul>
-                </nav>
-                {% endif %}
-              </div>
-            </div>
-            {% endblock %}
-          </form>
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" class="form-check-input" id="selectAll">
+                            </th>
+                            <th>{% trans 'Name' %}</th>
+                            <th>{% trans 'Permissions' %}</th>
+                            <th style="width: 150px;">{% trans 'Actions' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in cl.result_list %}
+                            <tr>
+                                <td>
+                                    {% if cl.formset and cl.result_has_allowable_actions %}
+                                        {{ result.form.action_checkbox }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'admin:auth_group_change' result.pk %}"><strong>{{ result.name }}</strong></a>
+                                </td>
+                                <td>
+                                    <span class="badge badge-status {% if result.permissions.count > 0 %}badge-active{% else %}badge-inactive{% endif %}">
+                                        {{ result.permissions.count }} {% trans 'permissions' %}
+                                    </span>
+                                </td>
+                                <td class="action-buttons">
+                                    <div class="d-flex">
+                                        <a href="{% url 'admin:auth_group_change' result.pk %}" class="btn btn-sm btn-outline-primary me-1" title="{% trans 'Edit' %}">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger me-1 delete-btn" title="{% trans 'Delete' %}" data-group-name="{{ result.name }}" data-group-id="{{ result.pk }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <a href="{% url 'admin:auth_group_history' result.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'History' %}">
+                                            <i class="fas fa-history"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                                        <h5>{% trans 'No groups found' %}</h5>
+                                        <p>{% trans 'No groups match your current filters. Try adjusting your search criteria.' %}</p>
+                                        <a href="{% url 'admin:auth_group_add' %}" class="btn btn-primary">
+                                            <i class="fas fa-plus me-1"></i> {% trans 'Add First Group' %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </form>
         </div>
-      </div>
     </div>
-  </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted">
+            {% if cl.result_count == 1 %}
+                {% blocktrans %}{{ cl.result_count }} item{% endblocktrans %}
+            {% else %}
+                {% blocktrans %}{{ cl.result_count }} items{% endblocktrans %}
+            {% endif %}
+        </div>
+        
+        {% if cl.result_count != 0 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                
+                <li class="page-item active">
+                    <span class="page-link">1</span>
+                </li>
+                
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
   
-  <!-- 添加删除确认模态对话框 -->
-  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<!-- 确认删除模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteModalLabel">{% trans 'Confirm deletion' %}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">{% trans 'Confirm Deletion' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans 'Are you sure you want to delete this group?' %} "<span id="groupName"></span>"</p>
+                <p class="text-danger">{% trans 'This action cannot be undone.' %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
+                <button type="button" id="confirmDelete" class="btn btn-danger">{% trans 'Delete' %}</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <p>{% trans 'Are you sure you want to delete the group' %} "<span id="groupName"></span>"?</p>
-          <p class="text-danger">{% trans 'This action cannot be undone.' %}</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
-          <button type="button" id="confirmDelete" class="btn btn-danger">{% trans 'Delete' %}</button>
-        </div>
-      </div>
     </div>
-  </div>
+</div>
+{% endblock %}
 
-  <!-- 添加通知提示 -->
-  <div class="toast-container position-fixed top-0 end-0 p-3">
-    <div id="deleteToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body">
-          <i class="fas fa-check-circle me-2"></i> <span id="toastMessage">{% trans 'Group deleted successfully!' %}</span>
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 添加Bootstrap和jQuery库 -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
+{% block extrajs %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
-      // 点击下拉菜单按钮时显示/隐藏下拉菜单
-      document.getElementById('permissionsDropdown').addEventListener('click', function() {
-        var menu = document.getElementById('permissionsDropdownMenu');
-        if (menu.style.display === 'none') {
-          // 计算位置
-          var buttonRect = this.getBoundingClientRect();
-          menu.style.top = (buttonRect.bottom + window.scrollY) + 'px';
-          menu.style.left = (buttonRect.left + window.scrollX) + 'px';
-          menu.style.display = 'block';
-        } else {
-          menu.style.display = 'none';
+        // 搜索功能
+        const searchInput = document.getElementById('searchbar');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('changelist-search').submit();
+                }
+            });
         }
-      });
-      
-      // 点击页面其他地方时隐藏下拉菜单
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('#permissionsDropdown')) {
-          var menu = document.getElementById('permissionsDropdownMenu');
-          if (menu) menu.style.display = 'none';
+        
+        // 全选/全不选
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = selectAll.checked;
+                });
+            });
         }
-      });
-      
-      // 全选/全不选
-      var selectAll = document.getElementById('action-toggle');
-      if (selectAll) {
-        selectAll.addEventListener('change', function() {
-          var checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-          checkboxes.forEach(function(checkbox) {
-            checkbox.checked = selectAll.checked;
-          });
+        
+        // 处理删除按钮点击事件
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        let currentRow = null;
+        let currentGroupId = null;
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const groupName = this.getAttribute('data-group-name');
+                currentGroupId = this.getAttribute('data-group-id');
+                currentRow = this.closest('tr');
+                
+                document.getElementById('groupName').textContent = groupName;
+                
+                deleteModal.show();
+            });
         });
-      }
-      
-      // 处理删除按钮点击事件
-      const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-      const deleteToast = new bootstrap.Toast(document.getElementById('deleteToast'));
-      const deleteButtons = document.querySelectorAll('.delete-btn');
-      let currentRow = null;
-      let currentGroupId = null;
-      
-      deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-          e.preventDefault();
-          const groupName = this.getAttribute('data-group-name');
-          currentGroupId = this.getAttribute('data-group-id');
-          currentRow = this.closest('tr');
-          
-          document.getElementById('groupName').textContent = groupName;
-          
-          deleteModal.show();
-        });
-      });
-      
-      // 处理确认删除按钮点击事件
-      document.getElementById('confirmDelete').addEventListener('click', function() {
-        if (!currentGroupId) return;
         
-        // 获取CSRF令牌
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        // 获取当前页面的语言前缀
-        const currentPath = window.location.pathname;
-        const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
-        
-        // 发送删除请求
-        fetch(`${adminUrl}auth/group/${currentGroupId}/delete/`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'post=yes'
-        })
-        .then(response => {
-          if (response.ok || response.redirected) {
-            // 成功删除
-            currentRow.style.opacity = '0.5';
-            setTimeout(() => {
-              currentRow.remove();
-              
-              // 更新总数
-              const totalElement = document.querySelector('.admin-card-header .text-muted');
-              if (totalElement) {
-                const currentText = totalElement.textContent;
-                const currentCount = parseInt(currentText.match(/\d+/)[0]);
-                const newCount = currentCount - 1;
-                totalElement.textContent = currentText.replace(currentCount, newCount);
-              }
-              
-              // 显示成功提示
-              deleteToast.show();
-            }, 300);
+        // 处理确认删除按钮点击事件
+        document.getElementById('confirmDelete').addEventListener('click', function() {
+            if (!currentGroupId) return;
             
-            // 关闭模态框
-            deleteModal.hide();
-          } else {
-            // 处理错误
-            throw new Error('删除失败');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          document.getElementById('toastMessage').textContent = '{% trans "Error deleting group" %}';
-          document.getElementById('deleteToast').classList.remove('bg-success');
-          document.getElementById('deleteToast').classList.add('bg-danger');
-          deleteToast.show();
-          deleteModal.hide();
+            // 获取CSRF令牌
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // 获取当前页面的语言前缀
+            const currentPath = window.location.pathname;
+            const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+            
+            // 发送删除请求
+            fetch(`${adminUrl}auth/group/${currentGroupId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'post=yes'
+            })
+            .then(response => {
+                if (response.ok || response.redirected) {
+                    // 成功删除
+                    currentRow.style.opacity = '0.5';
+                    setTimeout(() => {
+                        currentRow.remove();
+                        
+                        // 更新总数
+                        const totalElement = document.querySelector('.card-header .text-muted');
+                        if (totalElement) {
+                            const currentText = totalElement.textContent;
+                            const currentCount = parseInt(currentText.match(/\d+/)[0]);
+                            const newCount = currentCount - 1;
+                            totalElement.textContent = currentText.replace(currentCount, newCount);
+                        }
+                        
+                        // 显示成功提示
+                        showToast('success', '{% trans "Group deleted successfully!" %}');
+                    }, 300);
+                    
+                    // 关闭模态框
+                    deleteModal.hide();
+                } else {
+                    // 处理错误
+                    throw new Error('删除失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('danger', '{% trans "Error deleting group" %}');
+                deleteModal.hide();
+            });
         });
-      });
+        
+        // 显示提示消息
+        function showToast(type, message) {
+            const toastContainer = document.querySelector('.toast-container') || (() => {
+                const container = document.createElement('div');
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                document.body.appendChild(container);
+                return container;
+            })();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast bg-${type} text-white show`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="toast-header bg-${type} text-white">
+                    <strong class="me-auto">{% trans 'Notification' %}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // 创建Bootstrap Toast实例并显示
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 3000
+            });
+            bsToast.show();
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
     });
-  </script>
+</script>
 {% endblock %}

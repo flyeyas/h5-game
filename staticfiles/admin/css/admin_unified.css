@@ -1,0 +1,351 @@
+/* 统一管理页面样式 */
+
+/* 卡片样式统一 */
+.card, .admin-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    background-color: white;
+}
+
+.card-header, .admin-card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 15px 20px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* 表格样式统一 */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    color: #495057;
+    background-color: #f8f9fa;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 状态标签样式统一 */
+.badge-status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.badge-active {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.badge-inactive {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.badge-pending {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+/* 按钮样式统一 */
+.action-buttons .btn {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+/* 搜索框样式统一 */
+.search-box {
+    position: relative;
+}
+
+.search-box .form-control {
+    padding-left: 35px;
+    border-radius: 20px;
+    height: 38px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    color: #6c757d;
+}
+
+/* 筛选下拉菜单样式统一 */
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-dropdown-toggle {
+    white-space: nowrap;
+}
+
+.custom-dropdown-menu {
+    position: fixed;
+    list-style: none;
+    padding: 0.5rem 0;
+    margin: 0;
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 4px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    min-width: 180px;
+}
+
+.custom-dropdown-menu li {
+    padding: 0;
+}
+
+.custom-dropdown-menu li a {
+    display: block;
+    padding: 0.5rem 1.5rem;
+    color: #212529;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.custom-dropdown-menu li a:hover {
+    background-color: #f8f9fa;
+    color: #16181b;
+}
+
+/* 分页样式统一 */
+.pagination {
+    margin-bottom: 0;
+}
+
+.pagination .page-item .page-link {
+    border-radius: 4px;
+    margin: 0 2px;
+    color: #495057;
+    border-color: #dee2e6;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    box-shadow: none;
+    min-width: 32px;
+    text-align: center;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    font-weight: 500;
+}
+
+.pagination .page-item .page-link:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    color: #007bff;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #adb5bd;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    pointer-events: none;
+}
+
+/* 右侧用户信息样式统一 */
+.user-menu {
+    display: flex;
+    align-items: center;
+}
+
+.user-menu img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+}
+
+.user-menu span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #212529;
+}
+
+/* 添加按钮样式统一 */
+.btn-add {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-add i {
+    font-size: 0.85rem;
+}
+
+/* 游戏管理页面特定样式 */
+.game-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.game-thumbnail-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 20px;
+}
+
+/* 星级评分样式 */
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.rating-stars i {
+    color: #ffc107;
+    font-size: 1rem;
+}
+
+.rating-stars i.far {
+    color: #e9ecef;
+}
+
+.rating-number {
+    margin-left: 8px;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+/* 模态框统一样式 */
+.modal-content {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    border-radius: 10px 10px 0 0;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    border-radius: 0 0 10px 10px;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+/* 表单控件统一样式 */
+.form-control, .form-select {
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+/* 图片预览 */
+.preview-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+/* 响应式设计统一 */
+@media (max-width: 767.98px) {
+    .col-md-2, .col-md-3, .col-md-7 {
+        margin-bottom: 15px;
+    }
+    
+    .d-flex.flex-wrap {
+        justify-content: space-between;
+    }
+    
+    .custom-dropdown {
+        width: 48%;
+        margin-right: 0 !important;
+    }
+    
+    .custom-dropdown button {
+        width: 100%;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+}
+
+/* 卡片页脚样式 */
+.card-body {
+    padding: 15px 20px;
+}
+
+.card-footer {
+    background-color: white;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding: 15px;
+} 
