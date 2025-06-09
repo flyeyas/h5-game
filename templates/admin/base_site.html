@@ -507,6 +507,53 @@
                 margin-left: 70px;
             }
         }
+
+        /* 用户下拉菜单样式 */
+        .dropdown-menu {
+            position: absolute;
+            z-index: 1000;
+            display: none;
+            min-width: 10rem;
+            padding: 0.5rem 0;
+            margin: 0;
+            font-size: 1rem;
+            color: #212529;
+            text-align: left;
+            list-style: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 0.25rem;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .dropdown-menu-end {
+            right: 0;
+            left: auto;
+        }
+        
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.25rem 1rem;
+            clear: both;
+            font-weight: 400;
+            color: #212529;
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+        }
+        
+        .dropdown-item:hover, .dropdown-item:focus {
+            color: #1e2125;
+            background-color: #f8f9fa;
+            text-decoration: none;
+        }
     </style>
     
     {% block extrastyle %}{% endblock %}
@@ -568,7 +615,7 @@
                 {% if user.is_authenticated %}
                 <!-- 用户下拉菜单 - 按原型设计 -->
                 <div class="dropdown">
-                    <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" aria-expanded="false">
                         <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="{% trans 'Admin Avatar' %}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                         <span>{{ user.username|default:"Admin" }}</span>
                     </button>
@@ -615,8 +662,40 @@
             }
         }
 
+        // 初始化所有Bootstrap组件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化下拉菜单
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl)
+            });
+            
+            // 手动处理用户下拉菜单
+            const userDropdown = document.getElementById('userDropdown');
+            if (userDropdown) {
+                userDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const dropdownMenu = this.nextElementSibling;
+                    if (dropdownMenu.classList.contains('show')) {
+                        dropdownMenu.classList.remove('show');
+                    } else {
+                        dropdownMenu.classList.add('show');
+                        // 点击页面其他地方关闭下拉菜单
+                        document.addEventListener('click', function closeDropdown(e) {
+                            if (!dropdownMenu.contains(e.target) && e.target !== userDropdown) {
+                                dropdownMenu.classList.remove('show');
+                                document.removeEventListener('click', closeDropdown);
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // 响应式处理
+            handleResize();
+        });
+
         window.addEventListener('resize', handleResize);
-        document.addEventListener('DOMContentLoaded', handleResize);
     </script>
 
     {% block extrajs %}{% endblock %}

@@ -726,9 +726,53 @@
   <script src="{% static 'admin/js/category_modal.js' %}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // 更新页脚显示的项目数量
+      const updateFooterItemCount = function() {
+        const footerItemCountEl = document.querySelector('.card-footer .text-muted');
+        const visibleItems = document.querySelectorAll('tbody tr:not([style*="display: none"])').length;
+        
+        if (footerItemCountEl) {
+            if (visibleItems === 1) {
+                footerItemCountEl.textContent = '1 item';
+            } else {
+                footerItemCountEl.textContent = visibleItems + ' items';
+            }
+        }
+      };
+      
+      // 初始更新页脚项目数量
+      updateFooterItemCount();
+      
       // 搜索功能
       const searchInput = document.getElementById('searchInput');
       if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          // 实时搜索功能
+          const searchTerm = this.value.toLowerCase();
+          const tableRows = document.querySelectorAll('tbody tr');
+          
+          tableRows.forEach(row => {
+            const categoryName = row.querySelector('td:nth-child(3)');
+            if (categoryName) {
+              const text = categoryName.textContent.toLowerCase();
+              if (text.includes(searchTerm)) {
+                row.style.display = '';
+              } else {
+                row.style.display = 'none';
+              }
+            }
+          });
+          
+          // 更新页脚显示的项目数量
+          updateFooterItemCount();
+          
+          // 保留回车键提交搜索的功能
+          if (event.type === 'keyup' && event.key === 'Enter') {
+            window.location.href = '?q=' + encodeURIComponent(this.value);
+          }
+        });
+        
+        // 保留回车键提交搜索的功能
         searchInput.addEventListener('keyup', function(e) {
           if (e.key === 'Enter') {
             window.location.href = '?q=' + encodeURIComponent(this.value);
@@ -861,8 +905,6 @@
           toast.remove();
         }, 3000);
       }
-      
-      // 将原有的下拉菜单功能和分页器功能移除，使用Bootstrap原生功能
     });
   </script>
 {% endblock %} 
