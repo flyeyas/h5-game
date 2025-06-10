@@ -128,6 +128,16 @@ class CategoryAdmin(admin.ModelAdmin):
 
         return super().changelist_view(request, extra_context)
 
+    def get_urls(self):
+        """添加自定义URL"""
+        from django.urls import path
+        from .views_admin import toggle_category_status
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:category_id>/toggle-status/', self.admin_site.admin_view(toggle_category_status), name='toggle_category_status'),
+        ]
+        return custom_urls + urls
+
 
 @admin.register(Advertisement)
 class AdvertisementAdmin(admin.ModelAdmin):

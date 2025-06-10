@@ -943,7 +943,10 @@
           }
           
           // 发送AJAX请求更新状态
-          fetch('/admin/games/category/' + categoryId + '/toggle-status/', {
+          // 获取当前页面的语言前缀
+          const currentPath = window.location.pathname;
+          const langPrefix = currentPath.includes('/en/') ? '/en' : '/zh';
+          fetch(langPrefix + '/admin/games/category/' + categoryId + '/toggle-status/', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

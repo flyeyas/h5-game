@@ -509,4 +509,44 @@ def add_user_modal(request):
             }, status=500)
         
         # 否则重定向回添加用户页面
-        return HttpResponseRedirect(reverse('admin:auth_user_add')) 
+        return HttpResponseRedirect(reverse('admin:auth_user_add'))
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+@csrf_exempt
+def toggle_category_status(request, category_id):
+    """
+    切换分类的激活状态
+    """
+    try:
+        logger.info(f"Toggle category status for ID: {category_id}, User: {request.user.username}")
+
+        category = get_object_or_404(Category, pk=category_id)
+        logger.debug(f"Category found: {category.name} (ID: {category_id}), current status: {category.is_active}")
+
+        # 切换状态
+        category.is_active = not category.is_active
+        category.save(update_fields=['is_active'])
+
+        logger.info(f"Category status toggled for ID: {category_id}, new status: {category.is_active}")
+
+        return JsonResponse({
+            'success': True,
+            'category_id': category.id,
+            'is_active': category.is_active,
+            'status_text': _('Active') if category.is_active else _('Inactive'),
+            'message': _('Category status updated successfully')
+        })
+
+    except Exception as e:
+        logger.error(f"Error toggling category status for ID {category_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while toggling category status',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500)
