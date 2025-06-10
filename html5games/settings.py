@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.sitemaps',
+    'django.contrib.humanize',
 
     # 第三方应用
     'crispy_forms',
@@ -224,3 +225,56 @@ LOGGING = {
 # 确保日志目录存在
 if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
     os.makedirs(os.path.join(BASE_DIR, 'logs'))
+
+# Google AdSense API 配置
+# 获取这些值的步骤：
+# 1. 访问 Google Cloud Console (https://console.cloud.google.com/)
+# 2. 创建新项目或选择现有项目
+# 3. 启用 AdSense Management API
+# 4. 创建服务账户并下载JSON密钥文件
+# 5. 将JSON文件路径设置为 CREDENTIALS_FILE
+
+GOOGLE_ADSENSE_API_CONFIG = {
+    # Google服务账户JSON密钥文件路径
+    # 请将此路径替换为您的实际服务账户密钥文件路径
+    'CREDENTIALS_FILE': 'path/to/your/service-account-key.json',
+
+    # Google AdSense API配置
+    'API_VERSION': 'v2',
+    'SCOPES': [
+        'https://www.googleapis.com/auth/adsense.readonly'
+    ],
+
+    # API缓存设置（秒）
+    'CACHE_TIMEOUT': 300,  # 5分钟
+
+    # API请求限制
+    'QUOTA_USER': 'html5games-app',  # 您的应用名称
+    'REQUEST_TIMEOUT': 30,  # 30秒
+
+    # 日志设置
+    'LOG_LEVEL': 'INFO',
+    'LOG_FILE': 'logs/adsense_api.log',
+}
+
+# 缓存配置（用于AdSense API响应缓存）
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5分钟默认超时
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    },
+    'adsense': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'adsense-cache',
+        'TIMEOUT': GOOGLE_ADSENSE_API_CONFIG['CACHE_TIMEOUT'],
+        'OPTIONS': {
+            'MAX_ENTRIES': 100,
+            'CULL_FREQUENCY': 2,
+        }
+    }
+}

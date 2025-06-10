@@ -30,15 +30,72 @@ document.addEventListener('DOMContentLoaded', function() {
     if (saveCategoryBtn) {
         saveCategoryBtn.addEventListener('click', function() {
             const form = document.getElementById('addCategoryForm');
-            
+
             // 手动触发表单验证
             if (!form.checkValidity()) {
                 form.classList.add('was-validated');
                 return;
             }
-            
-            // 提交表单
-            form.submit();
+
+            // 使用AJAX提交表单
+            const formData = new FormData(form);
+
+            // 获取CSRF令牌
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // 修复URL路径问题，确保始终使用完整的URL路径
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '/zh';
+            const apiUrl = `${baseUrl}/api/category/add/`;
+
+            // 禁用按钮，防止重复提交
+            saveCategoryBtn.disabled = true;
+            saveCategoryBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+
+            fetch(apiUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // 显示成功消息
+                    showToast('success', data.message || 'Category added successfully');
+
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+                    modal.hide();
+
+                    // 重置表单
+                    form.reset();
+                    form.classList.remove('was-validated');
+
+                    // 刷新页面以显示新添加的分类
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    // 显示错误消息
+                    showToast('danger', data.message || 'Failed to add category');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('danger', 'An error occurred while processing your request: ' + error.message);
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                saveCategoryBtn.disabled = false;
+                saveCategoryBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save category';
+            });
         });
     }
 
@@ -58,14 +115,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(form);
             const categoryId = form.dataset.categoryId;
             document.getElementById('edit_category_id').value = categoryId;
-            
+
             // 获取CSRF令牌
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
+
             // 修复URL路径问题，确保始终使用完整的URL路径
             const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '/zh';
             const apiUrl = `${baseUrl}/api/category/${categoryId}/edit/`;
-            
+
+            // 禁用按钮，防止重复提交
+            updateCategoryBtn.disabled = true;
+            updateCategoryBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+
             fetch(apiUrl, {
                 method: 'POST',
                 body: formData,
@@ -83,61 +144,35 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     // 显示成功消息
-                    showToast('success', data.message || '分类更新成功');
-                    
+                    showToast('success', data.message || 'Category updated successfully');
+
                     // 关闭模态框
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editCategoryModal'));
                     modal.hide();
-                    
+
                     // 刷新页面以显示更新后的分类
                     setTimeout(() => {
                         window.location.reload();
                     }, 1000);
                 } else {
                     // 显示错误消息
-                    showToast('danger', data.message || '分类更新失败');
+                    showToast('danger', data.message || 'Failed to update category');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('danger', '处理请求时发生错误: ' + error.message);
+                showToast('danger', 'An error occurred while processing your request: ' + error.message);
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                updateCategoryBtn.disabled = false;
+                updateCategoryBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update category';
             });
         });
     }
 
-    // 自动生成分类别名
-    const categoryNameInput = document.getElementById('id_name');
-    if (categoryNameInput) {
-        categoryNameInput.addEventListener('input', function() {
-            const slugInput = document.getElementById('id_slug');
-            // 如果别名为空，则自动生成
-            if (slugInput && !slugInput.value) {
-                // 将输入转换为URL友好的格式
-                const slug = this.value
-                    .toLowerCase()
-                    .replace(/\s+/g, '-')
-                    .replace(/[^\w\-]+/g, '');
-                slugInput.value = slug;
-            }
-        });
-    }
-
-    // 编辑分类模态框中自动生成分类别名
-    const editCategoryNameInput = document.getElementById('edit_name');
-    if (editCategoryNameInput) {
-        editCategoryNameInput.addEventListener('input', function() {
-            const slugInput = document.getElementById('edit_slug');
-            // 如果别名为空，则自动生成
-            if (slugInput && !slugInput.value) {
-                // 将输入转换为URL友好的格式
-                const slug = this.value
-                    .toLowerCase()
-                    .replace(/\s+/g, '-')
-                    .replace(/[^\w\-]+/g, '');
-                slugInput.value = slug;
-            }
-        });
-    }
+    // Slug字段已移除，无需相关JavaScript处理
+    // 分类的slug将由后端自动生成唯一哈希串
 
     // 处理编辑按钮点击事件
     document.querySelectorAll('.edit-category-btn').forEach(button => {
@@ -222,14 +257,35 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 // 设置表单数据
                 const form = document.getElementById('editCategoryForm');
-                form.dataset.categoryId = categoryId;
-                document.getElementById('edit_category_id').value = categoryId;
-                
-                document.getElementById('edit_name').value = data.name;
-                document.getElementById('edit_slug').value = data.slug;
-                document.getElementById('edit_description').value = data.description || '';
-                document.getElementById('edit_order').value = data.order || 0;
-                
+                if (form) {
+                    form.dataset.categoryId = categoryId;
+                }
+
+                const editCategoryIdEl = document.getElementById('edit_category_id');
+                if (editCategoryIdEl) {
+                    editCategoryIdEl.value = categoryId;
+                }
+
+                const editNameEl = document.getElementById('edit_name');
+                if (editNameEl) {
+                    editNameEl.value = data.name;
+                }
+
+                const editSlugEl = document.getElementById('edit_slug');
+                if (editSlugEl) {
+                    editSlugEl.value = data.slug;
+                }
+
+                const editDescriptionEl = document.getElementById('edit_description');
+                if (editDescriptionEl) {
+                    editDescriptionEl.value = data.description || '';
+                }
+
+                const editIconClassEl = document.getElementById('edit_icon_class');
+                if (editIconClassEl) {
+                    editIconClassEl.value = data.icon_class || '';
+                }
+
                 // 设置父级分类
                 const parentSelect = document.getElementById('edit_parent');
                 if (parentSelect) {
@@ -241,13 +297,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 }
-                
+
                 // 设置活动状态
-                document.getElementById('edit_is_active').checked = data.is_active;
-                
+                const editIsActiveEl = document.getElementById('edit_is_active');
+                if (editIsActiveEl) {
+                    editIsActiveEl.checked = data.is_active;
+                }
+
                 // 显示模态框
-                const modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
-                modal.show();
+                const editModal = document.getElementById('editCategoryModal');
+                if (editModal) {
+                    const modal = new bootstrap.Modal(editModal);
+                    modal.show();
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -270,44 +332,73 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 // 设置基本信息
-                document.getElementById('view_name').textContent = data.name;
-                document.getElementById('view_slug').textContent = data.slug;
-                document.getElementById('view_parent').textContent = data.parent || '-';
-                document.getElementById('view_order').textContent = data.order;
-                
+                const viewNameEl = document.getElementById('view_name');
+                if (viewNameEl) {
+                    viewNameEl.textContent = data.name;
+                }
+
+                const viewSlugEl = document.getElementById('view_slug');
+                if (viewSlugEl) {
+                    viewSlugEl.textContent = data.slug;
+                }
+
+                const viewParentEl = document.getElementById('view_parent');
+                if (viewParentEl) {
+                    viewParentEl.textContent = data.parent || '-';
+                }
+
                 // 设置状态
                 const statusElement = document.getElementById('view_status');
-                if (data.is_active) {
-                    statusElement.innerHTML = '<span class="badge bg-success">Active</span>';
-                } else {
-                    statusElement.innerHTML = '<span class="badge bg-secondary">Inactive</span>';
+                if (statusElement) {
+                    if (data.is_active) {
+                        statusElement.innerHTML = '<span class="badge bg-success">Active</span>';
+                    } else {
+                        statusElement.innerHTML = '<span class="badge bg-secondary">Inactive</span>';
+                    }
                 }
-                
+
                 // 设置游戏数量
-                document.getElementById('view_game_count').textContent = data.game_count;
-                
+                const viewGameCountEl = document.getElementById('view_game_count');
+                if (viewGameCountEl) {
+                    viewGameCountEl.textContent = data.game_count;
+                }
+
                 // 设置时间戳
-                document.getElementById('view_created_at').textContent = data.created_at;
-                document.getElementById('view_updated_at').textContent = data.updated_at;
-                
+                const viewCreatedAtEl = document.getElementById('view_created_at');
+                if (viewCreatedAtEl) {
+                    viewCreatedAtEl.textContent = data.created_at;
+                }
+
+                const viewUpdatedAtEl = document.getElementById('view_updated_at');
+                if (viewUpdatedAtEl) {
+                    viewUpdatedAtEl.textContent = data.updated_at;
+                }
+
                 // 设置描述
-                document.getElementById('view_description').textContent = data.description || '(No description)';
-                
+                const viewDescriptionEl = document.getElementById('view_description');
+                if (viewDescriptionEl) {
+                    viewDescriptionEl.textContent = data.description || '(No description)';
+                }
+
                 // 设置图标
                 const iconElement = document.getElementById('view_icon');
-                if (data.icon_class) {
-                    iconElement.innerHTML = `<i class="${data.icon_class}"></i> ${data.icon_class}`;
-                } else {
-                    iconElement.textContent = '(No icon)';
+                if (iconElement) {
+                    if (data.icon_class) {
+                        iconElement.innerHTML = `<i class="${data.icon_class}"></i> ${data.icon_class}`;
+                    } else {
+                        iconElement.textContent = '(No icon)';
+                    }
                 }
-                
+
                 // 设置图片
                 const imageElement = document.getElementById('view_image');
-                if (data.image_url) {
-                    imageElement.src = data.image_url;
-                    imageElement.classList.remove('d-none');
-                } else {
-                    imageElement.classList.add('d-none');
+                if (imageElement) {
+                    if (data.image_url) {
+                        imageElement.src = data.image_url;
+                        imageElement.classList.remove('d-none');
+                    } else {
+                        imageElement.classList.add('d-none');
+                    }
                 }
                 
                 // 设置游戏列表
@@ -369,13 +460,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 删除分类
     function deleteCategory(categoryId) {
+        // 获取确认删除按钮
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
         // 获取CSRF令牌
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
+
         // 修复URL路径问题，确保始终使用完整的URL路径
         const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '/zh';
         const apiUrl = `${baseUrl}/api/category/${categoryId}/delete/`;
-        
+
+        // 禁用按钮，防止重复提交
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+
         fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -396,12 +494,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (status === 200 && data.success) {
                 // 显示成功消息
-                showToast('success', data.message || '分类删除成功');
-                
+                showToast('success', data.message || 'Category deleted successfully');
+
                 // 关闭模态框
                 const modal = bootstrap.Modal.getInstance(document.getElementById('deleteCategoryModal'));
                 modal.hide();
-                
+
                 // 刷新页面以更新分类列表
                 setTimeout(() => {
                     window.location.reload();
@@ -413,48 +511,121 @@ document.addEventListener('DOMContentLoaded', function() {
                     const warningsContainer = document.getElementById('delete_category_warnings');
                     warningsContainer.innerHTML = data.message;
                     warningsContainer.classList.remove('d-none');
-                    
+
                     // 如果是游戏关联错误，添加游戏计数
                     if (data.game_count) {
-                        warningsContainer.innerHTML += `<div class="mt-2">关联游戏数: ${data.game_count}</div>`;
+                        warningsContainer.innerHTML += `<div class="mt-2">Associated games: ${data.game_count}</div>`;
                     }
-                    
+
                     // 如果是子分类关联错误，添加子分类计数
                     if (data.children_count) {
-                        warningsContainer.innerHTML += `<div class="mt-2">子分类数: ${data.children_count}</div>`;
+                        warningsContainer.innerHTML += `<div class="mt-2">Subcategories: ${data.children_count}</div>`;
                     }
+
+                    // 显示警告Toast
+                    showToast('warning', data.message, 'Cannot Delete Category');
                 } else {
                     // 显示通用错误
-                    showToast('danger', data.message || '分类删除失败');
+                    showToast('danger', data.message || 'Failed to delete category');
                 }
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('danger', '处理请求时发生错误: ' + error.message);
+            showToast('danger', 'An error occurred while processing your request: ' + error.message);
+        })
+        .finally(() => {
+            // 恢复按钮状态
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete';
         });
     }
 
-    // 显示提示消息
-    window.showToast = function(type, message) {
+    // 显示Bootstrap Toast提示消息
+    window.showToast = function(type, message, title = null, duration = 5000) {
         const toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) return;
-        
+        if (!toastContainer) {
+            console.error('Toast container not found');
+            return;
+        }
+
+        // 生成唯一ID
+        const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+        // 根据类型设置图标和标题
+        let icon, toastTitle, bgClass, textClass;
+        switch (type) {
+            case 'success':
+                icon = 'fas fa-check-circle';
+                toastTitle = title || 'Success';
+                bgClass = 'bg-success';
+                textClass = 'text-white';
+                break;
+            case 'danger':
+            case 'error':
+                icon = 'fas fa-exclamation-circle';
+                toastTitle = title || 'Error';
+                bgClass = 'bg-danger';
+                textClass = 'text-white';
+                break;
+            case 'warning':
+                icon = 'fas fa-exclamation-triangle';
+                toastTitle = title || 'Warning';
+                bgClass = 'bg-warning';
+                textClass = 'text-dark';
+                break;
+            case 'info':
+                icon = 'fas fa-info-circle';
+                toastTitle = title || 'Information';
+                bgClass = 'bg-info';
+                textClass = 'text-white';
+                break;
+            default:
+                icon = 'fas fa-bell';
+                toastTitle = title || 'Notification';
+                bgClass = 'bg-primary';
+                textClass = 'text-white';
+        }
+
+        // 创建Toast元素
         const toast = document.createElement('div');
-        toast.className = `toast bg-${type} text-white`;
+        toast.id = toastId;
+        toast.className = `toast ${bgClass} ${textClass}`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
         toast.innerHTML = `
+            <div class="toast-header ${bgClass} ${textClass} border-0">
+                <i class="${icon} me-2"></i>
+                <strong class="me-auto">${toastTitle}</strong>
+                <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                <button type="button" class="btn-close ${textClass === 'text-white' ? 'btn-close-white' : ''}"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
             <div class="toast-body">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
                 ${message}
             </div>
-            <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
         `;
-        
+
+        // 添加到容器
         toastContainer.appendChild(toast);
-        
-        // 3秒后自动移除
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+
+        // 创建Bootstrap Toast实例
+        const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: duration
+        });
+
+        // 显示Toast
+        bsToast.show();
+
+        // 监听隐藏事件，移除DOM元素
+        toast.addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+
+        // 返回Toast实例，以便外部控制
+        return bsToast;
     };
 }); 

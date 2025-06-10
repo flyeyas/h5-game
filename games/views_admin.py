@@ -139,26 +139,17 @@ def add_category_modal(request):
         
         # 获取表单数据
         name = request.POST.get('name')
-        slug = request.POST.get('slug')
         description = request.POST.get('description', '')
         parent_id = request.POST.get('parent')
-        order = request.POST.get('order', 0)
         is_active = request.POST.get('is_active') == 'on'
-        
+        icon_class = request.POST.get('icon_class', '')
+
         # 验证必填字段
-        if not name or not slug:
-            logger.warning("Category creation failed: Name or slug is missing")
+        if not name:
+            logger.warning("Category creation failed: Name is missing")
             return JsonResponse({
                 'success': False,
-                'message': _('Name and slug are required')
-            }, status=400)
-        
-        # 验证slug唯一性
-        if Category.objects.filter(slug=slug).exists():
-            logger.warning(f"Category creation failed: Slug '{slug}' already exists")
-            return JsonResponse({
-                'success': False,
-                'message': _('A category with this slug already exists')
+                'message': _('Name is required')
             }, status=400)
         
         # 处理父级分类
@@ -166,14 +157,13 @@ def add_category_modal(request):
         if parent_id and parent_id != '0':
             parent = get_object_or_404(Category, pk=parent_id)
         
-        # 创建新分类
+        # 创建新分类（slug将由模型的save方法自动生成）
         category = Category.objects.create(
             name=name,
-            slug=slug,
             description=description,
             parent=parent,
-            order=order,
-            is_active=is_active
+            is_active=is_active,
+            icon_class=icon_class
         )
         
         logger.info(f"Category created successfully: {category.name} (ID: {category.id})")
@@ -188,7 +178,6 @@ def add_category_modal(request):
                     'name': category.name,
                     'slug': category.slug,
                     'parent': category.parent.name if category.parent else None,
-                    'order': category.order,
                     'is_active': category.is_active
                 }
             })
@@ -230,8 +219,8 @@ def get_category_data(request, category_id):
             'slug': category.slug,
             'description': category.description,
             'parent_id': category.parent.id if category.parent else 0,
-            'order': category.order,
-            'is_active': category.is_active
+            'is_active': category.is_active,
+            'icon_class': category.icon_class
         }
         
         logger.info(f"Successfully prepared category data for ID: {category_id}")
@@ -263,26 +252,17 @@ def edit_category_modal(request, category_id):
         
         # 获取表单数据
         name = request.POST.get('name')
-        slug = request.POST.get('slug')
         description = request.POST.get('description', '')
         parent_id = request.POST.get('parent')
-        order = request.POST.get('order', 0)
         is_active = request.POST.get('is_active') == 'on'
-        
+        icon_class = request.POST.get('icon_class', '')
+
         # 验证必填字段
-        if not name or not slug:
-            logger.warning("Category update failed: Name or slug is missing")
+        if not name:
+            logger.warning("Category update failed: Name is missing")
             return JsonResponse({
                 'success': False,
-                'message': _('Name and slug are required')
-            }, status=400)
-        
-        # 验证slug唯一性（排除当前分类）
-        if Category.objects.filter(slug=slug).exclude(pk=category_id).exists():
-            logger.warning(f"Category update failed: Slug '{slug}' already exists")
-            return JsonResponse({
-                'success': False,
-                'message': _('A category with this slug already exists')
+                'message': _('Name is required')
             }, status=400)
         
         # 处理父级分类
@@ -297,13 +277,18 @@ def edit_category_modal(request, category_id):
                 }, status=400)
             parent = get_object_or_404(Category, pk=parent_id)
         
-        # 更新分类
+        # 更新分类（如果名称改变，slug将由模型的save方法自动重新生成）
+        old_name = category.name
         category.name = name
-        category.slug = slug
         category.description = description
         category.parent = parent
-        category.order = order
         category.is_active = is_active
+        category.icon_class = icon_class
+
+        # 如果名称改变了，清空slug让模型重新生成
+        if old_name != name:
+            category.slug = ''
+
         category.save()
         
         logger.info(f"Category updated successfully: {category.name} (ID: {category.id})")
@@ -318,7 +303,6 @@ def edit_category_modal(request, category_id):
                     'name': category.name,
                     'slug': category.slug,
                     'parent': category.parent.name if category.parent else None,
-                    'order': category.order,
                     'is_active': category.is_active
                 }
             })
@@ -361,7 +345,6 @@ def view_category_modal(request, category_id):
             'description': category.description,
             'parent': category.parent.name if category.parent else None,
             'parent_id': category.parent.id if category.parent else 0,
-            'order': category.order,
             'is_active': category.is_active,
             'created_at': category.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             'updated_at': category.updated_at.strftime('%Y-%m-%d %H:%M:%S'),

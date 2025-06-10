@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from .views_category import CategoryDetailView
-from .views_ad import ad_click
+from .views_ad import ad_click, ad_view, ad_statistics, revenue_reports, toggle_ad_status, edit_ad_ajax
 from . import views_admin
 
 app_name = 'games'
@@ -14,9 +14,14 @@ urlpatterns = [
     path('categories/', views.CategoryListView.as_view(), name='category_list'),
     path('game/<slug:game_slug>/', views.GameDetailView.as_view(), name='game_detail'),
     path('category/<slug:category_slug>/', CategoryDetailView.as_view(), name='category_detail'),
-    
+
     # 广告相关
     path('ad-click/<int:ad_id>/', ad_click, name='ad_click'),
+    path('ad-view/<int:ad_id>/', ad_view, name='ad_view'),
+    path('api/ad-statistics/', ad_statistics, name='ad_statistics'),
+    path('api/revenue-reports/', revenue_reports, name='revenue_reports'),
+    path('api/ads/<int:ad_id>/toggle-status/', toggle_ad_status, name='toggle_ad_status'),
+    path('api/ads/<int:ad_id>/edit/', edit_ad_ajax, name='edit_ad_ajax'),
     
     # 管理员API
     path('api/game/<int:game_id>/json/', views_admin.game_edit_json, name='game_edit_json'),

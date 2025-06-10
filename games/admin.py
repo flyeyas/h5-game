@@ -5,6 +5,10 @@ from django.utils.html import format_html
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_http_methods
 from .models import (
     Game, Category, Advertisement
 )
@@ -86,14 +90,18 @@ class GameAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'parent', 'is_active', 'order', 'display_icon')
+    list_display = ('id', 'name', 'slug', 'parent', 'is_active', 'display_icon')
     list_filter = ('is_active', 'parent')
     search_fields = ('name', 'description')
-    prepopulated_fields = {'slug': ('name',)}
+    # 移除prepopulated_fields，因为我们现在使用自动生成
+    # prepopulated_fields = {'slug': ('name',)}
     change_list_template = 'admin/games/category/change_list.html'
+    list_per_page = 5  # 每页显示5条记录，便于测试分页功能
+    ordering = ['id']  # 按ID升序排列
+    readonly_fields = ('slug',)  # 将slug设为只读
     fieldsets = (
         (None, {
-            'fields': ('name', 'slug', 'description', 'parent', 'order', 'is_active')
+            'fields': ('name', 'slug', 'description', 'parent', 'is_active')
         }),
         (_('Visuals'), {
             'fields': ('image', 'icon_class'),
@@ -107,14 +115,57 @@ class CategoryAdmin(admin.ModelAdmin):
         return '-'
     display_icon.short_description = _('Icon')
 
+    def changelist_view(self, request, extra_context=None):
+        """
+        自定义分类列表视图，处理分页参数转换
+        """
+        # 处理分页参数转换：将 page 参数转换为 Django admin 标准的 p 参数
+        if 'page' in request.GET and 'p' not in request.GET:
+            # 创建一个新的 QueryDict 来修改参数
+            get_params = request.GET.copy()
+            get_params['p'] = get_params.pop('page')[0]
+            request.GET = get_params
+
+        return super().changelist_view(request, extra_context)
+
 
 @admin.register(Advertisement)
 class AdvertisementAdmin(admin.ModelAdmin):
-    list_display = ('name', 'position', 'is_active', 'start_date', 'end_date')
-    list_filter = ('position', 'is_active')
-    search_fields = ('name', 'content')
+    list_display = ('name', 'position', 'ad_type', 'ad_size', 'is_active', 'click_count', 'view_count', 'revenue')
+    list_filter = ('position', 'ad_type', 'is_active', 'ad_size')
+    search_fields = ('name', 'adsense_unit_id', 'adsense_publisher_id')
     date_hierarchy = 'start_date'
     change_list_template = 'admin/games/advertisement/change_list.html'
+    change_form_template = 'admin/games/advertisement/change_form.html'
+    list_per_page = 5  # 每页显示5条记录，便于测试分页功能
+
+    def get_queryset(self, request):
+        """确保使用正确的查询集"""
+        return super().get_queryset(request)
+
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'position', 'ad_type', 'ad_size', 'is_active')
+        }),
+        (_('Content'), {
+            'fields': ('image', 'url', 'html_code'),
+            'description': _('Upload an image or provide HTML code for the advertisement.')
+        }),
+        (_('Google AdSense'), {
+            'fields': ('adsense_publisher_id', 'adsense_unit_id', 'adsense_slot_id'),
+            'description': _('Google AdSense configuration for this advertisement.'),
+            'classes': ('collapse',),
+        }),
+        (_('Schedule'), {
+            'fields': ('start_date', 'end_date'),
+            'description': _('Set the time period during which the advertisement will be displayed.')
+        }),
+        (_('Statistics'), {
+            'fields': ('click_count', 'view_count', 'revenue', 'ctr'),
+            'classes': ('collapse',),
+            'description': _('Performance metrics for this advertisement.')
+        }),
+    )
     
     def get_position_display(self, obj):
         position_map = {
@@ -134,56 +185,154 @@ class AdvertisementAdmin(admin.ModelAdmin):
         """
         自定义广告列表视图，添加额外的上下文数据
         """
-        extra_context = extra_context or {}
-        
-        # 获取广告数据
-        queryset = self.get_queryset(request)
-        
-        # 应用筛选
-        if request.GET.get('position__exact'):
-            position = request.GET.get('position__exact')
-            queryset = queryset.filter(position=position)
-            
-        if request.GET.get('is_active__exact') is not None:
-            is_active = request.GET.get('is_active__exact') == '1'
-            queryset = queryset.filter(is_active=is_active)
-            
-        # 应用搜索
-        search_term = request.GET.get('q')
-        if search_term:
-            queryset = queryset.filter(name__icontains=search_term)
-            
-        # 应用排序
-        ordering = request.GET.get('o')
-        if ordering == '1':
-            queryset = queryset.order_by('name')
-        elif ordering == '2':
-            queryset = queryset.order_by('position')
-        elif ordering == '3':
-            queryset = queryset.order_by('-is_active')
-        elif ordering == '4':
-            queryset = queryset.order_by('start_date')
-        elif ordering == '5':
-            queryset = queryset.order_by('end_date')
-            
-        # 添加分页
-        paginator = Paginator(queryset, 10)  # 每页显示10条
-        page = request.GET.get('page')
-        try:
-            results = paginator.page(page)
-        except PageNotAnInteger:
-            # 如果page不是整数，返回第一页
-            results = paginator.page(1)
-        except EmptyPage:
-            # 如果page超出范围，返回最后一页
-            results = paginator.page(paginator.num_pages)
-            
-        extra_context['results'] = results
-        extra_context['paginator'] = paginator
-        extra_context['page_obj'] = results
-        extra_context['cl'] = {'result_count': queryset.count(), 'result_list': results.object_list}
-        
+        # 检查 Google AdSense 连接状态
+        adsense_status = self.check_adsense_connection()
+
+        # 准备额外的上下文数据
+        if extra_context is None:
+            extra_context = {}
+
+        extra_context.update({
+            'adsense_connected': adsense_status['connected'],
+            'adsense_publisher_id': adsense_status['publisher_id'],
+            'adsense_message': adsense_status['message'],
+            'valid_ads_count': adsense_status['valid_ads_count'],
+        })
+
+        # 调用父类方法获取标准的changelist视图
         return super().changelist_view(request, extra_context)
+
+    def check_adsense_connection(self):
+        """
+        检查 Google AdSense 连接状态
+        """
+        # 获取所有广告单元
+        all_ads = Advertisement.objects.all()
+
+        # 查找有效的 AdSense Publisher ID
+        valid_publisher_ids = []
+        valid_ads_count = 0
+
+        for ad in all_ads:
+            if (ad.adsense_publisher_id and
+                ad.adsense_publisher_id != 'ca-pub-XXXXXXXXXXXXXXXX' and
+                ad.adsense_publisher_id.strip() != '' and
+                'ca-pub-' in ad.adsense_publisher_id and
+                not 'XXXX' in ad.adsense_publisher_id and  # 排除包含 XXXX 的占位符
+                len(ad.adsense_publisher_id) > 15):  # 确保是完整的 Publisher ID
+
+                if ad.adsense_publisher_id not in valid_publisher_ids:
+                    valid_publisher_ids.append(ad.adsense_publisher_id)
+                valid_ads_count += 1
+
+        # 判断连接状态
+        if valid_publisher_ids:
+            return {
+                'connected': True,
+                'publisher_id': valid_publisher_ids[0],  # 使用第一个有效的 Publisher ID
+                'message': _('Your Google AdSense account is successfully connected. You can manage ad units, view revenue data, and optimize ad display performance.'),
+                'valid_ads_count': valid_ads_count,
+            }
+        else:
+            return {
+                'connected': False,
+                'publisher_id': None,
+                'message': _('Google AdSense is not configured. Please add your AdSense Publisher ID to your ad units to enable revenue tracking and reporting.'),
+                'valid_ads_count': 0,
+            }
+
+    def get_urls(self):
+        """添加自定义URL"""
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('update-adsense-settings/', self.admin_site.admin_view(self.update_adsense_settings), name='update_adsense_settings'),
+            path('verify-adsense-connection/', self.admin_site.admin_view(self.verify_adsense_connection), name='verify_adsense_connection'),
+        ]
+        return custom_urls + urls
+
+    def update_adsense_settings(self, request):
+        """更新 AdSense 设置"""
+        if request.method == 'POST':
+            try:
+                global_publisher_id = request.POST.get('global_publisher_id', '').strip()
+                update_existing = request.POST.get('update_existing') == 'on'
+
+                # 验证 Publisher ID 格式
+                if global_publisher_id and not self.validate_publisher_id(global_publisher_id):
+                    return JsonResponse({
+                        'success': False,
+                        'message': _('Invalid Publisher ID format. It should start with "ca-pub-" followed by 16 digits.')
+                    })
+
+                updated_count = 0
+
+                if update_existing and global_publisher_id:
+                    # 更新所有现有的广告单元
+                    ads_to_update = Advertisement.objects.all()
+                    for ad in ads_to_update:
+                        ad.adsense_publisher_id = global_publisher_id
+                        ad.save()
+                        updated_count += 1
+
+                return JsonResponse({
+                    'success': True,
+                    'message': _('AdSense settings updated successfully. {} ad units updated.').format(updated_count)
+                })
+
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': _('An error occurred while updating settings: {}').format(str(e))
+                })
+
+        return JsonResponse({'success': False, 'message': _('Invalid request method.')})
+
+    def verify_adsense_connection(self, request):
+        """验证 AdSense 连接"""
+        if request.method == 'POST':
+            try:
+                import json
+                from .adsense_api import adsense_service
+
+                data = json.loads(request.body)
+                publisher_id = data.get('publisher_id', '').strip()
+
+                # 使用真实的AdSense API进行验证
+                success, verification_result = adsense_service.verify_publisher_id(publisher_id)
+
+                return JsonResponse(verification_result)
+
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'success': False,
+                    'status': 'error',
+                    'message': _('Invalid JSON data.')
+                })
+            except Exception as e:
+                # 记录详细错误信息
+                import logging
+                logger = logging.getLogger('games')
+                logger.error(f'AdSense verification error: {e}', exc_info=True)
+
+                return JsonResponse({
+                    'success': False,
+                    'status': 'error',
+                    'message': _('An error occurred during verification: {}').format(str(e))
+                })
+
+        return JsonResponse({
+            'success': False,
+            'status': 'error',
+            'message': _('Invalid request method.')
+        })
+
+
+
+    def validate_publisher_id(self, publisher_id):
+        """验证 Publisher ID 格式"""
+        from .adsense_api import adsense_service
+        return adsense_service.validate_publisher_id_format(publisher_id)
 
 
 # 自定义AdminSite类，添加统计数据到首页

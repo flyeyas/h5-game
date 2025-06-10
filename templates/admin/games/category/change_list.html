@@ -83,7 +83,34 @@
         min-width: 200px;
     }
 
-    /* 筛选按钮样式 - 使用统一的按钮系统 */
+    /* 筛选按钮样式 - 使用较浅颜色，避免深色按钮 */
+    .filter-btn {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        color: #495057;
+        transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #212529;
+    }
+
+    .filter-btn:focus {
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+    }
+
+    .filter-btn.active {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: #fff;
+    }
+
+    .dropdown-item.active {
+        background-color: #007bff;
+        color: #fff;
+    }
     .pagination {
         margin-bottom: 0;
     }
@@ -294,23 +321,23 @@
             <div class="col-md-7 mb-3 mb-md-0">
                 <div class="d-flex flex-wrap">
                     <div class="dropdown me-2 mb-2 mb-md-0">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle filter-btn" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-filter me-1"></i> {% trans 'Status' %}
                         </button>
-                        <ul class="dropdown-menu filter-dropdown">
-                            <li><a class="dropdown-item" href="?">{% trans 'All Status' %}</a></li>
-                            <li><a class="dropdown-item" href="?is_active__exact=1">{% trans 'Active' %}</a></li>
-                            <li><a class="dropdown-item" href="?is_active__exact=0">{% trans 'Inactive' %}</a></li>
+                        <ul class="dropdown-menu filter-dropdown" aria-labelledby="statusDropdown">
+                            <li><a class="dropdown-item filter-status" href="#" data-filter="all">{% trans 'All Status' %}</a></li>
+                            <li><a class="dropdown-item filter-status" href="#" data-filter="active">{% trans 'Active' %}</a></li>
+                            <li><a class="dropdown-item filter-status" href="#" data-filter="inactive">{% trans 'Inactive' %}</a></li>
                         </ul>
                     </div>
                     <div class="dropdown mb-2 mb-md-0">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle filter-btn" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-sort-amount-down me-1"></i> {% trans 'Sort' %}
                         </button>
-                        <ul class="dropdown-menu filter-dropdown">
-                            <li><a class="dropdown-item" href="?o=1">{% trans 'Latest Added' %}</a></li>
-                            <li><a class="dropdown-item" href="?o=2">{% trans 'Name A-Z' %}</a></li>
-                            <li><a class="dropdown-item" href="?o=3">{% trans 'Order' %}</a></li>
+                        <ul class="dropdown-menu filter-dropdown" aria-labelledby="sortDropdown">
+                            <li><a class="dropdown-item filter-sort" href="#" data-sort="latest">{% trans 'Latest Added' %}</a></li>
+                            <li><a class="dropdown-item filter-sort" href="#" data-sort="name">{% trans 'Name A-Z' %}</a></li>
+                            <li><a class="dropdown-item filter-sort" href="#" data-sort="oldest">{% trans 'Oldest First' %}</a></li>
                         </ul>
                     </div>
                 </div>
@@ -338,11 +365,10 @@
                         <th style="width: 40px;">
                             <input type="checkbox" class="form-check-input" id="selectAll">
                         </th>
-                        <th style="width: 60px;">#</th>
+                        <th style="width: 60px;">ID</th>
                         <th>{% trans 'Category name' %}</th>
                         <th>{% trans 'Description' %}</th>
                         <th>{% trans 'Parent category' %}</th>
-                        <th>{% trans 'Order' %}</th>
                         <th>{% trans 'Status' %}</th>
                         <th style="width: 150px;">{% trans 'Actions' %}</th>
                     </tr>
@@ -353,13 +379,12 @@
                         <td>
                             <input type="checkbox" class="form-check-input" value="{{ result.pk }}">
                         </td>
-                        <td>{{ forloop.counter }}</td>
+                        <td>{{ result.id }}</td>
                         <td>
                             <a href="#" class="edit-category-btn" data-category-id="{{ result.pk }}"><strong>{{ result }}</strong></a>
                         </td>
                         <td>{{ result.description|truncatechars:50|default:'' }}</td>
                         <td>{{ result.parent|default:'-' }}</td>
-                        <td>{{ result.order|default:'0' }}</td>
                         <td>
                             <span class="badge badge-status {% if result.is_active %}badge-active{% else %}badge-inactive{% endif %} category-status-toggle" data-category-id="{{ result.pk }}" style="cursor: pointer;">
                                 {% if result.is_active %}{% trans 'Active' %}{% else %}{% trans 'Inactive' %}{% endif %}
@@ -409,17 +434,30 @@
         {% if cl.result_count != 0 %}
         <nav aria-label="Page navigation">
             <ul class="pagination pagination-sm mb-0">
-                <li class="page-item {% if cl.page_num == 1 %}disabled{% endif %}">
-                    <a class="page-link" href="?p=1{% if cl.query %}&q={{ cl.query }}{% endif %}" tabindex="-1" {% if cl.page_num == 1 %}aria-disabled="true"{% endif %}>
-                        <i class="fas fa-angle-double-left"></i>
-                    </a>
-                </li>
-                <li class="page-item {% if cl.page_num == 1 %}disabled{% endif %}">
-                    <a class="page-link" href="?p={{ cl.page_num|add:'-1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" tabindex="-1" {% if cl.page_num == 1 %}aria-disabled="true"{% endif %}>
-                        <i class="fas fa-angle-left"></i>
-                    </a>
-                </li>
-                
+                {% if cl.page_num > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?p=1{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'First page' %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?p={{ cl.page_num|add:'-1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'Previous page' %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
                 {% for page_num in cl.paginator.page_range %}
                     {% if cl.page_num == page_num %}
                         <li class="page-item active">
@@ -431,17 +469,30 @@
                         </li>
                     {% endif %}
                 {% endfor %}
-                
-                <li class="page-item {% if cl.page_num >= cl.paginator.num_pages %}disabled{% endif %}">
-                    <a class="page-link" href="?p={{ cl.page_num|add:'1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" {% if cl.page_num >= cl.paginator.num_pages %}aria-disabled="true"{% endif %}>
-                        <i class="fas fa-angle-right"></i>
-                    </a>
-                </li>
-                <li class="page-item {% if cl.page_num >= cl.paginator.num_pages %}disabled{% endif %}">
-                    <a class="page-link" href="?p={{ cl.paginator.num_pages }}{% if cl.query %}&q={{ cl.query }}{% endif %}" {% if cl.page_num >= cl.paginator.num_pages %}aria-disabled="true"{% endif %}>
-                        <i class="fas fa-angle-double-right"></i>
-                    </a>
-                </li>
+
+                {% if cl.page_num < cl.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?p={{ cl.page_num|add:'1' }}{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'Next page' %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?p={{ cl.paginator.num_pages }}{% if cl.query %}&q={{ cl.query }}{% endif %}" title="{% trans 'Last page' %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
             </ul>
         </nav>
         {% endif %}
@@ -482,18 +533,10 @@
             <textarea class="form-control" id="id_description" name="description" rows="3" placeholder="{% trans 'Enter category description' %}"></textarea>
             <div class="form-text">{% trans 'Briefly describe this category and the types of games it includes' %}</div>
           </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="id_order" class="form-label">{% trans 'Order' %}</label>
-              <input type="number" class="form-control" id="id_order" name="order" value="0" min="0">
-              <div class="form-text">{% trans 'Lower numbers will be displayed first' %}</div>
-            </div>
-            <div class="col-md-6">
-              <label for="id_slug" class="form-label">{% trans 'Category slug' %} <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="id_slug" name="slug" placeholder="{% trans 'english-name-for-url' %}" required>
-              <div class="invalid-feedback">{% trans 'Please enter a category slug' %}</div>
-              <div class="form-text">{% trans 'English letters, numbers and hyphens, used for URL-friendly display' %}</div>
-            </div>
+          <div class="mb-3">
+            <label for="id_icon_class" class="form-label">{% trans 'Icon Class' %}</label>
+            <input type="text" class="form-control" id="id_icon_class" name="icon_class" placeholder="fa-solid fa-gamepad">
+            <div class="form-text">{% trans 'Font Awesome 6+ icon class, e.g., "fa-solid fa-gamepad"' %}</div>
           </div>
           <div class="mb-3">
             <div class="form-check form-switch">
@@ -504,8 +547,12 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
-        <button type="button" class="btn btn-primary" id="saveCategoryBtn">{% trans 'Save category' %}</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>{% trans 'Cancel' %}
+        </button>
+        <button type="button" class="btn btn-primary" id="saveCategoryBtn">
+          <i class="fas fa-save me-2"></i>{% trans 'Save category' %}
+        </button>
       </div>
     </div>
   </div>
@@ -546,18 +593,10 @@
             <textarea class="form-control" id="edit_description" name="description" rows="3" placeholder="{% trans 'Enter category description' %}"></textarea>
             <div class="form-text">{% trans 'Briefly describe this category and the types of games it includes' %}</div>
           </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="edit_order" class="form-label">{% trans 'Order' %}</label>
-              <input type="number" class="form-control" id="edit_order" name="order" value="0" min="0">
-              <div class="form-text">{% trans 'Lower numbers will be displayed first' %}</div>
-            </div>
-            <div class="col-md-6">
-              <label for="edit_slug" class="form-label">{% trans 'Category slug' %} <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="edit_slug" name="slug" placeholder="{% trans 'english-name-for-url' %}" required>
-              <div class="invalid-feedback">{% trans 'Please enter a category slug' %}</div>
-              <div class="form-text">{% trans 'English letters, numbers and hyphens, used for URL-friendly display' %}</div>
-            </div>
+          <div class="mb-3">
+            <label for="edit_icon_class" class="form-label">{% trans 'Icon Class' %}</label>
+            <input type="text" class="form-control" id="edit_icon_class" name="icon_class" placeholder="fa-solid fa-gamepad">
+            <div class="form-text">{% trans 'Font Awesome 6+ icon class, e.g., "fa-solid fa-gamepad"' %}</div>
           </div>
           <div class="mb-3">
             <div class="form-check form-switch">
@@ -568,8 +607,12 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
-        <button type="button" class="btn btn-primary" id="updateCategoryBtn">{% trans 'Update category' %}</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>{% trans 'Cancel' %}
+        </button>
+        <button type="button" class="btn btn-primary" id="updateCategoryBtn">
+          <i class="fas fa-save me-2"></i>{% trans 'Update category' %}
+        </button>
       </div>
     </div>
   </div>
@@ -601,10 +644,6 @@
                   <li class="list-group-item d-flex justify-content-between">
                     <span>{% trans 'Parent' %}:</span>
                     <span id="view_parent">-</span>
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between">
-                    <span>{% trans 'Order' %}:</span>
-                    <span id="view_order"></span>
                   </li>
                   <li class="list-group-item d-flex justify-content-between">
                     <span>{% trans 'Status' %}:</span>
@@ -706,15 +745,21 @@
         <div id="delete_category_warnings" class="alert alert-warning mt-3 d-none"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans 'Cancel' %}</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" data-category-id="">{% trans 'Delete' %}</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>{% trans 'Cancel' %}
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" data-category-id="">
+          <i class="fas fa-trash me-2"></i>{% trans 'Delete' %}
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 成功提示容器 -->
-<div class="toast-container"></div>
+<!-- Bootstrap Toast 容器 -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+  <!-- Toast 消息将动态添加到这里 -->
+</div>
 {% endblock %}
 
 {% block extrajs %}
@@ -722,8 +767,8 @@
     <script src="{% static 'admin/js/jquery.init.js' %}"></script>
     <script src="{% static 'admin/js/actions.js' %}"></script>
   {% endif %}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{% static 'admin/js/category_modal.js' %}"></script>
+  <!-- Bootstrap JS已在base_site.html中加载，无需重复加载 -->
+  <script src="{% static 'admin/js/category_modal.js' %}?v=2"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // 更新页脚显示的项目数量
@@ -742,7 +787,100 @@
       
       // 初始更新页脚项目数量
       updateFooterItemCount();
-      
+
+      // 筛选功能
+      let currentStatusFilter = 'all';
+      let currentSortOrder = 'latest';
+
+      // 状态筛选功能
+      const statusFilterItems = document.querySelectorAll('.filter-status');
+      statusFilterItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          // 移除其他项的active状态
+          statusFilterItems.forEach(i => i.classList.remove('active'));
+          // 添加当前项的active状态
+          this.classList.add('active');
+
+          currentStatusFilter = this.getAttribute('data-filter');
+          applyFilters();
+
+          // 更新按钮文本
+          const statusButton = document.getElementById('statusDropdown');
+          const buttonText = this.textContent;
+          statusButton.innerHTML = `<i class="fas fa-filter me-1"></i> ${buttonText}`;
+        });
+      });
+
+      // 排序功能
+      const sortFilterItems = document.querySelectorAll('.filter-sort');
+      sortFilterItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          // 移除其他项的active状态
+          sortFilterItems.forEach(i => i.classList.remove('active'));
+          // 添加当前项的active状态
+          this.classList.add('active');
+
+          currentSortOrder = this.getAttribute('data-sort');
+          applyFilters();
+
+          // 更新按钮文本
+          const sortButton = document.getElementById('sortDropdown');
+          const buttonText = this.textContent;
+          sortButton.innerHTML = `<i class="fas fa-sort-amount-down me-1"></i> ${buttonText}`;
+        });
+      });
+
+      // 应用筛选和排序
+      function applyFilters() {
+        const tableRows = Array.from(document.querySelectorAll('tbody tr'));
+
+        // 筛选
+        tableRows.forEach(row => {
+          const statusBadge = row.querySelector('.badge-status');
+          let showRow = true;
+
+          if (currentStatusFilter !== 'all' && statusBadge) {
+            const isActive = statusBadge.classList.contains('badge-active');
+            if (currentStatusFilter === 'active' && !isActive) {
+              showRow = false;
+            } else if (currentStatusFilter === 'inactive' && isActive) {
+              showRow = false;
+            }
+          }
+
+          row.style.display = showRow ? '' : 'none';
+        });
+
+        // 排序
+        const visibleRows = tableRows.filter(row => row.style.display !== 'none');
+        visibleRows.sort((a, b) => {
+          if (currentSortOrder === 'name') {
+            const nameA = a.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const nameB = b.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            return nameA.localeCompare(nameB);
+          } else if (currentSortOrder === 'oldest') {
+            const idA = parseInt(a.querySelector('td:nth-child(2)').textContent);
+            const idB = parseInt(b.querySelector('td:nth-child(2)').textContent);
+            return idA - idB;
+          } else { // latest
+            const idA = parseInt(a.querySelector('td:nth-child(2)').textContent);
+            const idB = parseInt(b.querySelector('td:nth-child(2)').textContent);
+            return idB - idA;
+          }
+        });
+
+        // 重新排列表格行
+        const tbody = document.querySelector('tbody');
+        visibleRows.forEach(row => tbody.appendChild(row));
+
+        // 更新页脚项目数量
+        updateFooterItemCount();
+      }
+
       // 搜索功能
       const searchInput = document.getElementById('searchInput');
       if (searchInput) {
@@ -750,28 +888,34 @@
           // 实时搜索功能
           const searchTerm = this.value.toLowerCase();
           const tableRows = document.querySelectorAll('tbody tr');
-          
+
           tableRows.forEach(row => {
             const categoryName = row.querySelector('td:nth-child(3)');
             if (categoryName) {
               const text = categoryName.textContent.toLowerCase();
-              if (text.includes(searchTerm)) {
-                row.style.display = '';
-              } else {
-                row.style.display = 'none';
+              let showRow = text.includes(searchTerm);
+
+              // 如果搜索匹配，还需要检查筛选条件
+              if (showRow && currentStatusFilter !== 'all') {
+                const statusBadge = row.querySelector('.badge-status');
+                if (statusBadge) {
+                  const isActive = statusBadge.classList.contains('badge-active');
+                  if (currentStatusFilter === 'active' && !isActive) {
+                    showRow = false;
+                  } else if (currentStatusFilter === 'inactive' && isActive) {
+                    showRow = false;
+                  }
+                }
               }
+
+              row.style.display = showRow ? '' : 'none';
             }
           });
-          
+
           // 更新页脚显示的项目数量
           updateFooterItemCount();
-          
-          // 保留回车键提交搜索的功能
-          if (event.type === 'keyup' && event.key === 'Enter') {
-            window.location.href = '?q=' + encodeURIComponent(this.value);
-          }
         });
-        
+
         // 保留回车键提交搜索的功能
         searchInput.addEventListener('keyup', function(e) {
           if (e.key === 'Enter') {
@@ -870,40 +1014,92 @@
         });
       }
       
-      // 显示提示消息
-      function showToast(type, message) {
+      // 显示Bootstrap Toast提示消息
+      function showToast(type, message, title = null, duration = 5000) {
         const toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) return;
-        
+        if (!toastContainer) {
+          console.error('Toast container not found');
+          return;
+        }
+
+        // 生成唯一ID
+        const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+        // 根据类型设置图标和标题
+        let icon, toastTitle, bgClass, textClass;
+        switch (type) {
+          case 'success':
+            icon = 'fas fa-check-circle';
+            toastTitle = title || '{% trans "Success" %}';
+            bgClass = 'bg-success';
+            textClass = 'text-white';
+            break;
+          case 'danger':
+          case 'error':
+            icon = 'fas fa-exclamation-circle';
+            toastTitle = title || '{% trans "Error" %}';
+            bgClass = 'bg-danger';
+            textClass = 'text-white';
+            break;
+          case 'warning':
+            icon = 'fas fa-exclamation-triangle';
+            toastTitle = title || '{% trans "Warning" %}';
+            bgClass = 'bg-warning';
+            textClass = 'text-dark';
+            break;
+          case 'info':
+            icon = 'fas fa-info-circle';
+            toastTitle = title || '{% trans "Information" %}';
+            bgClass = 'bg-info';
+            textClass = 'text-white';
+            break;
+          default:
+            icon = 'fas fa-bell';
+            toastTitle = title || '{% trans "Notification" %}';
+            bgClass = 'bg-primary';
+            textClass = 'text-white';
+        }
+
+        // 创建Toast元素
         const toast = document.createElement('div');
-        toast.className = `toast bg-${type} text-white show`;
+        toast.id = toastId;
+        toast.className = `toast ${bgClass} ${textClass}`;
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
-        
+
         toast.innerHTML = `
-          <div class="toast-header bg-${type} text-white">
-            <strong class="me-auto">{% trans 'Notification' %}</strong>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+          <div class="toast-header ${bgClass} ${textClass} border-0">
+            <i class="${icon} me-2"></i>
+            <strong class="me-auto">${toastTitle}</strong>
+            <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+            <button type="button" class="btn-close ${textClass === 'text-white' ? 'btn-close-white' : ''}"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
           </div>
           <div class="toast-body">
             ${message}
           </div>
         `;
-        
+
+        // 添加到容器
         toastContainer.appendChild(toast);
-        
-        // 创建Bootstrap Toast实例并显示
+
+        // 创建Bootstrap Toast实例
         const bsToast = new bootstrap.Toast(toast, {
           autohide: true,
-          delay: 3000
+          delay: duration
         });
+
+        // 显示Toast
         bsToast.show();
-        
-        // 3秒后移除
-        setTimeout(() => {
-          toast.remove();
-        }, 3000);
+
+        // 监听隐藏事件，移除DOM元素
+        toast.addEventListener('hidden.bs.toast', function() {
+          this.remove();
+        });
+
+        // 返回Toast实例，以便外部控制
+        return bsToast;
       }
     });
   </script>
