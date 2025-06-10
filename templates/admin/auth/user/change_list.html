@@ -453,6 +453,7 @@
                 <th style="width: 40px;">
                   <input type="checkbox" class="form-check-input" id="selectAll">
                 </th>
+                <th style="width: 80px;">{% trans 'ID' %}</th>
                 <th>{% trans 'Username' %}</th>
                 <th>{% trans 'Email address' %}</th>
                 <th>{% trans 'Full name' %}</th>
@@ -465,11 +466,14 @@
             <tbody>
               {% for result in cl.result_list %}
                 {% if result.form.errors %}
-                  <tr class="{% cycle 'row1' 'row2' %}"><td colspan="8">{{ result.form.errors }}</td></tr>
+                  <tr class="{% cycle 'row1' 'row2' %}"><td colspan="9">{{ result.form.errors }}</td></tr>
                 {% endif %}
                 <tr>
                   <td>
                     <input type="checkbox" class="form-check-input" value="{{ result.pk }}">
+                  </td>
+                  <td>
+                    <span class="text-muted">{{ result.pk }}</span>
                   </td>
                   <td>
                     <a href="{% url 'admin:auth_user_change' result.pk %}"><strong>{{ result.username }}</strong></a>
@@ -483,31 +487,58 @@
                     {% endif %}
                   </td>
                   <td>
-                    <span class="badge badge-status {% if result.is_staff %}badge-active{% else %}badge-inactive{% endif %} staff-status-toggle" data-user-id="{{ result.pk }}" style="cursor: pointer;">
-                      {% if result.is_staff %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
-                    </span>
+                    {% if result.pk == 1 %}
+                      <span class="badge badge-status badge-active" title="{% trans 'Protected - Cannot be modified' %}">
+                        {% if result.is_staff %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
+                        <i class="fas fa-lock ms-1" style="font-size: 0.8em;"></i>
+                      </span>
+                    {% else %}
+                      <span class="badge badge-status {% if result.is_staff %}badge-active{% else %}badge-inactive{% endif %} staff-status-toggle" data-user-id="{{ result.pk }}" style="cursor: pointer;">
+                        {% if result.is_staff %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
+                      </span>
+                    {% endif %}
                   </td>
                   <td>
-                    <span class="badge badge-status {% if result.is_superuser %}badge-active{% else %}badge-inactive{% endif %} superuser-status-toggle" data-user-id="{{ result.pk }}" style="cursor: pointer;">
-                      {% if result.is_superuser %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
-                    </span>
+                    {% if result.pk == 1 %}
+                      <span class="badge badge-status badge-active" title="{% trans 'Protected - Cannot be modified' %}">
+                        {% if result.is_superuser %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
+                        <i class="fas fa-lock ms-1" style="font-size: 0.8em;"></i>
+                      </span>
+                    {% else %}
+                      <span class="badge badge-status {% if result.is_superuser %}badge-active{% else %}badge-inactive{% endif %} superuser-status-toggle" data-user-id="{{ result.pk }}" style="cursor: pointer;">
+                        {% if result.is_superuser %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
+                      </span>
+                    {% endif %}
                   </td>
                   <td>
-                    <span class="badge badge-status {% if result.is_active %}badge-active{% else %}badge-inactive{% endif %} active-status-toggle" data-user-id="{{ result.pk }}" style="cursor: pointer;">
-                      {% if result.is_active %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
-                    </span>
+                    {% if result.pk == 1 %}
+                      <span class="badge badge-status badge-active" title="{% trans 'Protected - Cannot be modified' %}">
+                        {% if result.is_active %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
+                        <i class="fas fa-lock ms-1" style="font-size: 0.8em;"></i>
+                      </span>
+                    {% else %}
+                      <span class="badge badge-status {% if result.is_active %}badge-active{% else %}badge-inactive{% endif %} active-status-toggle" data-user-id="{{ result.pk }}" style="cursor: pointer;">
+                        {% if result.is_active %}{% trans 'Yes' %}{% else %}{% trans 'No' %}{% endif %}
+                      </span>
+                    {% endif %}
                   </td>
                   <td class="action-buttons">
                     <div class="d-flex">
                       <a href="{% url 'admin:auth_user_change' result.pk %}" class="btn btn-sm btn-outline-primary me-1" title="{% trans 'Edit' %}">
                       <i class="fas fa-edit"></i>
                     </a>
-                      <button type="button" class="btn btn-sm btn-outline-danger me-1 delete-user-btn" 
-                            data-user-id="{{ result.pk }}" 
-                            data-user-name="{{ result.username }}"
-                              data-delete-url="{% url 'admin:auth_user_delete' result.pk %}" title="{% trans 'Delete' %}">
-                      <i class="fas fa-trash-alt"></i>
-                    </button>
+                      {% if result.pk == 1 %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-1" disabled title="{% trans 'Protected user - Cannot be deleted' %}">
+                          <i class="fas fa-lock"></i>
+                        </button>
+                      {% else %}
+                        <button type="button" class="btn btn-sm btn-outline-danger me-1 delete-user-btn"
+                              data-user-id="{{ result.pk }}"
+                              data-user-name="{{ result.username }}"
+                                data-delete-url="{% url 'admin:auth_user_delete' result.pk %}" title="{% trans 'Delete' %}">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                      {% endif %}
                       <a href="{% url 'admin:auth_user_history' result.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'History' %}">
                       <i class="fas fa-history"></i>
                     </a>
@@ -516,7 +547,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="8" class="text-center py-4">
+                  <td colspan="9" class="text-center py-4">
                     <div class="text-muted">
                       <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
                       <h5>{% trans 'No users found' %}</h5>
@@ -650,7 +681,13 @@
         toggle.addEventListener('click', function() {
           const userId = this.getAttribute('data-user-id');
           const isStaff = this.classList.contains('badge-active');
-          
+
+          // 检查是否是受保护的用户（ID为1）
+          if (userId === '1') {
+            showToast('warning', '{% trans "Cannot modify staff status of the primary administrator account" %}');
+            return;
+          }
+
           // 先切换UI样式
           if (isStaff) {
             this.classList.remove('badge-active');
@@ -663,7 +700,7 @@
           }
           
           // 发送AJAX请求更新状态
-          fetch('/admin/auth/user/' + userId + '/toggle-staff/', {
+          fetch('/en/api/users/' + userId + '/toggle-staff/', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -712,7 +749,13 @@
         toggle.addEventListener('click', function() {
           const userId = this.getAttribute('data-user-id');
           const isSuperuser = this.classList.contains('badge-active');
-          
+
+          // 检查是否是受保护的用户（ID为1）
+          if (userId === '1') {
+            showToast('warning', '{% trans "Cannot modify superuser status of the primary administrator account" %}');
+            return;
+          }
+
           // 先切换UI样式
           if (isSuperuser) {
             this.classList.remove('badge-active');
@@ -725,7 +768,7 @@
           }
           
           // 发送AJAX请求更新状态
-          fetch('/admin/auth/user/' + userId + '/toggle-superuser/', {
+          fetch('/en/api/users/' + userId + '/toggle-superuser/', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -767,14 +810,30 @@
           });
         });
       });
-            
+
+      // 为受保护用户的状态元素添加点击事件监听器，显示警告消息
+      const protectedStatusElements = document.querySelectorAll('span[title="{% trans "Protected - Cannot be modified" %}"]');
+      protectedStatusElements.forEach(element => {
+        element.addEventListener('click', function() {
+          showToast('warning', '{% trans "Cannot modify status of the primary administrator account" %}');
+        });
+        // 添加指针样式，表明可以点击
+        element.style.cursor = 'pointer';
+      });
+
       // 状态切换功能 - Active 状态
       const activeStatusToggles = document.querySelectorAll('.active-status-toggle');
       activeStatusToggles.forEach(toggle => {
         toggle.addEventListener('click', function() {
           const userId = this.getAttribute('data-user-id');
           const isActive = this.classList.contains('badge-active');
-          
+
+          // 检查是否是受保护的用户（ID为1）
+          if (userId === '1') {
+            showToast('warning', '{% trans "Cannot modify active status of the primary administrator account" %}');
+            return;
+          }
+
           // 先切换UI样式
           if (isActive) {
             this.classList.remove('badge-active');
@@ -787,7 +846,7 @@
           }
           
           // 发送AJAX请求更新状态
-          fetch('/admin/auth/user/' + userId + '/toggle-active/', {
+          fetch('/en/api/users/' + userId + '/toggle-active/', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -885,7 +944,7 @@
     
       // 显示提示消息
       function showToast(type, message) {
-        const toastContainer = document.querySelector('.toast-container');
+        let toastContainer = document.querySelector('.toast-container');
         if (!toastContainer) {
           // 如果没有 toast 容器，则创建一个
           const newToastContainer = document.createElement('div');

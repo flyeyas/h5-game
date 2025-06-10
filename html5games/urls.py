@@ -22,7 +22,10 @@ from django.contrib.sitemaps.views import sitemap
 from games.sitemaps import GameSitemap, CategorySitemap, StaticSitemap
 from games import views as games_views
 from games.admin import admin_site
-from games.views_admin import game_edit_json, toggle_game_status, add_user_modal
+from games.views_admin import (
+    game_edit_json, toggle_game_status, add_user_modal,
+    toggle_user_staff, toggle_user_superuser, toggle_user_active
+)
 
 # 站点地图配置
 sitemaps = {
@@ -49,6 +52,10 @@ urlpatterns += i18n_patterns(
     path('api/games/<int:game_id>/toggle-status/', toggle_game_status, name='toggle_game_status'),
     # 用户添加模态框API
     path('api/users/add-modal/', add_user_modal, name='add_user_modal'),
+    # 用户状态切换API
+    path('api/users/<int:user_id>/toggle-staff/', toggle_user_staff, name='toggle_user_staff'),
+    path('api/users/<int:user_id>/toggle-superuser/', toggle_user_superuser, name='toggle_user_superuser'),
+    path('api/users/<int:user_id>/toggle-active/', toggle_user_active, name='toggle_user_active'),
     # 使用自定义admin站点 (基于Django admin二次开发)
     path('admin/', admin_site.urls),
     # 保留Django默认admin作为备用

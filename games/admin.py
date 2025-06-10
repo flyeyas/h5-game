@@ -377,6 +377,36 @@ class CustomAdminSite(AdminSite):
         return super().index(request, extra_context)
 
 
+# 自定义UserAdmin，设置每页显示10条记录
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+class CustomUserAdmin(BaseUserAdmin):
+    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'is_active')  # 在username前添加id列
+    list_per_page = 10  # 设置每页显示10条记录
+    ordering = ['id']  # 按ID正序排列
+    change_list_template = 'admin/auth/user/change_list.html'
+
+    def has_delete_permission(self, request, obj=None):
+        """
+        控制删除权限，禁止删除ID为1的用户
+        """
+        # 如果是ID为1的用户，禁止删除
+        if obj and obj.id == 1:
+            return False
+        # 其他情况使用默认权限检查
+        return super().has_delete_permission(request, obj)
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        为ID为1的用户设置只读字段，防止修改关键状态
+        """
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+
+        # 如果是ID为1的用户，将关键字段设为只读
+        if obj and obj.id == 1:
+            readonly_fields.extend(['is_staff', 'is_superuser', 'is_active'])
+
+        return readonly_fields
+
 # 自定义GroupAdmin，设置每页显示10条记录
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 class CustomGroupAdmin(BaseGroupAdmin):
@@ -394,8 +424,7 @@ admin_site.register(Advertisement, AdvertisementAdmin)
 
 # 注册Django内置模型
 from django.contrib.auth.models import User, Group
-from django.contrib.auth.admin import UserAdmin, GroupAdmin
-admin_site.register(User, UserAdmin)
+admin_site.register(User, CustomUserAdmin)  # 使用自定义的UserAdmin
 admin_site.register(Group, CustomGroupAdmin)  # 使用自定义的GroupAdmin
 
 

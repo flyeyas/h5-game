@@ -550,3 +550,177 @@ def toggle_category_status(request, category_id):
             'message': str(e),
             'type': type(e).__name__
         }, status=500)
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+@csrf_exempt
+def toggle_user_staff(request, user_id):
+    """
+    切换用户的staff状态，但保护ID为1的用户
+    """
+    try:
+        logger.info(f"Toggle user staff status for ID: {user_id}, User: {request.user.username}")
+
+        # 获取User模型
+        User = get_user_model()
+        user = get_object_or_404(User, pk=user_id)
+        logger.debug(f"User found: {user.username} (ID: {user_id}), current staff status: {user.is_staff}")
+
+        # 检查是否是ID为1的用户
+        if user.id == 1:
+            logger.warning(f"Attempt to modify staff status of protected user ID: {user_id}")
+            return JsonResponse({
+                'success': False,
+                'message': _('Cannot modify staff status of the primary administrator account'),
+                'error': 'Protected user'
+            }, status=403)
+
+        # 解析请求数据
+        try:
+            data = json.loads(request.body)
+            new_staff_status = data.get('is_staff', not user.is_staff)
+        except (json.JSONDecodeError, KeyError):
+            new_staff_status = not user.is_staff
+
+        # 更新staff状态
+        user.is_staff = new_staff_status
+        user.save(update_fields=['is_staff'])
+
+        logger.info(f"User staff status toggled for ID: {user_id}, new status: {user.is_staff}")
+
+        return JsonResponse({
+            'success': True,
+            'user_id': user.id,
+            'is_staff': user.is_staff,
+            'status_text': _('Yes') if user.is_staff else _('No'),
+            'message': _('Staff status updated successfully')
+        })
+
+    except Exception as e:
+        logger.error(f"Error toggling user staff status for ID {user_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while toggling user staff status',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+@csrf_exempt
+def toggle_user_superuser(request, user_id):
+    """
+    切换用户的superuser状态，但保护ID为1的用户
+    """
+    try:
+        logger.info(f"Toggle user superuser status for ID: {user_id}, User: {request.user.username}")
+
+        # 获取User模型
+        User = get_user_model()
+        user = get_object_or_404(User, pk=user_id)
+        logger.debug(f"User found: {user.username} (ID: {user_id}), current superuser status: {user.is_superuser}")
+
+        # 检查是否是ID为1的用户
+        if user.id == 1:
+            logger.warning(f"Attempt to modify superuser status of protected user ID: {user_id}")
+            return JsonResponse({
+                'success': False,
+                'message': _('Cannot modify superuser status of the primary administrator account'),
+                'error': 'Protected user'
+            }, status=403)
+
+        # 解析请求数据
+        try:
+            data = json.loads(request.body)
+            new_superuser_status = data.get('is_superuser', not user.is_superuser)
+        except (json.JSONDecodeError, KeyError):
+            new_superuser_status = not user.is_superuser
+
+        # 更新superuser状态
+        user.is_superuser = new_superuser_status
+        user.save(update_fields=['is_superuser'])
+
+        logger.info(f"User superuser status toggled for ID: {user_id}, new status: {user.is_superuser}")
+
+        return JsonResponse({
+            'success': True,
+            'user_id': user.id,
+            'is_superuser': user.is_superuser,
+            'status_text': _('Yes') if user.is_superuser else _('No'),
+            'message': _('Superuser status updated successfully')
+        })
+
+    except Exception as e:
+        logger.error(f"Error toggling user superuser status for ID {user_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while toggling user superuser status',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+@csrf_exempt
+def toggle_user_active(request, user_id):
+    """
+    切换用户的active状态，但保护ID为1的用户
+    """
+    try:
+        logger.info(f"Toggle user active status for ID: {user_id}, User: {request.user.username}")
+
+        # 获取User模型
+        User = get_user_model()
+        user = get_object_or_404(User, pk=user_id)
+        logger.debug(f"User found: {user.username} (ID: {user_id}), current active status: {user.is_active}")
+
+        # 检查是否是ID为1的用户
+        if user.id == 1:
+            logger.warning(f"Attempt to modify active status of protected user ID: {user_id}")
+            return JsonResponse({
+                'success': False,
+                'message': _('Cannot modify active status of the primary administrator account'),
+                'error': 'Protected user'
+            }, status=403)
+
+        # 解析请求数据
+        try:
+            data = json.loads(request.body)
+            new_active_status = data.get('is_active', not user.is_active)
+        except (json.JSONDecodeError, KeyError):
+            new_active_status = not user.is_active
+
+        # 更新active状态
+        user.is_active = new_active_status
+        user.save(update_fields=['is_active'])
+
+        logger.info(f"User active status toggled for ID: {user_id}, new status: {user.is_active}")
+
+        return JsonResponse({
+            'success': True,
+            'user_id': user.id,
+            'is_active': user.is_active,
+            'status_text': _('Yes') if user.is_active else _('No'),
+            'message': _('Active status updated successfully')
+        })
+
+    except Exception as e:
+        logger.error(f"Error toggling user active status for ID {user_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while toggling user active status',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500)
