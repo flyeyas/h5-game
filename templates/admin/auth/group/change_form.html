@@ -1,18 +1,15 @@
-{% extends "admin/change_form.html" %}
+{% extends "admin/base_site.html" %}
 {% load i18n admin_urls static admin_modify %}
 
-{% block title %}{% if errors %}{% translate "Error:" %} {% endif %}{{ block.super }}{% endblock %}
+{% block title %}{% if errors %}{% translate "Error:" %} {% endif %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
-{% block page_title %}
-{% if add %}{% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}{% else %}{% trans 'Change group' %}: {{ original|truncatewords:"18" }}{% endif %}
-{% endblock %}
-
-{% block extrahead %}{{ block.super }}
+{% block extrahead %}
 <script src="{% url 'admin:jsi18n' %}"></script>
 {{ media }}
 {% endblock %}
 
-{% block extrastyle %}{{ block.super }}
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
 <style>
 /* 群组编辑页面专用样式 - 按原型设计 */
 .group-edit-container {
@@ -218,19 +215,45 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="group-edit-container">
-    {% if errors %}
-        <div class="errornote">
-            {% blocktranslate count counter=errors|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
-        </div>
-    {% endif %}
+{% block coltype %}colM{% endblock %}
 
-    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>
-        {% csrf_token %}
-        {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
-        {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
-        {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; {% if has_view_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+&rsaquo; {% if add %}{% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}{% else %}{{ original|truncatewords:"18" }}{% endif %}
+</div>
+{% endblock %}
+{% endif %}
+
+{% block object-tools %}
+{% if change and not is_popup %}
+  <ul class="object-tools">
+    {% block object-tools-items %}
+      {% change_form_object_tools %}
+    {% endblock %}
+  </ul>
+{% endif %}
+{% endblock %}
+
+{% block content %}<div id="content-main">
+<form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+<div>
+{% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+{% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+{% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
+{% if errors %}
+    <p class="errornote">
+    {% blocktranslate count counter=errors|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+    </p>
+    {{ adminform.form.non_field_errors }}
+{% endif %}
+
+<div class="group-edit-container">
 
         <div class="card">
             <div class="card-header">
@@ -243,15 +266,82 @@
                 </h5>
             </div>
             <div class="card-body">
+                {% block field_sets %}
                 {% for fieldset in adminform %}
-                    {% include "admin/includes/fieldset.html" %}
+                  <!-- 内联Django默认fieldset模板内容 -->
+                  <fieldset class="module aligned {{ fieldset.classes }}"{% if fieldset.name %} aria-labelledby="fieldset-{{ forloop.counter0 }}-heading"{% endif %}>
+                      {% if fieldset.name %}
+                          {% if fieldset.is_collapsible %}<details><summary>{% endif %}
+                          <h2 id="fieldset-{{ forloop.counter0 }}-heading" class="fieldset-heading">{{ fieldset.name }}</h2>
+                          {% if fieldset.is_collapsible %}</summary>{% endif %}
+                      {% endif %}
+                      {% if fieldset.description %}
+                          <div class="description">{{ fieldset.description|safe }}</div>
+                      {% endif %}
+                      {% for line in fieldset %}
+                          <div class="form-row{% if line.fields|length == 1 and line.errors %} errors{% endif %}{% if not line.has_visible_field %} hidden{% endif %}{% for field in line %}{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% endfor %}">
+                              {% if line.fields|length == 1 %}{{ line.errors }}{% else %}<div class="flex-container form-multiline">{% endif %}
+                              {% for field in line %}
+                                  <div>
+                                      {% if not line.fields|length == 1 and not field.is_readonly %}{{ field.errors }}{% endif %}
+                                          <div class="flex-container{% if not line.fields|length == 1 %} fieldBox{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% if not field.is_readonly and field.errors %} errors{% endif %}{% if field.field.is_hidden %} hidden{% endif %}{% endif %}{% if field.is_checkbox %} checkbox-row{% endif %}">
+                                              {% if field.is_checkbox %}
+                                                  {{ field.field }}{{ field.label_tag }}
+                                              {% else %}
+                                                  {{ field.label_tag }}
+                                                  {% if field.is_readonly %}
+                                                      <div class="readonly">{{ field.contents }}</div>
+                                                  {% else %}
+                                                      {{ field.field }}
+                                                  {% endif %}
+                                              {% endif %}
+                                          </div>
+                                      {% if field.field.help_text %}
+                                          <div class="help{% if field.field.is_hidden %} hidden{% endif %}"{% if field.field.id_for_label %} id="{{ field.field.id_for_label }}_helptext"{% endif %}>
+                                              <div>{{ field.field.help_text|safe }}</div>
+                                          </div>
+                                      {% endif %}
+                                  </div>
+                              {% endfor %}
+                              {% if not line.fields|length == 1 %}</div>{% endif %}
+                          </div>
+                      {% endfor %}
+                      {% if fieldset.name and fieldset.is_collapsible %}</details>{% endif %}
+                  </fieldset>
                 {% endfor %}
+                {% endblock %}
 
+                {% block after_field_sets %}{% endblock %}
+
+                {% block inline_field_sets %}
                 {% for inline_admin_formset in inline_admin_formsets %}
                     {% include inline_admin_formset.opts.template %}
                 {% endfor %}
+                {% endblock %}
+
+                {% block after_related_objects %}{% endblock %}
             </div>
         </div>
+
+        {% block submit_buttons_bottom %}
+        <!-- 内联Django默认submit_row模板内容 -->
+        <div class="submit-row">
+        {% block submit-row %}
+        {% if show_save %}<input type="submit" value="{% translate 'Save' %}" class="default" name="_save">{% endif %}
+        {% if show_save_as_new %}<input type="submit" value="{% translate 'Save as new' %}" name="_saveasnew">{% endif %}
+        {% if show_save_and_add_another %}<input type="submit" value="{% translate 'Save and add another' %}" name="_addanother">{% endif %}
+        {% if show_save_and_continue %}<input type="submit" value="{% if can_change %}{% translate 'Save and continue editing' %}{% else %}{% translate 'Save and view' %}{% endif %}" name="_continue">{% endif %}
+        {% if show_close %}
+            {% url opts|admin_urlname:'changelist' as changelist_url %}
+            <a href="{% add_preserved_filters changelist_url %}" class="closelink">{% translate 'Close' %}</a>
+        {% endif %}
+        {% if show_delete_link and original %}
+            {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
+            <a href="{% add_preserved_filters delete_url %}" class="deletelink">{% translate "Delete" %}</a>
+        {% endif %}
+        {% endblock %}
+        </div>
+        {% endblock %}
 
         <!-- 自定义操作按钮 - Save和Delete按钮 -->
         <div class="btn-actions">
@@ -264,8 +354,12 @@
             </button>
             {% endif %}
         </div>
-    </form>
+
+        {# JavaScript for prepopulated fields #}
+        {% prepopulated_fields_js %}
+
 </div>
+</form></div>
 
 <!-- 删除确认Modal -->
 {% if not add %}
@@ -301,6 +395,7 @@
 <div class="toast-container position-fixed top-0 end-0 p-3"></div>
 
 {% block admin_change_form_document_ready %}
+    <!-- Django默认的admin_change_form_document_ready块内容 -->
     <script id="django-admin-form-add-constants"
             src="{% static 'admin/js/change_form.js' %}"
             {% if adminform and add %}
