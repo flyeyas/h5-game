@@ -351,47 +351,8 @@
             </form>
         </div>
     </div>
-    <div class="card-footer d-flex justify-content-between align-items-center">
-        <div class="text-muted">
-            {% if cl.result_count == 1 %}
-                {% blocktrans %}{{ cl.result_count }} item{% endblocktrans %}
-            {% else %}
-                {% blocktrans %}{{ cl.result_count }} items{% endblocktrans %}
-            {% endif %}
-        </div>
-        
-        {% if cl.result_count != 0 %}
-        <nav aria-label="Page navigation">
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                        <i class="fas fa-angle-double-left"></i>
-                    </a>
-                </li>
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                        <i class="fas fa-angle-left"></i>
-                    </a>
-                </li>
-                
-                <li class="page-item active">
-                    <span class="page-link">1</span>
-                </li>
-                
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                        <i class="fas fa-angle-right"></i>
-                    </a>
-                </li>
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                        <i class="fas fa-angle-double-right"></i>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        {% endif %}
-    </div>
+    <!-- 使用Django分页模板 -->
+    {% include "admin/pagination.html" with cl=cl %}
 </div>
   
 <!-- 确认删除模态框 -->
