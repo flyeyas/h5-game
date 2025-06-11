@@ -24,7 +24,8 @@ from games import views as games_views
 from games.admin import admin_site
 from games.views_admin import (
     game_edit_json, toggle_game_status, add_user_modal,
-    toggle_user_staff, toggle_user_superuser, toggle_user_active
+    toggle_user_staff, toggle_user_superuser, toggle_user_active,
+    get_permissions_api, add_group_modal
 )
 
 # 站点地图配置
@@ -56,6 +57,9 @@ urlpatterns += i18n_patterns(
     path('api/users/<int:user_id>/toggle-staff/', toggle_user_staff, name='toggle_user_staff'),
     path('api/users/<int:user_id>/toggle-superuser/', toggle_user_superuser, name='toggle_user_superuser'),
     path('api/users/<int:user_id>/toggle-active/', toggle_user_active, name='toggle_user_active'),
+    # 用户组管理API
+    path('api/permissions/', get_permissions_api, name='get_permissions_api'),
+    path('api/groups/add-modal/', add_group_modal, name='add_group_modal'),
     # 使用自定义admin站点 (基于Django admin二次开发)
     path('admin/', admin_site.urls),
     # 保留Django默认admin作为备用

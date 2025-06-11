@@ -7,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User, Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from .models import Game, Category
 import logging
 import traceback
@@ -724,3 +726,158 @@ def toggle_user_active(request, user_id):
             'message': str(e),
             'type': type(e).__name__
         }, status=500)
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["GET"])
+def get_permissions_api(request):
+    """
+    获取所有权限的API端点，用于用户组管理模态框
+    """
+    try:
+        logger.info(f"Fetching permissions data, User: {request.user.username}")
+
+        # 获取所有权限，按内容类型和权限名称排序
+        permissions = Permission.objects.select_related('content_type').order_by(
+            'content_type__app_label',
+            'content_type__model',
+            'codename'
+        )
+
+        # 准备权限数据
+        permissions_data = []
+        for permission in permissions:
+            # 获取内容类型的可读名称
+            content_type = permission.content_type
+            app_label = content_type.app_label
+            model_name = content_type.model
+
+            # 根据应用标签设置分组名称
+            if app_label == 'auth':
+                group_name = _('Authentication and Authorization')
+            elif app_label == 'admin':
+                group_name = _('Administration')
+            elif app_label == 'contenttypes':
+                group_name = _('Content Types')
+            elif app_label == 'sessions':
+                group_name = _('Sessions')
+            elif app_label == 'sites':
+                group_name = _('Sites')
+            elif app_label == 'games':
+                group_name = _('游戏管理')  # 游戏管理
+            else:
+                group_name = app_label.title()
+
+            # 获取模型的可读名称
+            try:
+                model_class = content_type.model_class()
+                if model_class and hasattr(model_class._meta, 'verbose_name'):
+                    model_verbose_name = str(model_class._meta.verbose_name)
+                else:
+                    model_verbose_name = model_name
+            except:
+                model_verbose_name = model_name
+
+            # 构建权限显示名称
+            permission_display = f"{group_name} | {model_verbose_name} | {permission.name}"
+
+            permissions_data.append({
+                'id': permission.id,
+                'name': permission_display,
+                'codename': permission.codename,
+                'content_type': {
+                    'app_label': app_label,
+                    'model': model_name,
+                    'name': model_verbose_name
+                },
+                'group': group_name
+            })
+
+        logger.info(f"Successfully prepared {len(permissions_data)} permissions")
+
+        return JsonResponse({
+            'success': True,
+            'permissions': permissions_data,
+            'count': len(permissions_data)
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching permissions data: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while fetching permissions data',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500)
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def add_group_modal(request):
+    """
+    通过模态框添加用户组
+    """
+    try:
+        logger.info(f"Adding group via modal form, User: {request.user.username}")
+
+        # 获取表单数据
+        name = request.POST.get('name')
+        permissions_ids = request.POST.getlist('permissions')
+
+        # 验证必填字段
+        if not name:
+            logger.warning("Group creation failed: Name is missing")
+            return JsonResponse({
+                'success': False,
+                'message': _('Name is required')
+            }, status=400)
+
+        # 检查组名是否已存在
+        if Group.objects.filter(name=name).exists():
+            logger.warning(f"Group creation failed: Name '{name}' already exists")
+            return JsonResponse({
+                'success': False,
+                'message': _('A group with this name already exists')
+            }, status=400)
+
+        # 创建新用户组
+        group = Group.objects.create(name=name)
+
+        # 添加权限
+        if permissions_ids:
+            permissions = Permission.objects.filter(id__in=permissions_ids)
+            group.permissions.set(permissions)
+            logger.info(f"Added {len(permissions)} permissions to group: {group.name}")
+
+        logger.info(f"Group created successfully: {group.name} (ID: {group.id})")
+
+        # 如果是AJAX请求，返回JSON响应
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': _('Group added successfully'),
+                'group': {
+                    'id': group.id,
+                    'name': group.name,
+                    'permissions_count': group.permissions.count()
+                }
+            })
+
+        # 否则重定向回用户组列表页面
+        return HttpResponseRedirect(reverse('admin:auth_group_changelist'))
+
+    except Exception as e:
+        logger.error(f"Error adding group: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': _('An error occurred while adding the group'),
+                'error': str(e)
+            }, status=500)
+
+        # 重定向回用户组列表页面，并显示错误消息
+        return HttpResponseRedirect(reverse('admin:auth_group_changelist'))

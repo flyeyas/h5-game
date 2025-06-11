@@ -1,27 +1,12 @@
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls static admin_list %}
 
-{% block title %}{% if cl.formset and cl.formset.errors %}{% translate "Error:" %} {% endif %}{{ block.super }}{% endblock %}
-
-{% block page_title %}{% trans 'Group Management System' %}{% endblock %}
+{% block page_title %}{% trans 'Group Management' %}{% endblock %}
 
 {% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static "admin/css/changelists.css" %}">
-  {% if cl.formset %}
-    <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
-  {% endif %}
-  {% if cl.formset or action_form %}
-    <script src="{% url 'admin:jsi18n' %}"></script>
-  {% endif %}
-  {{ media.css }}
-  {% if not actions_on_top and not actions_on_bottom %}
-    <style>
-      #changelist table thead th:first-child {width: inherit}
-    </style>
-  {% endif %}
-  <style>
-    /* 群组管理页面特定样式 */
+{{ block.super }}
+<style>
+    /* 群组管理页面特定样式 - 与分类管理页面保持一致 */
     .card {
         border: none;
         border-radius: 10px;
@@ -54,6 +39,10 @@
         background-color: rgba(108, 117, 125, 0.1);
         color: #6c757d;
     }
+    .badge-pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
     .action-buttons .btn {
         padding: 5px 10px;
         font-size: 0.85rem;
@@ -75,77 +64,68 @@
         min-width: 200px;
     }
 
-    /* 筛选按钮样式 - 使用统一的按钮系统 */
-    .pagination {
-        margin-bottom: 0;
-    }
-    .pagination .page-link {
-        color: #343a40;
-        padding: 8px 15px;
-    }
-    .pagination .page-item.active .page-link {
-        background-color: #343a40;
-        border-color: #343a40;
-    }
-    .modal-header {
+    /* 筛选按钮样式 - 使用较浅颜色，避免深色按钮 */
+    .filter-btn {
         background-color: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
+        border-color: #dee2e6;
+        color: #495057;
+        transition: all 0.2s ease;
     }
-    .modal-footer {
-        background-color: #f8f9fa;
-        border-top: 1px solid #e9ecef;
+
+    .filter-btn:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #212529;
     }
-    .form-label {
-        font-weight: 500;
+
+    .filter-btn:focus {
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
     }
-    .form-text {
-        font-size: 0.85rem;
+
+    .filter-btn.active {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: #fff;
     }
-    .preview-image {
-        max-width: 100%;
-        height: auto;
-        border-radius: 5px;
-        margin-top: 10px;
+
+    .dropdown-item.active {
+        background-color: #007bff;
+        color: #fff;
     }
-    @media (max-width: 991.98px) {
-        .sidebar {
-            width: 70px;
-            padding-top: 10px;
-        }
-        .sidebar-header {
-            padding: 0 10px 10px;
-        }
-        .sidebar-header img {
-            height: 30px;
-        }
-        .sidebar-header h4, .sidebar-header p {
-            display: none;
-        }
-        .menu-item {
-            padding: 10px;
-            justify-content: center;
-        }
-        .menu-item i {
-            margin-right: 0;
-        }
-        .menu-item span {
-            display: none;
-        }
-        .content {
-            margin-left: 70px;
-        }
-    }
+
+    /* 响应式设计 - 与分类页面保持一致 */
     @media (max-width: 767.98px) {
-        .sidebar {
-            width: 0;
-            padding: 0;
-            overflow: hidden;
+        .col-md-2, .col-md-3, .col-md-7 {
+            margin-bottom: 15px;
         }
-        .content {
-            margin-left: 0;
+
+        .d-flex.flex-wrap {
+            justify-content: space-between;
         }
-        .mobile-toggle {
-            display: block !important;
+
+        .dropdown {
+            width: 48%;
+            margin-right: 0 !important;
+        }
+
+        .dropdown button {
+            width: 100%;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        /* 在小屏幕上隐藏部分列 */
+        th:nth-child(4), td:nth-child(4) {
+            display: none;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        /* 在中等屏幕上隐藏权限列 */
+        th:nth-child(4), td:nth-child(4) {
+            display: none;
         }
     }
 
@@ -191,7 +171,7 @@
     .pagination {
       margin-bottom: 0;
     }
-    
+
     .pagination .page-item .page-link {
       border-radius: 4px;
       margin: 0 2px;
@@ -204,20 +184,20 @@
       text-align: center;
       background-color: #fff;
     }
-    
+
     .pagination .page-item.active .page-link {
       background-color: #007bff;
       border-color: #007bff;
       color: white;
       font-weight: 500;
     }
-    
+
     .pagination .page-item .page-link:hover {
       background-color: #e9ecef;
       border-color: #dee2e6;
       color: #007bff;
     }
-    
+
     .pagination .page-item.disabled .page-link {
       color: #adb5bd;
       background-color: #f8f9fa;
@@ -231,81 +211,32 @@
         border-top: 1px solid rgba(0,0,0,0.05);
         padding: 0.75rem 1.25rem;
     }
-    
+
     /* 图标样式调整 */
     .page-link .fas {
         font-size: 0.75rem;
     }
-    
-    /* 隐藏原始的Django Admin操作选择器 */
-    .actions {
-        display: none;
+
+    /* Badge样式 */
+    .badge-status {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+    }
+
+    .badge-active {
+        background-color: #198754;
+        color: white;
+    }
+
+    .badge-inactive {
+        background-color: #6c757d;
+        color: white;
     }
   </style>
 {% endblock %}
 
-{% block extrahead %}
-{{ block.super }}
-{{ media.js }}
-<script src="{% static 'admin/js/filters.js' %}" defer></script>
-{% endblock %}
-
-{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock %}
-
-{% if not is_popup %}
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
-&rsaquo; <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{{ cl.opts.app_config.verbose_name }}</a>
-&rsaquo; {{ cl.opts.verbose_name_plural|capfirst }}
-</div>
-{% endblock %}
-{% endif %}
-
-{% block coltype %}{% endblock %}
-
-{% block object-tools %}
-<ul class="object-tools">
-  {% block object-tools-items %}
-    {% change_list_object_tools %}
-  {% endblock %}
-</ul>
-{% endblock %}
-
 {% block content %}
-  <div id="content-main">
-    {% if cl.formset and cl.formset.errors %}
-        <p class="errornote">
-        {% blocktranslate count counter=cl.formset.total_error_count %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
-        </p>
-        {{ cl.formset.non_form_errors }}
-    {% endif %}
-    <div class="module{% if cl.has_filters %} filtered{% endif %}" id="changelist">
-      <div class="changelist-form-container">
-        {% block search %}
-        <!-- 内联Django默认search_form模板内容 -->
-        {% if cl.search_fields %}
-        <div id="toolbar"><form id="changelist-search" method="get" role="search">
-        <div><!-- DIV needed for valid HTML -->
-        <label for="searchbar"><img src="{% static "admin/img/search.svg" %}" alt="Search"></label>
-        <input type="text" size="40" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar"{% if cl.search_help_text %} aria-describedby="searchbar_helptext"{% endif %}>
-        <input type="submit" value="{% translate 'Search' %}">
-        {% if show_result_count %}
-            <span class="small quiet">{% blocktranslate count counter=cl.result_count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %} (<a href="?{% if cl.is_popup %}{{ is_popup_var }}=1{% if cl.add_facets %}&{% endif %}{% endif %}{% if cl.add_facets %}{{ is_facets_var }}{% endif %}">{% if cl.show_full_result_count %}{% blocktranslate with full_result_count=cl.full_result_count %}{{ full_result_count }} total{% endblocktranslate %}{% else %}{% translate "Show all" %}{% endif %}</a>)</span>
-        {% endif %}
-        {% for pair in cl.params.items %}
-            {% if pair.0 != search_var %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
-        {% endfor %}
-        </div>
-        {% if cl.search_help_text %}
-        <br class="clear">
-        <div class="help" id="searchbar_helptext">{{ cl.search_help_text }}</div>
-        {% endif %}
-        </form></div>
-        {% endif %}
-        {% endblock %}
-
-        {% block date_hierarchy %}{% if cl.date_hierarchy %}{% date_hierarchy cl %}{% endif %}{% endblock %}
 
 <!-- 群组管理工具栏 -->
 <div class="card mb-4">
@@ -314,32 +245,38 @@
             <div class="col-md-3 mb-3 mb-md-0">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <form id="changelist-search" method="get">
-                        <input type="text" name="q" class="form-control" placeholder="{% trans 'Search groups...' %}" value="{{ cl.query }}" id="searchbar">
-                        <input type="submit" style="display: none;">
-                    </form>
+                    <input type="text" class="form-control" placeholder="{% trans 'Search groups...' %}" id="searchInput">
                 </div>
             </div>
             <div class="col-md-7 mb-3 mb-md-0">
                 <div class="d-flex flex-wrap">
                     <div class="dropdown me-2 mb-2 mb-md-0">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle filter-btn" type="button" id="permissionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-filter me-1"></i> {% trans 'Permissions' %}
                         </button>
-                        <ul class="dropdown-menu filter-dropdown">
-                            <li><a class="dropdown-item" href=".">{% trans 'All' %}</a></li>
-                            <li><a class="dropdown-item" href="?permissions__isnull=False">{% trans 'With permissions' %}</a></li>
-                            <li><a class="dropdown-item" href="?permissions__isnull=True">{% trans 'Without permissions' %}</a></li>
+                        <ul class="dropdown-menu filter-dropdown" aria-labelledby="permissionsDropdown">
+                            <li><a class="dropdown-item filter-permissions" href="#" data-filter="all">{% trans 'All Permissions' %}</a></li>
+                            <li><a class="dropdown-item filter-permissions" href="#" data-filter="low">{% trans 'Low (1-5)' %}</a></li>
+                            <li><a class="dropdown-item filter-permissions" href="#" data-filter="medium">{% trans 'Medium (6-10)' %}</a></li>
+                            <li><a class="dropdown-item filter-permissions" href="#" data-filter="high">{% trans 'High (11+)' %}</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown mb-2 mb-md-0">
+                        <button class="btn btn-outline-secondary dropdown-toggle filter-btn" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-sort-amount-down me-1"></i> {% trans 'Sort' %}
+                        </button>
+                        <ul class="dropdown-menu filter-dropdown" aria-labelledby="sortDropdown">
+                            <li><a class="dropdown-item filter-sort" href="#" data-sort="latest">{% trans 'Latest Added' %}</a></li>
+                            <li><a class="dropdown-item filter-sort" href="#" data-sort="name">{% trans 'Name A-Z' %}</a></li>
+                            <li><a class="dropdown-item filter-sort" href="#" data-sort="oldest">{% trans 'Oldest First' %}</a></li>
                         </ul>
                     </div>
                 </div>
             </div>
             <div class="col-md-2 text-md-end">
-                {% if has_add_permission %}
-                <a href="{% url 'admin:auth_group_add' %}" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
                     <i class="fas fa-plus me-1"></i> {% trans 'Add Group' %}
-                </a>
-                {% endif %}
+                </button>
             </div>
         </div>
     </div>
@@ -353,200 +290,187 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <form id="changelist-form" method="post"{% if cl.formset and cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>{% csrf_token %}
-                {% if cl.formset %}
-                    <div>{{ cl.formset.management_form }}</div>
-                {% endif %}
-                
-        {% block result_list %}
-          {% if action_form and actions_on_top and cl.show_admin_actions %}
-          <!-- 内联Django默认admin_actions模板内容 -->
-          <div class="actions">
-            {% block actions %}
-              {% block actions-form %}
-              {% for field in action_form %}{% if field.label %}<label>{{ field.label }} {{ field }}</label>{% else %}{{ field }}{% endif %}{% endfor %}
-              {% endblock %}
-              {% block actions-submit %}
-              <button type="submit" class="button" title="{% translate "Run the selected action" %}" name="index" value="{{ action_index|default:0 }}">{% translate "Go" %}</button>
-              {% endblock %}
-              {% block actions-counter %}
-              {% if actions_selection_counter %}
-                  <span class="action-counter" data-actions-icnt="{{ cl.result_list|length }}">{{ selection_note }}</span>
-                  {% if cl.result_count != cl.result_list|length %}
-                  <span class="all hidden">{{ selection_note_all }}</span>
-                  <span class="question hidden">
-                      <a role="button" href="#" title="{% translate "Click here to select the objects across all pages" %}">{% blocktranslate with cl.result_count as total_count %}Select all {{ total_count }} {{ module_name }}{% endblocktranslate %}</a>
-                  </span>
-                  <span class="clear hidden"><a role="button" href="#">{% translate "Clear selection" %}</a></span>
-                  {% endif %}
-              {% endif %}
-              {% endblock %}
-            {% endblock %}
-          </div>
-          {% endif %}
-
-          <!-- 内联Django默认change_list_results模板内容 -->
-          {% if result_hidden_fields %}
-          <div class="hiddenfields">{# DIV for HTML validation #}
-          {% for item in result_hidden_fields %}{{ item }}{% endfor %}
-          </div>
-          {% endif %}
-          {% if results %}
-          <div class="results">
-          <table id="result_list">
-          <thead>
-          <tr>
-          {% for header in result_headers %}
-          <th scope="col"{{ header.class_attrib }}>
-             {% if header.sortable and header.sort_priority > 0 %}
-                 <div class="sortoptions">
-                   <a class="sortremove" href="{{ header.url_remove }}" title="{% translate "Remove from sorting" %}"></a>
-                   {% if num_sorted_fields > 1 %}<span class="sortpriority" title="{% blocktranslate with priority_number=header.sort_priority %}Sorting priority: {{ priority_number }}{% endblocktranslate %}">{{ header.sort_priority }}</span>{% endif %}
-                   <a href="{{ header.url_toggle }}" class="toggle {{ header.ascending|yesno:'ascending,descending' }}" title="{% translate "Toggle sorting" %}"></a>
-                 </div>
-             {% endif %}
-             <div class="text">{% if header.sortable %}<a href="{{ header.url_primary }}">{{ header.text|capfirst }}</a>{% else %}<span>{{ header.text|capfirst }}</span>{% endif %}</div>
-             <div class="clear"></div>
-          </th>{% endfor %}
-          </tr>
-          </thead>
-          <tbody>
-          {% for result in results %}
-          {% if result.form and result.form.non_field_errors %}
-              <tr><td colspan="{{ result|length }}">{{ result.form.non_field_errors }}</td></tr>
-          {% endif %}
-          <tr>{% for item in result %}{{ item }}{% endfor %}</tr>
-          {% endfor %}
-          </tbody>
-          </table>
-          </div>
-          {% endif %}
-
-          <!-- 自定义表格显示 -->
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" class="form-check-input" id="selectAll">
-                            </th>
-                            <th>{% trans 'Name' %}</th>
-                            <th>{% trans 'Permissions' %}</th>
-                            <th style="width: 150px;">{% trans 'Actions' %}</th>
+            <table class="table table-hover mb-0" id="groupTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" class="form-check-input" id="selectAll">
+                        </th>
+                        <th style="width: 60px;">ID</th>
+                        <th>{% trans 'Group name' %}</th>
+                        <th>{% trans 'Permissions' %}</th>
+                        <th style="width: 150px;">{% trans 'Actions' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in cl.result_list %}
+                        <tr data-permissions="{{ result.permissions.count }}">
+                            <td>
+                                <input type="checkbox" class="form-check-input" value="{{ result.pk }}">
+                            </td>
+                            <td>{{ result.id }}</td>
+                            <td>
+                                <a href="{% url 'admin:auth_group_change' result.pk %}"><strong>{{ result.name }}</strong></a>
+                            </td>
+                            <td>
+                                <span class="badge badge-status {% if result.permissions.count > 0 %}badge-active{% else %}badge-inactive{% endif %}">
+                                    {{ result.permissions.count }} {% trans 'permissions' %}
+                                </span>
+                            </td>
+                            <td class="action-buttons">
+                                <div class="d-flex">
+                                    <a href="{% url 'admin:auth_group_change' result.pk %}" class="btn btn-sm btn-outline-primary me-1" title="{% trans 'Edit' %}">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger me-1 delete-btn" title="{% trans 'Delete' %}" data-group-name="{{ result.name }}" data-group-id="{{ result.pk }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <a href="{% url 'admin:auth_group_history' result.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'History' %}">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for result in cl.result_list %}
-                            <tr>
-                                <td>
-                                    {% if cl.formset and cl.result_has_allowable_actions %}
-                                        {{ result.form.action_checkbox }}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'admin:auth_group_change' result.pk %}"><strong>{{ result.name }}</strong></a>
-                                </td>
-                                <td>
-                                    <span class="badge badge-status {% if result.permissions.count > 0 %}badge-active{% else %}badge-inactive{% endif %}">
-                                        {{ result.permissions.count }} {% trans 'permissions' %}
-                                    </span>
-                                </td>
-                                <td class="action-buttons">
-                                    <div class="d-flex">
-                                        <a href="{% url 'admin:auth_group_change' result.pk %}" class="btn btn-sm btn-outline-primary me-1" title="{% trans 'Edit' %}">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger me-1 delete-btn" title="{% trans 'Delete' %}" data-group-name="{{ result.name }}" data-group-id="{{ result.pk }}">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <a href="{% url 'admin:auth_group_history' result.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'History' %}">
-                                            <i class="fas fa-history"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center py-4">
-                                    <div class="text-muted">
-                                        <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
-                                        <h5>{% trans 'No groups found' %}</h5>
-                                        <p>{% trans 'No groups match your current filters. Try adjusting your search criteria.' %}</p>
-                                        <a href="{% url 'admin:auth_group_add' %}" class="btn btn-primary">
-                                            <i class="fas fa-plus me-1"></i> {% trans 'Add First Group' %}
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-          {% if action_form and actions_on_bottom and cl.show_admin_actions %}
-          <!-- 内联Django默认admin_actions模板内容 (底部) -->
-          <div class="actions">
-            {% block actions-bottom %}
-              {% block actions-form-bottom %}
-              {% for field in action_form %}{% if field.label %}<label>{{ field.label }} {{ field }}</label>{% else %}{{ field }}{% endif %}{% endfor %}
-              {% endblock %}
-              {% block actions-submit-bottom %}
-              <button type="submit" class="button" title="{% translate "Run the selected action" %}" name="index" value="{{ action_index|default:0 }}">{% translate "Go" %}</button>
-              {% endblock %}
-              {% block actions-counter-bottom %}
-              {% if actions_selection_counter %}
-                  <span class="action-counter" data-actions-icnt="{{ cl.result_list|length }}">{{ selection_note }}</span>
-                  {% if cl.result_count != cl.result_list|length %}
-                  <span class="all hidden">{{ selection_note_all }}</span>
-                  <span class="question hidden">
-                      <a role="button" href="#" title="{% translate "Click here to select the objects across all pages" %}">{% blocktranslate with cl.result_count as total_count %}Select all {{ total_count }} {{ module_name }}{% endblocktranslate %}</a>
-                  </span>
-                  <span class="clear hidden"><a role="button" href="#">{% translate "Clear selection" %}</a></span>
-                  {% endif %}
-              {% endif %}
-              {% endblock %}
-            {% endblock %}
-          </div>
-          {% endif %}
-        {% endblock %}
-
-        {% block pagination %}
-        <!-- 内联Django默认pagination模板内容 -->
-        <p class="paginator">
-        {% if pagination_required %}
-        {% for i in page_range %}
-            {% paginator_number cl i %}
-        {% endfor %}
-        {% endif %}
-        {{ cl.result_count }} {% if cl.result_count == 1 %}{{ cl.opts.verbose_name }}{% else %}{{ cl.opts.verbose_name_plural }}{% endif %}
-        {% if show_all_url %}<a href="{{ show_all_url }}" class="showall">{% translate 'Show all' %}</a>{% endif %}
-        {% if cl.formset and cl.result_count %}<input type="submit" name="_save" class="default" value="{% translate 'Save' %}">{% endif %}
-        </p>
-        {% endblock %}
-        </form>
-      </div>
-      {% block filters %}
-        {% if cl.has_filters %}
-          <nav id="changelist-filter" aria-labelledby="changelist-filter-header">
-            <h2 id="changelist-filter-header">{% translate 'Filter' %}</h2>
-            {% if cl.is_facets_optional or cl.has_active_filters %}<div id="changelist-filter-extra-actions">
-              {% if cl.is_facets_optional %}<h3>
-                {% if cl.add_facets %}<a href="{{ cl.remove_facet_link }}" class="hidelink">{% translate "Hide counts" %}</a>
-                {% else %}<a href="{{ cl.add_facet_link }}" class="viewlink">{% translate "Show counts" %}</a>{% endif %}
-              </h3>{% endif %}
-              {% if cl.has_active_filters %}<h3>
-                <a href="{{ cl.clear_all_filters_qs }}">&#10006; {% translate "Clear all filters" %}</a>
-              </h3>{% endif %}
-            </div>{% endif %}
-            {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
-          </nav>
-        {% endif %}
-      {% endblock %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                                    <h5>{% trans 'No groups found' %}</h5>
+                                    <p>{% trans 'No groups match your current filters. Try adjusting your search criteria.' %}</p>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+                                        <i class="fas fa-plus me-1"></i> {% trans 'Add First Group' %}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
 
-    <!-- 使用Django分页模板 -->
-    {% include "admin/pagination.html" with cl=cl %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted">
+            {% if cl.result_count == 1 %}
+                {% blocktrans %}{{ cl.result_count }} item{% endblocktrans %}
+            {% else %}
+                {% blocktrans %}{{ cl.result_count }} items{% endblocktrans %}
+            {% endif %}
+        </div>
+
+        {% if cl.result_count != 0 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                {% if cl.page_num > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?p=1{% if cl.query %}&{{ search_var }}={{ cl.query }}{% endif %}" title="{% trans 'First page' %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?p={{ cl.page_num|add:'-1' }}{% if cl.query %}&{{ search_var }}={{ cl.query }}{% endif %}" title="{% trans 'Previous page' %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in cl.paginator.page_range %}
+                    {% if cl.page_num == page_num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?p={{ page_num }}{% if cl.query %}&{{ search_var }}={{ cl.query }}{% endif %}">{{ page_num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if cl.page_num < cl.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?p={{ cl.page_num|add:'1' }}{% if cl.query %}&{{ search_var }}={{ cl.query }}{% endif %}" title="{% trans 'Next page' %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?p={{ cl.paginator.num_pages }}{% if cl.query %}&{{ search_var }}={{ cl.query }}{% endif %}" title="{% trans 'Last page' %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
 </div>
   
+<!-- 添加群组模态框 -->
+<div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addGroupModalLabel">{% trans 'Add New Group' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addGroupForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">{% trans 'Group Name' %} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="id_name" name="name" required placeholder="{% trans 'Enter group name' %}">
+                        <div class="form-text">{% trans 'Enter a unique name for this group' %}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_permissions" class="form-label">{% trans 'Permissions' %}</label>
+                        <div class="position-relative">
+                            <select class="form-select" id="id_permissions" name="permissions" multiple size="10">
+                                <option disabled>{% trans 'Loading permissions...' %}</option>
+                            </select>
+                            <div id="permissionsLoader" class="position-absolute top-50 start-50 translate-middle d-none">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-text">{% trans 'Hold down "Control", or "Command" on a Mac, to select more than one.' %}</div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>{% trans 'Cancel' %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>{% trans 'Save' %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- 确认删除模态框 -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -574,14 +498,19 @@
 
 {% block extrajs %}
 {{ block.super }}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // 初始化Bootstrap下拉菜单
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl)
+        });
+
         // 更新页脚显示的项目数量
         const updateFooterItemCount = function() {
             const footerItemCountEl = document.querySelector('.card-footer .text-muted');
-            const visibleItems = document.querySelectorAll('tbody tr:not([style*="display: none"])').length;
-            
+            const visibleItems = document.querySelectorAll('#groupTable tbody tr[data-permissions]:not([style*="display: none"])').length;
+
             if (footerItemCountEl) {
                 if (visibleItems === 1) {
                     footerItemCountEl.textContent = '1 item';
@@ -593,36 +522,135 @@
         
         // 初始更新页脚项目数量
         updateFooterItemCount();
-        
-        // 搜索功能
-        const searchInput = document.getElementById('searchbar');
+
+        // 筛选功能
+        let currentPermissionsFilter = 'all';
+        let currentSortOrder = 'latest';
+
+        // 权限筛选功能
+        const permissionsFilterItems = document.querySelectorAll('.filter-permissions');
+        permissionsFilterItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // 移除其他项的active状态
+                permissionsFilterItems.forEach(i => i.classList.remove('active'));
+                // 添加当前项的active状态
+                this.classList.add('active');
+
+                currentPermissionsFilter = this.getAttribute('data-filter');
+                applyFilters();
+
+                // 更新按钮文本
+                const permissionsButton = document.getElementById('permissionsDropdown');
+                const buttonText = this.textContent;
+                permissionsButton.innerHTML = `<i class="fas fa-filter me-1"></i> ${buttonText}`;
+            });
+        });
+
+        // 排序功能
+        const sortFilterItems = document.querySelectorAll('.filter-sort');
+        sortFilterItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // 移除其他项的active状态
+                sortFilterItems.forEach(i => i.classList.remove('active'));
+                // 添加当前项的active状态
+                this.classList.add('active');
+
+                currentSortOrder = this.getAttribute('data-sort');
+                applyFilters();
+
+                // 更新按钮文本
+                const sortButton = document.getElementById('sortDropdown');
+                const buttonText = this.textContent;
+                sortButton.innerHTML = `<i class="fas fa-sort-amount-down me-1"></i> ${buttonText}`;
+            });
+        });
+
+        // 应用筛选和排序
+        function applyFilters() {
+            const tableRows = Array.from(document.querySelectorAll('#groupTable tbody tr[data-permissions]'));
+
+            // 筛选
+            tableRows.forEach(row => {
+                let showRow = true;
+
+                if (currentPermissionsFilter !== 'all') {
+                    const permissionsCount = parseInt(row.getAttribute('data-permissions'));
+
+                    if (currentPermissionsFilter === 'low' && permissionsCount > 5) {
+                        showRow = false;
+                    } else if (currentPermissionsFilter === 'medium' && (permissionsCount < 6 || permissionsCount > 10)) {
+                        showRow = false;
+                    } else if (currentPermissionsFilter === 'high' && permissionsCount < 11) {
+                        showRow = false;
+                    }
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            });
+
+            // 排序
+            const visibleRows = tableRows.filter(row => row.style.display !== 'none');
+            visibleRows.sort((a, b) => {
+                if (currentSortOrder === 'name') {
+                    const nameA = a.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    const nameB = b.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    return nameA.localeCompare(nameB);
+                } else if (currentSortOrder === 'oldest') {
+                    const idA = parseInt(a.querySelector('td:nth-child(2)').textContent);
+                    const idB = parseInt(b.querySelector('td:nth-child(2)').textContent);
+                    return idA - idB;
+                } else { // latest
+                    const idA = parseInt(a.querySelector('td:nth-child(2)').textContent);
+                    const idB = parseInt(b.querySelector('td:nth-child(2)').textContent);
+                    return idB - idA;
+                }
+            });
+
+            // 重新排列表格行
+            const tbody = document.querySelector('#groupTable tbody');
+            visibleRows.forEach(row => tbody.appendChild(row));
+
+            // 更新页脚项目数量
+            updateFooterItemCount();
+        }
+
+        // 搜索功能 - 与分类页面保持一致
+        const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', function() {
                 // 实时搜索功能
                 const searchTerm = this.value.toLowerCase();
-                const tableRows = document.querySelectorAll('tbody tr');
-                
+                const tableRows = document.querySelectorAll('#groupTable tbody tr[data-permissions]');
+
                 tableRows.forEach(row => {
-                    const groupName = row.querySelector('td:nth-child(2)');
+                    const groupName = row.querySelector('td:nth-child(3)');
                     if (groupName) {
                         const text = groupName.textContent.toLowerCase();
-                        if (text.includes(searchTerm)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
+                        let showRow = text.includes(searchTerm);
+
+                        // 如果搜索匹配，还需要检查筛选条件
+                        if (showRow && currentPermissionsFilter !== 'all') {
+                            const permissionsCount = parseInt(row.getAttribute('data-permissions'));
+
+                            if (currentPermissionsFilter === 'low' && permissionsCount > 5) {
+                                showRow = false;
+                            } else if (currentPermissionsFilter === 'medium' && (permissionsCount < 6 || permissionsCount > 10)) {
+                                showRow = false;
+                            } else if (currentPermissionsFilter === 'high' && permissionsCount < 11) {
+                                showRow = false;
+                            }
                         }
+
+                        row.style.display = showRow ? '' : 'none';
                     }
                 });
-                
+
                 // 更新页脚显示的项目数量
                 updateFooterItemCount();
-            });
-            
-            // 保留回车键提交搜索的功能
-            searchInput.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    document.getElementById('changelist-search').submit();
-                }
             });
         }
         
@@ -718,13 +746,13 @@
                 document.body.appendChild(container);
                 return container;
             })();
-            
+
             const toast = document.createElement('div');
             toast.className = `toast bg-${type} text-white show`;
             toast.setAttribute('role', 'alert');
             toast.setAttribute('aria-live', 'assertive');
             toast.setAttribute('aria-atomic', 'true');
-            
+
             toast.innerHTML = `
                 <div class="toast-header bg-${type} text-white">
                     <strong class="me-auto">{% trans 'Notification' %}</strong>
@@ -734,20 +762,129 @@
                     ${message}
                 </div>
             `;
-            
+
             toastContainer.appendChild(toast);
-            
+
             // 创建Bootstrap Toast实例并显示
             const bsToast = new bootstrap.Toast(toast, {
                 autohide: true,
                 delay: 3000
             });
             bsToast.show();
-            
+
             // 3秒后移除
             setTimeout(() => {
                 toast.remove();
             }, 3000);
+        }
+
+        // 加载权限数据
+        function loadPermissions() {
+            const permissionsSelect = document.getElementById('id_permissions');
+            const permissionsLoader = document.getElementById('permissionsLoader');
+
+            // 显示加载器
+            permissionsLoader.classList.remove('d-none');
+            permissionsSelect.disabled = true;
+
+            // 获取当前页面的语言前缀
+            const currentPath = window.location.pathname;
+            const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+
+            // 发送请求获取权限数据
+            fetch(`${adminUrl.replace('/admin/', '/api/')}permissions/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // 清空现有选项
+                        permissionsSelect.innerHTML = '';
+
+                        // 添加权限选项
+                        data.permissions.forEach(permission => {
+                            const option = document.createElement('option');
+                            option.value = permission.id;
+                            option.textContent = permission.name;
+                            permissionsSelect.appendChild(option);
+                        });
+
+                        console.log(`Loaded ${data.permissions.length} permissions`);
+                    } else {
+                        throw new Error(data.message || 'Failed to load permissions');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading permissions:', error);
+                    permissionsSelect.innerHTML = '<option disabled>{% trans "Error loading permissions" %}</option>';
+                    showToast('danger', '{% trans "Failed to load permissions" %}');
+                })
+                .finally(() => {
+                    // 隐藏加载器
+                    permissionsLoader.classList.add('d-none');
+                    permissionsSelect.disabled = false;
+                });
+        }
+
+        // 处理添加用户组模态框
+        const addGroupModal = document.getElementById('addGroupModal');
+        if (addGroupModal) {
+            addGroupModal.addEventListener('show.bs.modal', function() {
+                // 模态框显示时加载权限数据
+                loadPermissions();
+            });
+        }
+
+        // 处理添加用户组表单提交
+        const addGroupForm = document.getElementById('addGroupForm');
+        if (addGroupForm) {
+            addGroupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+
+                // 获取当前页面的语言前缀
+                const currentPath = window.location.pathname;
+                const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+
+                // 发送AJAX请求
+                fetch(`${adminUrl.replace('/admin/', '/api/')}groups/add-modal/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 成功添加用户组
+                        showToast('success', data.message);
+
+                        // 关闭模态框
+                        const modal = bootstrap.Modal.getInstance(addGroupModal);
+                        modal.hide();
+
+                        // 重置表单
+                        addGroupForm.reset();
+
+                        // 刷新页面以显示新添加的用户组
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        // 显示错误消息
+                        showToast('danger', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding group:', error);
+                    showToast('danger', '{% trans "An error occurred while adding the group" %}');
+                });
+            });
         }
     });
 </script>

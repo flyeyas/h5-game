@@ -411,6 +411,7 @@ class CustomUserAdmin(BaseUserAdmin):
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 class CustomGroupAdmin(BaseGroupAdmin):
     list_per_page = 10  # 设置每页显示10条记录
+    ordering = ['id']  # 按ID正序排列
     change_list_template = 'admin/auth/group/change_list.html'
 
 
