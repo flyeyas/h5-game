@@ -319,9 +319,9 @@
                             </td>
                             <td class="action-buttons">
                                 <div class="d-flex">
-                                    <a href="{% url 'admin:auth_group_change' result.pk %}" class="btn btn-sm btn-outline-primary me-1" title="{% trans 'Edit' %}">
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-1 edit-group-btn" title="{% trans 'Edit' %}" data-group-id="{{ result.pk }}">
                                         <i class="fas fa-edit"></i>
-                                    </a>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-outline-danger me-1 delete-btn" title="{% trans 'Delete' %}" data-group-name="{{ result.name }}" data-group-id="{{ result.pk }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -450,6 +450,50 @@
                                 <option disabled>{% trans 'Loading permissions...' %}</option>
                             </select>
                             <div id="permissionsLoader" class="position-absolute top-50 start-50 translate-middle d-none">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-text">{% trans 'Hold down "Control", or "Command" on a Mac, to select more than one.' %}</div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>{% trans 'Cancel' %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>{% trans 'Save' %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑群组模态框 -->
+<div class="modal fade" id="editGroupModal" tabindex="-1" aria-labelledby="editGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editGroupModalLabel">{% trans 'Edit Group' %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editGroupForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_id_name" class="form-label">{% trans 'Group Name' %} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_id_name" name="name" required placeholder="{% trans 'Enter group name' %}">
+                        <div class="form-text">{% trans 'Enter a unique name for this group' %}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_id_permissions" class="form-label">{% trans 'Permissions' %}</label>
+                        <div class="position-relative">
+                            <select class="form-select" id="edit_id_permissions" name="permissions" multiple size="10">
+                                <option disabled>{% trans 'Loading permissions...' %}</option>
+                            </select>
+                            <div id="editPermissionsLoader" class="position-absolute top-50 start-50 translate-middle d-none">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                                     <span class="visually-hidden">{% trans 'Loading...' %}</span>
                                 </div>
@@ -883,6 +927,125 @@
                 .catch(error => {
                     console.error('Error adding group:', error);
                     showToast('danger', '{% trans "An error occurred while adding the group" %}');
+                });
+            });
+        }
+
+        // 处理编辑用户组按钮点击事件
+        const editGroupButtons = document.querySelectorAll('.edit-group-btn');
+        const editGroupModal = document.getElementById('editGroupModal');
+        let currentEditGroupId = null;
+
+        editGroupButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const groupId = this.getAttribute('data-group-id');
+                currentEditGroupId = groupId;
+                loadGroupDataForEdit(groupId);
+            });
+        });
+
+        // 加载用户组数据用于编辑
+        function loadGroupDataForEdit(groupId) {
+            // 获取当前页面的语言前缀
+            const currentPath = window.location.pathname;
+            const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+
+            // 显示模态框
+            const modal = new bootstrap.Modal(editGroupModal);
+            modal.show();
+
+            // 加载权限数据和用户组数据
+            Promise.all([
+                fetch(`${adminUrl.replace('/admin/', '/api/')}permissions/`).then(response => response.json()),
+                fetch(`${adminUrl.replace('/admin/', '/api/')}groups/${groupId}/json/`).then(response => response.json())
+            ])
+            .then(([permissionsData, groupData]) => {
+                if (permissionsData.success) {
+                    // 填充权限选择框
+                    const permissionsSelect = document.getElementById('edit_id_permissions');
+                    permissionsSelect.innerHTML = '';
+
+                    permissionsData.permissions.forEach(permission => {
+                        const option = document.createElement('option');
+                        option.value = permission.id;
+                        option.textContent = permission.name;
+                        permissionsSelect.appendChild(option);
+                    });
+
+                    // 填充用户组数据
+                    document.getElementById('edit_id_name').value = groupData.name;
+
+                    // 预选已配置的权限
+                    if (groupData.permissions && groupData.permissions.length > 0) {
+                        groupData.permissions.forEach(permissionId => {
+                            const option = permissionsSelect.querySelector(`option[value="${permissionId}"]`);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    }
+
+                    console.log(`Loaded group data for editing: ${groupData.name}, permissions: ${groupData.permissions.length}`);
+                } else {
+                    throw new Error(permissionsData.message || 'Failed to load permissions');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading group data for edit:', error);
+                showToast('danger', '{% trans "Failed to load group data" %}');
+                modal.hide();
+            });
+        }
+
+        // 处理编辑用户组表单提交
+        const editGroupForm = document.getElementById('editGroupForm');
+        if (editGroupForm) {
+            editGroupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (!currentEditGroupId) return;
+
+                const formData = new FormData(this);
+
+                // 获取当前页面的语言前缀
+                const currentPath = window.location.pathname;
+                const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+
+                // 发送AJAX请求
+                fetch(`${adminUrl.replace('/admin/', '/api/')}groups/${currentEditGroupId}/edit/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 成功更新用户组
+                        showToast('success', data.message);
+
+                        // 关闭模态框
+                        const modal = bootstrap.Modal.getInstance(editGroupModal);
+                        modal.hide();
+
+                        // 重置表单
+                        editGroupForm.reset();
+                        currentEditGroupId = null;
+
+                        // 刷新页面以显示更新后的用户组
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        // 显示错误消息
+                        showToast('danger', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error editing group:', error);
+                    showToast('danger', '{% trans "An error occurred while updating the group" %}');
                 });
             });
         }

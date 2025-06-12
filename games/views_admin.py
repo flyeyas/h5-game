@@ -881,3 +881,117 @@ def add_group_modal(request):
 
         # 重定向回用户组列表页面，并显示错误消息
         return HttpResponseRedirect(reverse('admin:auth_group_changelist'))
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["GET"])
+def get_group_data(request, group_id):
+    """
+    获取用户组数据的JSON API，用于编辑用户组模态框
+    """
+    try:
+        logger.info(f"Fetching group data for ID: {group_id}, User: {request.user.username}")
+
+        group = get_object_or_404(Group, pk=group_id)
+        logger.debug(f"Group found: {group.name} (ID: {group_id})")
+
+        # 准备用户组数据的JSON响应
+        data = {
+            'id': group.id,
+            'name': group.name,
+            'permissions': list(group.permissions.values_list('id', flat=True))
+        }
+
+        logger.info(f"Successfully prepared group data for ID: {group_id}")
+
+        return JsonResponse(data)
+
+    except Exception as e:
+        logger.error(f"Error fetching group data for ID {group_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        return JsonResponse({
+            'error': 'An error occurred while fetching group data',
+            'message': str(e),
+            'type': type(e).__name__
+        }, status=500)
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def edit_group_modal(request, group_id):
+    """
+    通过模态框编辑用户组
+    """
+    try:
+        logger.info(f"Editing group via modal form, ID: {group_id}, User: {request.user.username}")
+
+        # 获取用户组对象
+        group = get_object_or_404(Group, pk=group_id)
+
+        # 获取表单数据
+        name = request.POST.get('name')
+        permissions_ids = request.POST.getlist('permissions')
+
+        # 验证必填字段
+        if not name:
+            logger.warning("Group update failed: Name is missing")
+            return JsonResponse({
+                'success': False,
+                'message': _('Name is required')
+            }, status=400)
+
+        # 检查组名是否已存在（排除当前组）
+        if Group.objects.filter(name=name).exclude(id=group_id).exists():
+            logger.warning(f"Group update failed: Name '{name}' already exists")
+            return JsonResponse({
+                'success': False,
+                'message': _('A group with this name already exists')
+            }, status=400)
+
+        # 更新用户组信息
+        group.name = name
+        group.save()
+
+        # 更新权限
+        if permissions_ids:
+            permissions = Permission.objects.filter(id__in=permissions_ids)
+            group.permissions.set(permissions)
+            logger.info(f"Updated permissions for group: {group.name}, count: {len(permissions)}")
+        else:
+            # 如果没有选择权限，清空所有权限
+            group.permissions.clear()
+            logger.info(f"Cleared all permissions for group: {group.name}")
+
+        logger.info(f"Group updated successfully: {group.name} (ID: {group.id})")
+
+        # 如果是AJAX请求，返回JSON响应
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': _('Group updated successfully'),
+                'group': {
+                    'id': group.id,
+                    'name': group.name,
+                    'permissions_count': group.permissions.count()
+                }
+            })
+
+        # 否则重定向回用户组列表页面
+        return HttpResponseRedirect(reverse('admin:auth_group_changelist'))
+
+    except Exception as e:
+        logger.error(f"Error editing group ID {group_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': _('An error occurred while updating the group'),
+                'error': str(e)
+            }, status=500)
+
+        # 重定向回用户组列表页面，并显示错误消息
+        return HttpResponseRedirect(reverse('admin:auth_group_changelist'))
