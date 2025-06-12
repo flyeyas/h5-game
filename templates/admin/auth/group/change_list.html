@@ -167,6 +167,216 @@
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
 
+    /* 双列权限选择器样式 */
+    .permission-selector {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        margin-top: 8px;
+    }
+
+    .permission-column {
+        flex: 1;
+        min-height: 320px;
+        max-width: calc(50% - 30px);
+    }
+
+    .permission-column h6 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px 5px 0 0;
+        margin: 0;
+    }
+
+    .permission-list {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+        height: 280px;
+        overflow-y: auto;
+        background-color: white;
+        padding: 0;
+    }
+
+    .permission-item {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f1f3f4;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        font-size: 0.875rem;
+        line-height: 1.4;
+        user-select: none;
+    }
+
+    .permission-item:last-child {
+        border-bottom: none;
+    }
+
+    .permission-item:hover {
+        background-color: #e3f2fd;
+    }
+
+    .permission-item.selected {
+        background-color: #2196f3;
+        color: white;
+    }
+
+    .permission-item.selected:hover {
+        background-color: #1976d2;
+    }
+
+    .permission-controls {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+        padding-top: 35px;
+        min-width: 60px;
+    }
+
+    .permission-btn {
+        width: 45px;
+        height: 36px;
+        border: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        color: #495057;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .permission-btn:hover:not(:disabled) {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .permission-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .permission-search {
+        margin-bottom: 8px;
+    }
+
+    .permission-search input {
+        font-size: 0.875rem;
+        padding: 6px 10px;
+    }
+
+    .permission-count {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-align: center;
+        padding: 5px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+    }
+
+    /* 模态框优化样式 */
+    .modal-xl .modal-body {
+        padding: 1.25rem 2rem;
+    }
+
+    .modal-xl .permission-selector {
+        margin-top: 10px;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 1199.98px) {
+        .permission-column {
+            max-width: calc(50% - 25px);
+            min-height: 300px;
+        }
+
+        .permission-list {
+            height: 260px;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .modal-xl {
+            max-width: 90%;
+        }
+
+        .permission-selector {
+            gap: 15px;
+        }
+
+        .permission-column {
+            max-width: calc(50% - 20px);
+            min-height: 280px;
+        }
+
+        .permission-list {
+            height: 240px;
+        }
+
+        .permission-controls {
+            min-width: 50px;
+            padding-top: 30px;
+        }
+
+        .permission-btn {
+            width: 40px;
+            height: 32px;
+            font-size: 0.875rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .modal-xl {
+            max-width: 95%;
+            margin: 0.5rem;
+        }
+
+        .modal-xl .modal-body {
+            padding: 1rem 1.5rem;
+        }
+
+        .permission-selector {
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .permission-column {
+            max-width: 100%;
+            min-height: 240px;
+        }
+
+        .permission-controls {
+            flex-direction: row;
+            justify-content: center;
+            padding-top: 0;
+            min-width: auto;
+            gap: 6px;
+        }
+
+        .permission-btn {
+            width: 60px;
+            height: 36px;
+        }
+
+        .permission-list {
+            height: 180px;
+        }
+
+        .permission-search {
+            margin-bottom: 6px;
+        }
+    }
+
     /* 分页组件样式更新 */
     .pagination {
       margin-bottom: 0;
@@ -429,7 +639,7 @@
   
 <!-- 添加群组模态框 -->
 <div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addGroupModalLabel">{% trans 'Add New Group' %}</h5>
@@ -444,18 +654,65 @@
                         <div class="form-text">{% trans 'Enter a unique name for this group' %}</div>
                     </div>
                     <div class="mb-3">
-                        <label for="id_permissions" class="form-label">{% trans 'Permissions' %}</label>
-                        <div class="position-relative">
-                            <select class="form-select" id="id_permissions" name="permissions" multiple size="10">
-                                <option disabled>{% trans 'Loading permissions...' %}</option>
-                            </select>
-                            <div id="permissionsLoader" class="position-absolute top-50 start-50 translate-middle d-none">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                        <label class="form-label">{% trans 'Permissions' %}</label>
+                        <div class="permission-selector" id="addPermissionSelector">
+                            <!-- 可用权限列 -->
+                            <div class="permission-column">
+                                <h6>{% trans 'Available permissions' %}</h6>
+                                <div class="permission-search">
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="{% trans 'Search available permissions...' %}"
+                                           id="addAvailableSearch">
                                 </div>
+                                <div class="permission-list" id="addAvailableList">
+                                    <div class="text-center p-3 text-muted">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                                        </div>
+                                        <div class="mt-2">{% trans 'Loading permissions...' %}</div>
+                                    </div>
+                                </div>
+                                <div class="permission-count" id="addAvailableCount">0 {% trans 'available' %}</div>
+                            </div>
+
+                            <!-- 控制按钮 -->
+                            <div class="permission-controls">
+                                <button type="button" class="permission-btn" id="addMoveRight" title="{% trans 'Add selected' %}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <button type="button" class="permission-btn" id="addMoveAllRight" title="{% trans 'Add all' %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </button>
+                                <button type="button" class="permission-btn" id="addMoveLeft" title="{% trans 'Remove selected' %}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button type="button" class="permission-btn" id="addMoveAllLeft" title="{% trans 'Remove all' %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </button>
+                            </div>
+
+                            <!-- 已选权限列 -->
+                            <div class="permission-column">
+                                <h6>{% trans 'Chosen permissions' %}</h6>
+                                <div class="permission-search">
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="{% trans 'Search chosen permissions...' %}"
+                                           id="addChosenSearch">
+                                </div>
+                                <div class="permission-list" id="addChosenList">
+                                    <div class="text-center p-3 text-muted">
+                                        {% trans 'No permissions selected' %}
+                                    </div>
+                                </div>
+                                <div class="permission-count" id="addChosenCount">0 {% trans 'chosen' %}</div>
                             </div>
                         </div>
-                        <div class="form-text">{% trans 'Hold down "Control", or "Command" on a Mac, to select more than one.' %}</div>
+
+                        <!-- 隐藏的select用于表单提交 -->
+                        <select class="d-none" id="id_permissions" name="permissions" multiple>
+                        </select>
+
+                        <div class="form-text">{% trans 'Use the arrows to move permissions between lists, or double-click to move individual items.' %}</div>
                     </div>
                 </div>
                 <div class="modal-footer d-flex justify-content-end gap-2">
@@ -473,7 +730,7 @@
 
 <!-- 编辑群组模态框 -->
 <div class="modal fade" id="editGroupModal" tabindex="-1" aria-labelledby="editGroupModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editGroupModalLabel">{% trans 'Edit Group' %}</h5>
@@ -488,18 +745,65 @@
                         <div class="form-text">{% trans 'Enter a unique name for this group' %}</div>
                     </div>
                     <div class="mb-3">
-                        <label for="edit_id_permissions" class="form-label">{% trans 'Permissions' %}</label>
-                        <div class="position-relative">
-                            <select class="form-select" id="edit_id_permissions" name="permissions" multiple size="10">
-                                <option disabled>{% trans 'Loading permissions...' %}</option>
-                            </select>
-                            <div id="editPermissionsLoader" class="position-absolute top-50 start-50 translate-middle d-none">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                        <label class="form-label">{% trans 'Permissions' %}</label>
+                        <div class="permission-selector" id="editPermissionSelector">
+                            <!-- 可用权限列 -->
+                            <div class="permission-column">
+                                <h6>{% trans 'Available permissions' %}</h6>
+                                <div class="permission-search">
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="{% trans 'Search available permissions...' %}"
+                                           id="editAvailableSearch">
                                 </div>
+                                <div class="permission-list" id="editAvailableList">
+                                    <div class="text-center p-3 text-muted">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                                        </div>
+                                        <div class="mt-2">{% trans 'Loading permissions...' %}</div>
+                                    </div>
+                                </div>
+                                <div class="permission-count" id="editAvailableCount">0 {% trans 'available' %}</div>
+                            </div>
+
+                            <!-- 控制按钮 -->
+                            <div class="permission-controls">
+                                <button type="button" class="permission-btn" id="editMoveRight" title="{% trans 'Add selected' %}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <button type="button" class="permission-btn" id="editMoveAllRight" title="{% trans 'Add all' %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </button>
+                                <button type="button" class="permission-btn" id="editMoveLeft" title="{% trans 'Remove selected' %}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button type="button" class="permission-btn" id="editMoveAllLeft" title="{% trans 'Remove all' %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </button>
+                            </div>
+
+                            <!-- 已选权限列 -->
+                            <div class="permission-column">
+                                <h6>{% trans 'Chosen permissions' %}</h6>
+                                <div class="permission-search">
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="{% trans 'Search chosen permissions...' %}"
+                                           id="editChosenSearch">
+                                </div>
+                                <div class="permission-list" id="editChosenList">
+                                    <div class="text-center p-3 text-muted">
+                                        {% trans 'No permissions selected' %}
+                                    </div>
+                                </div>
+                                <div class="permission-count" id="editChosenCount">0 {% trans 'chosen' %}</div>
                             </div>
                         </div>
-                        <div class="form-text">{% trans 'Hold down "Control", or "Command" on a Mac, to select more than one.' %}</div>
+
+                        <!-- 隐藏的select用于表单提交 -->
+                        <select class="d-none" id="edit_id_permissions" name="permissions" multiple>
+                        </select>
+
+                        <div class="form-text">{% trans 'Use the arrows to move permissions between lists, or double-click to move individual items.' %}</div>
                     </div>
                 </div>
                 <div class="modal-footer d-flex justify-content-end gap-2">
@@ -822,63 +1126,275 @@
             }, 3000);
         }
 
-        // 加载权限数据
-        function loadPermissions() {
-            const permissionsSelect = document.getElementById('id_permissions');
-            const permissionsLoader = document.getElementById('permissionsLoader');
+        // 双列权限选择器类
+        class PermissionSelector {
+            constructor(prefix) {
+                this.prefix = prefix;
+                this.availableList = document.getElementById(`${prefix}AvailableList`);
+                this.chosenList = document.getElementById(`${prefix}ChosenList`);
+                this.availableSearch = document.getElementById(`${prefix}AvailableSearch`);
+                this.chosenSearch = document.getElementById(`${prefix}ChosenSearch`);
+                this.availableCount = document.getElementById(`${prefix}AvailableCount`);
+                this.chosenCount = document.getElementById(`${prefix}ChosenCount`);
+                this.hiddenSelect = document.getElementById(prefix === 'add' ? 'id_permissions' : 'edit_id_permissions');
 
-            // 显示加载器
-            permissionsLoader.classList.remove('d-none');
-            permissionsSelect.disabled = true;
+                this.moveRightBtn = document.getElementById(`${prefix}MoveRight`);
+                this.moveAllRightBtn = document.getElementById(`${prefix}MoveAllRight`);
+                this.moveLeftBtn = document.getElementById(`${prefix}MoveLeft`);
+                this.moveAllLeftBtn = document.getElementById(`${prefix}MoveAllLeft`);
 
-            // 获取当前页面的语言前缀
-            const currentPath = window.location.pathname;
-            const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+                this.allPermissions = [];
+                this.availablePermissions = [];
+                this.chosenPermissions = [];
 
-            // 发送请求获取权限数据
-            fetch(`${adminUrl.replace('/admin/', '/api/')}permissions/`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                this.initEventListeners();
+            }
+
+            initEventListeners() {
+                // 搜索功能
+                this.availableSearch.addEventListener('input', () => this.filterAvailable());
+                this.chosenSearch.addEventListener('input', () => this.filterChosen());
+
+                // 按钮事件
+                this.moveRightBtn.addEventListener('click', () => this.moveSelected('available', 'chosen'));
+                this.moveAllRightBtn.addEventListener('click', () => this.moveAll('available', 'chosen'));
+                this.moveLeftBtn.addEventListener('click', () => this.moveSelected('chosen', 'available'));
+                this.moveAllLeftBtn.addEventListener('click', () => this.moveAll('chosen', 'available'));
+
+                // 双击移动
+                this.availableList.addEventListener('dblclick', (e) => {
+                    if (e.target.classList.contains('permission-item')) {
+                        this.moveItem(e.target, 'available', 'chosen');
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // 清空现有选项
-                        permissionsSelect.innerHTML = '';
-
-                        // 添加权限选项
-                        data.permissions.forEach(permission => {
-                            const option = document.createElement('option');
-                            option.value = permission.id;
-                            option.textContent = permission.name;
-                            permissionsSelect.appendChild(option);
-                        });
-
-                        console.log(`Loaded ${data.permissions.length} permissions`);
-                    } else {
-                        throw new Error(data.message || 'Failed to load permissions');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading permissions:', error);
-                    permissionsSelect.innerHTML = '<option disabled>{% trans "Error loading permissions" %}</option>';
-                    showToast('danger', '{% trans "Failed to load permissions" %}');
-                })
-                .finally(() => {
-                    // 隐藏加载器
-                    permissionsLoader.classList.add('d-none');
-                    permissionsSelect.disabled = false;
                 });
+
+                this.chosenList.addEventListener('dblclick', (e) => {
+                    if (e.target.classList.contains('permission-item')) {
+                        this.moveItem(e.target, 'chosen', 'available');
+                    }
+                });
+
+                // 点击选择
+                this.availableList.addEventListener('click', (e) => this.handleItemClick(e, 'available'));
+                this.chosenList.addEventListener('click', (e) => this.handleItemClick(e, 'chosen'));
+            }
+
+            loadPermissions() {
+                // 显示加载状态
+                this.availableList.innerHTML = `
+                    <div class="text-center p-3 text-muted">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">{% trans 'Loading...' %}</span>
+                        </div>
+                        <div class="mt-2">{% trans 'Loading permissions...' %}</div>
+                    </div>
+                `;
+
+                // 获取当前页面的语言前缀
+                const currentPath = window.location.pathname;
+                const adminUrl = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+
+                return fetch(`${adminUrl.replace('/admin/', '/api/')}permissions/`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            this.allPermissions = data.permissions;
+                            this.availablePermissions = [...data.permissions];
+                            this.chosenPermissions = [];
+                            this.renderLists();
+                            console.log(`Loaded ${data.permissions.length} permissions for ${this.prefix} selector`);
+                        } else {
+                            throw new Error(data.message || 'Failed to load permissions');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading permissions:', error);
+                        this.availableList.innerHTML = `
+                            <div class="text-center p-3 text-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div class="mt-2">{% trans "Error loading permissions" %}</div>
+                            </div>
+                        `;
+                        showToast('danger', '{% trans "Failed to load permissions" %}');
+                    });
+            }
+
+            setChosenPermissions(permissionIds) {
+                // 重置权限分配
+                this.availablePermissions = [...this.allPermissions];
+                this.chosenPermissions = [];
+
+                // 移动指定权限到已选列表
+                if (permissionIds && permissionIds.length > 0) {
+                    permissionIds.forEach(id => {
+                        const permission = this.availablePermissions.find(p => p.id === id);
+                        if (permission) {
+                            this.chosenPermissions.push(permission);
+                            this.availablePermissions = this.availablePermissions.filter(p => p.id !== id);
+                        }
+                    });
+                }
+
+                this.renderLists();
+            }
+
+            renderLists() {
+                this.renderAvailable();
+                this.renderChosen();
+                this.updateCounts();
+                this.updateHiddenSelect();
+                this.updateButtons();
+            }
+
+            renderAvailable() {
+                const searchTerm = this.availableSearch.value.toLowerCase();
+                const filtered = this.availablePermissions.filter(p =>
+                    p.name.toLowerCase().includes(searchTerm)
+                );
+
+                if (filtered.length === 0) {
+                    this.availableList.innerHTML = `
+                        <div class="text-center p-3 text-muted">
+                            ${searchTerm ? '{% trans "No matching permissions" %}' : '{% trans "All permissions selected" %}'}
+                        </div>
+                    `;
+                } else {
+                    this.availableList.innerHTML = filtered.map(permission => `
+                        <div class="permission-item" data-id="${permission.id}" title="${permission.name}">
+                            ${permission.name}
+                        </div>
+                    `).join('');
+                }
+            }
+
+            renderChosen() {
+                const searchTerm = this.chosenSearch.value.toLowerCase();
+                const filtered = this.chosenPermissions.filter(p =>
+                    p.name.toLowerCase().includes(searchTerm)
+                );
+
+                if (filtered.length === 0) {
+                    this.chosenList.innerHTML = `
+                        <div class="text-center p-3 text-muted">
+                            ${searchTerm ? '{% trans "No matching permissions" %}' : '{% trans "No permissions selected" %}'}
+                        </div>
+                    `;
+                } else {
+                    this.chosenList.innerHTML = filtered.map(permission => `
+                        <div class="permission-item" data-id="${permission.id}" title="${permission.name}">
+                            ${permission.name}
+                        </div>
+                    `).join('');
+                }
+            }
+
+            updateCounts() {
+                this.availableCount.textContent = `${this.availablePermissions.length} {% trans 'available' %}`;
+                this.chosenCount.textContent = `${this.chosenPermissions.length} {% trans 'chosen' %}`;
+            }
+
+            updateHiddenSelect() {
+                this.hiddenSelect.innerHTML = '';
+                this.chosenPermissions.forEach(permission => {
+                    const option = document.createElement('option');
+                    option.value = permission.id;
+                    option.selected = true;
+                    this.hiddenSelect.appendChild(option);
+                });
+            }
+
+            updateButtons() {
+                const hasAvailableSelected = this.availableList.querySelector('.permission-item.selected');
+                const hasChosenSelected = this.chosenList.querySelector('.permission-item.selected');
+
+                this.moveRightBtn.disabled = !hasAvailableSelected;
+                this.moveLeftBtn.disabled = !hasChosenSelected;
+                this.moveAllRightBtn.disabled = this.availablePermissions.length === 0;
+                this.moveAllLeftBtn.disabled = this.chosenPermissions.length === 0;
+            }
+
+            handleItemClick(e, listType) {
+                if (e.target.classList.contains('permission-item')) {
+                    // 清除同一列表中其他项的选中状态
+                    const list = listType === 'available' ? this.availableList : this.chosenList;
+                    list.querySelectorAll('.permission-item').forEach(item => {
+                        if (item !== e.target) {
+                            item.classList.remove('selected');
+                        }
+                    });
+
+                    // 切换当前项的选中状态
+                    e.target.classList.toggle('selected');
+                    this.updateButtons();
+                }
+            }
+
+            moveSelected(fromType, toType) {
+                const fromList = fromType === 'available' ? this.availableList : this.chosenList;
+                const selectedItems = fromList.querySelectorAll('.permission-item.selected');
+
+                selectedItems.forEach(item => {
+                    this.moveItem(item, fromType, toType);
+                });
+            }
+
+            moveAll(fromType, toType) {
+                const fromPermissions = fromType === 'available' ? this.availablePermissions : this.chosenPermissions;
+                const toPermissions = toType === 'available' ? this.availablePermissions : this.chosenPermissions;
+
+                // 移动所有权限
+                toPermissions.push(...fromPermissions);
+                fromPermissions.length = 0;
+
+                this.renderLists();
+            }
+
+            moveItem(item, fromType, toType) {
+                const permissionId = parseInt(item.dataset.id);
+                const fromPermissions = fromType === 'available' ? this.availablePermissions : this.chosenPermissions;
+                const toPermissions = toType === 'available' ? this.availablePermissions : this.chosenPermissions;
+
+                const permissionIndex = fromPermissions.findIndex(p => p.id === permissionId);
+                if (permissionIndex !== -1) {
+                    const permission = fromPermissions.splice(permissionIndex, 1)[0];
+                    toPermissions.push(permission);
+                    this.renderLists();
+                }
+            }
+
+            filterAvailable() {
+                this.renderAvailable();
+            }
+
+            filterChosen() {
+                this.renderChosen();
+            }
         }
+
+        // 创建权限选择器实例
+        let addPermissionSelector, editPermissionSelector;
 
         // 处理添加用户组模态框
         const addGroupModal = document.getElementById('addGroupModal');
         if (addGroupModal) {
             addGroupModal.addEventListener('show.bs.modal', function() {
-                // 模态框显示时加载权限数据
-                loadPermissions();
+                if (!addPermissionSelector) {
+                    addPermissionSelector = new PermissionSelector('add');
+                }
+                addPermissionSelector.loadPermissions();
+            });
+
+            addGroupModal.addEventListener('hidden.bs.modal', function() {
+                // 重置表单
+                document.getElementById('addGroupForm').reset();
+                if (addPermissionSelector) {
+                    addPermissionSelector.setChosenPermissions([]);
+                }
             });
         }
 
@@ -955,41 +1471,24 @@
             const modal = new bootstrap.Modal(editGroupModal);
             modal.show();
 
+            // 初始化编辑权限选择器
+            if (!editPermissionSelector) {
+                editPermissionSelector = new PermissionSelector('edit');
+            }
+
             // 加载权限数据和用户组数据
             Promise.all([
-                fetch(`${adminUrl.replace('/admin/', '/api/')}permissions/`).then(response => response.json()),
+                editPermissionSelector.loadPermissions(),
                 fetch(`${adminUrl.replace('/admin/', '/api/')}groups/${groupId}/json/`).then(response => response.json())
             ])
-            .then(([permissionsData, groupData]) => {
-                if (permissionsData.success) {
-                    // 填充权限选择框
-                    const permissionsSelect = document.getElementById('edit_id_permissions');
-                    permissionsSelect.innerHTML = '';
+            .then(([_, groupData]) => {
+                // 填充用户组数据
+                document.getElementById('edit_id_name').value = groupData.name;
 
-                    permissionsData.permissions.forEach(permission => {
-                        const option = document.createElement('option');
-                        option.value = permission.id;
-                        option.textContent = permission.name;
-                        permissionsSelect.appendChild(option);
-                    });
+                // 预选已配置的权限
+                editPermissionSelector.setChosenPermissions(groupData.permissions || []);
 
-                    // 填充用户组数据
-                    document.getElementById('edit_id_name').value = groupData.name;
-
-                    // 预选已配置的权限
-                    if (groupData.permissions && groupData.permissions.length > 0) {
-                        groupData.permissions.forEach(permissionId => {
-                            const option = permissionsSelect.querySelector(`option[value="${permissionId}"]`);
-                            if (option) {
-                                option.selected = true;
-                            }
-                        });
-                    }
-
-                    console.log(`Loaded group data for editing: ${groupData.name}, permissions: ${groupData.permissions.length}`);
-                } else {
-                    throw new Error(permissionsData.message || 'Failed to load permissions');
-                }
+                console.log(`Loaded group data for editing: ${groupData.name}, permissions: ${groupData.permissions ? groupData.permissions.length : 0}`);
             })
             .catch(error => {
                 console.error('Error loading group data for edit:', error);

@@ -61,7 +61,11 @@
             </td>
             <td>
               {% if action.action_flag == 1 %}
-                {% trans 'Initial creation' %}
+                {% if action.change_message %}
+                  {{ action.change_message }}
+                {% else %}
+                  {% trans 'Initial creation' %}
+                {% endif %}
               {% elif action.action_flag == 2 %}
                 <div class="history-details">
                   <ul>

@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from .models import Game, Category
 import logging
 import traceback
@@ -853,6 +854,20 @@ def add_group_modal(request):
 
         logger.info(f"Group created successfully: {group.name} (ID: {group.id})")
 
+        # 创建Django admin历史记录
+        try:
+            LogEntry.objects.create(
+                user_id=request.user.pk,
+                content_type_id=ContentType.objects.get_for_model(Group).pk,
+                object_id=group.pk,
+                object_repr=str(group),
+                action_flag=ADDITION,
+                change_message=_('Added group via modal form.')
+            )
+            logger.info(f"Created admin log entry for group addition: {group.name}")
+        except Exception as log_error:
+            logger.warning(f"Failed to create admin log entry for group {group.name}: {log_error}")
+
         # 如果是AJAX请求，返回JSON响应
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
@@ -951,6 +966,11 @@ def edit_group_modal(request, group_id):
                 'message': _('A group with this name already exists')
             }, status=400)
 
+        # 记录原始数据用于变更消息
+        original_name = group.name
+        original_permissions = set(group.permissions.all())
+        original_permissions_count = len(original_permissions)
+
         # 更新用户组信息
         group.name = name
         group.save()
@@ -966,6 +986,57 @@ def edit_group_modal(request, group_id):
             logger.info(f"Cleared all permissions for group: {group.name}")
 
         logger.info(f"Group updated successfully: {group.name} (ID: {group.id})")
+
+        # 创建Django admin历史记录
+        try:
+            # 获取更新后的权限
+            new_permissions = set(group.permissions.all())
+            new_permissions_count = len(new_permissions)
+
+            # 构建变更消息
+            changes = []
+
+            # 记录名称变更
+            if original_name != name:
+                changes.append(f"Name: '{original_name}' → '{name}'")
+
+            # 记录权限变更详情
+            if original_permissions != new_permissions:
+                # 计算添加和移除的权限
+                added_permissions = new_permissions - original_permissions
+                removed_permissions = original_permissions - new_permissions
+
+                # 记录添加的权限
+                if added_permissions:
+                    added_names = [perm.name for perm in added_permissions]
+                    added_names.sort()  # 排序以保持一致性
+                    changes.append(_('Added permissions: [{}]').format(', '.join(added_names)))
+
+                # 记录移除的权限
+                if removed_permissions:
+                    removed_names = [perm.name for perm in removed_permissions]
+                    removed_names.sort()  # 排序以保持一致性
+                    changes.append(_('Removed permissions: [{}]').format(', '.join(removed_names)))
+
+                # 记录权限数量变化
+                if original_permissions_count != new_permissions_count:
+                    changes.append(_('Permissions count: {} → {}').format(original_permissions_count, new_permissions_count))
+
+            change_message = _('Changed group via modal form.')
+            if changes:
+                change_message += f" {_('Changes')}: {'; '.join(changes)}"
+
+            LogEntry.objects.create(
+                user_id=request.user.pk,
+                content_type_id=ContentType.objects.get_for_model(Group).pk,
+                object_id=group.pk,
+                object_repr=str(group),
+                action_flag=CHANGE,
+                change_message=change_message
+            )
+            logger.info(f"Created admin log entry for group update: {group.name}")
+        except Exception as log_error:
+            logger.warning(f"Failed to create admin log entry for group {group.name}: {log_error}")
 
         # 如果是AJAX请求，返回JSON响应
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
