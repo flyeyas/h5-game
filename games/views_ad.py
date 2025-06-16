@@ -12,7 +12,7 @@ import json
 @csrf_exempt
 def ad_click(request, ad_id):
     """
-    记录广告点击
+    Record advertisement click
     """
     try:
         ad = Advertisement.objects.get(id=ad_id)
@@ -27,7 +27,7 @@ def ad_click(request, ad_id):
 @csrf_exempt
 def ad_view(request, ad_id):
     """
-    记录广告展示
+    Record advertisement view
     """
     try:
         ad = Advertisement.objects.get(id=ad_id)
@@ -41,13 +41,13 @@ def ad_view(request, ad_id):
 @require_GET
 def ad_statistics(request):
     """
-    获取广告统计数据
+    Get advertisement statistics data
     """
     try:
-        # 获取活跃广告数量
+        # Get active advertisement count
         active_ads = Advertisement.objects.filter(is_active=True).count()
 
-        # 获取总统计数据
+        # Get total statistics data
         total_stats = Advertisement.objects.aggregate(
             total_views=Sum('view_count'),
             total_clicks=Sum('click_count'),
@@ -55,10 +55,10 @@ def ad_statistics(request):
             avg_ctr=Avg('ctr')
         )
 
-        # 获取本月数据（这里简化处理，实际应该根据时间范围过滤）
+        # Get current month data (simplified here, should filter by time range in practice)
         current_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        # 按位置统计
+        # Statistics by position
         position_stats = []
         for position_code, position_name in Advertisement.POSITION_CHOICES:
             ads_in_position = Advertisement.objects.filter(position=position_code, is_active=True)
@@ -94,18 +94,18 @@ def ad_statistics(request):
 @require_GET
 def revenue_reports(request):
     """
-    获取Revenue Reports数据，支持时间段筛选
+    Get Revenue Reports data with time period filtering support
     """
     try:
-        # 获取时间段参数
+        # Get time period parameters
         period = request.GET.get('period', 'today')
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
 
-        # 计算时间范围
+        # Calculate time range
         now = timezone.now()
 
-        # 如果提供了自定义日期范围
+        # If custom date range is provided
         if start_date_str and end_date_str:
             try:
                 from datetime import datetime
@@ -137,14 +137,14 @@ def revenue_reports(request):
             start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             end_date = now
         else:
-            # 默认为今天
+            # Default to today
             start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
             end_date = now
 
-        # 由于我们的模型没有时间戳字段来过滤广告数据，我们需要模拟一些数据
-        # 在实际项目中，您需要添加一个AdStatistics模型来记录每日的统计数据
+        # Since our model doesn't have timestamp fields to filter ad data, we need to simulate some data
+        # In a real project, you would need to add an AdStatistics model to record daily statistics
 
-        # 模拟不同时间段的数据
+        # Simulate data for different time periods
         mock_data = {
             'today': {
                 'revenue': 45.67,
@@ -183,13 +183,13 @@ def revenue_reports(request):
             }
         }
 
-        # 获取对应时间段的数据
+        # Get data for corresponding time period
         data = mock_data.get(period, mock_data['today'])
 
-        # 如果是自定义日期范围，根据日期范围计算模拟数据
+        # If it's a custom date range, calculate simulated data based on date range
         if period == 'custom' and start_date and end_date:
             days_diff = (end_date.date() - start_date.date()).days + 1
-            # 基于天数计算模拟数据
+            # Calculate simulated data based on number of days
             daily_avg_revenue = 45.67
             daily_avg_views = 1234
             daily_avg_clicks = 89
@@ -202,8 +202,8 @@ def revenue_reports(request):
                 'change': f'+{round(days_diff * 2.5, 1)}%'
             }
 
-        # 在实际项目中，这里应该是真实的数据库查询
-        # 例如：
+        # In a real project, this should be actual database queries
+        # For example:
         # ads_in_period = Advertisement.objects.filter(
         #     created_at__gte=start_date,
         #     created_at__lte=end_date,

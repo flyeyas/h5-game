@@ -98,7 +98,7 @@
 
 {% block extra_css %}
 <style>
-    /* 游戏列表页面头部样式 */
+    /* Game list page header styles */
     .games-header {
         background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
         color: white;
@@ -126,7 +126,7 @@
         z-index: 1;
     }
 
-    /* 游戏卡片样式 - 基于原型设计 */
+    /* Game card styles - based on prototype design */
     .game-card {
         border-radius: 10px;
         overflow: hidden;
@@ -313,7 +313,7 @@
 {% endblock %}
 
 {% block hero %}
-<!-- 游戏列表页面头部 -->
+<!-- Game list page header -->
 <section class="games-header">
     <div class="container">
         <div class="row align-items-center">
@@ -405,9 +405,9 @@
             </div>
         </div>
 
-        <!-- 右侧游戏列表 -->
+        <!-- Right side game list -->
         <div class="col-md-9">
-        <!-- 游戏列表上方广告 -->
+        <!-- Advertisement above game list -->
         {% if game_between_ads %}
         <div class="ad-banner mb-4">
             {% for ad in game_between_ads %}
@@ -428,7 +428,7 @@
             {% endfor %}
         </div>
         {% endif %}
-            <!-- 游戏列表控制区域 -->
+            <!-- Game list control area -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4>
                     {% if current_category %}
@@ -460,7 +460,7 @@
         </div>
         {% endif %}
         
-            <!-- 游戏列表 -->
+            <!-- Game list -->
             {% if games %}
             <div class="row">
                 {% for game in games %}
@@ -576,7 +576,7 @@
         </div>
         {% endif %}
         
-        <!-- 游戏列表底部广告 -->
+        <!-- Advertisement below game list -->
         {% if game_between_ads %}
         <div class="ad-banner mt-4 mb-4">
             {% for ad in game_between_ads %}
@@ -666,7 +666,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 游戏卡片悬停效果
+    // Game card hover effects
     const gameCards = document.querySelectorAll('.game-card');
     gameCards.forEach(card => {
         card.addEventListener('mouseenter', function() {

@@ -25,21 +25,21 @@ class GameAdmin(admin.ModelAdmin):
 
     def categories(self, obj):
         return ", ".join([c.name for c in obj.categories.all()])
-    categories.short_description = _('分类')
+    categories.short_description = _('Categories')
 
     def changelist_view(self, request, extra_context=None):
         """
-        自定义游戏列表视图，添加额外的上下文数据
+        Custom game list view, add additional context data
         """
         extra_context = extra_context or {}
 
-        # 添加分类列表用于筛选下拉菜单
+        # Add category list for filter dropdown menu
         extra_context['categories'] = Category.objects.filter(is_active=True)
 
-        # 获取游戏数据
+        # Get game data
         queryset = self.get_queryset(request)
 
-        # 应用筛选
+        # Apply filters
         if request.GET.get('category__id__exact'):
             category_id = request.GET.get('category__id__exact')
             queryset = queryset.filter(categories__id=category_id)
@@ -52,12 +52,12 @@ class GameAdmin(admin.ModelAdmin):
             is_featured = request.GET.get('is_featured__exact') == '1'
             queryset = queryset.filter(is_featured=is_featured)
 
-        # 应用搜索
+        # Apply search
         search_term = request.GET.get('q')
         if search_term:
             queryset = queryset.filter(title__icontains=search_term)
 
-        # 应用排序
+        # Apply sorting
         ordering = request.GET.get('o')
         if ordering == '1':
             queryset = queryset.order_by('-created_at')
@@ -93,12 +93,12 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'parent', 'is_active', 'display_icon')
     list_filter = ('is_active', 'parent')
     search_fields = ('name', 'description')
-    # 移除prepopulated_fields，因为我们现在使用自动生成
+    # Remove prepopulated_fields since we now use auto-generation
     # prepopulated_fields = {'slug': ('name',)}
     change_list_template = 'admin/games/category/change_list.html'
-    list_per_page = 5  # 每页显示5条记录，便于测试分页功能
-    ordering = ['id']  # 按ID升序排列
-    readonly_fields = ('slug',)  # 将slug设为只读
+    list_per_page = 5  # Display 5 records per page for testing pagination
+    ordering = ['id']  # Sort by ID in ascending order
+    readonly_fields = ('slug',)  # Set slug as read-only
     fieldsets = (
         (None, {
             'fields': ('name', 'slug', 'description', 'parent', 'is_active')
@@ -117,11 +117,11 @@ class CategoryAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         """
-        自定义分类列表视图，处理分页参数转换
+        Custom category list view, handle pagination parameter conversion
         """
-        # 处理分页参数转换：将 page 参数转换为 Django admin 标准的 p 参数
+        # Handle pagination parameter conversion: convert page parameter to Django admin standard p parameter
         if 'page' in request.GET and 'p' not in request.GET:
-            # 创建一个新的 QueryDict 来修改参数
+            # Create a new QueryDict to modify parameters
             get_params = request.GET.copy()
             get_params['p'] = get_params.pop('page')[0]
             request.GET = get_params
@@ -129,7 +129,7 @@ class CategoryAdmin(admin.ModelAdmin):
         return super().changelist_view(request, extra_context)
 
     def get_urls(self):
-        """添加自定义URL"""
+        """Add custom URLs"""
         from django.urls import path
         from .views_admin import toggle_category_status
         urls = super().get_urls()
@@ -147,7 +147,7 @@ class AdvertisementAdmin(admin.ModelAdmin):
     date_hierarchy = 'start_date'
     change_list_template = 'admin/games/advertisement/change_list.html'
     change_form_template = 'admin/games/advertisement/change_form.html'
-    list_per_page = 5  # 每页显示5条记录，便于测试分页功能
+    list_per_page = 5  # Display 5 records per page for testing pagination
 
     def get_queryset(self, request):
         """确保使用正确的查询集"""
@@ -193,12 +193,12 @@ class AdvertisementAdmin(admin.ModelAdmin):
     
     def changelist_view(self, request, extra_context=None):
         """
-        自定义广告列表视图，添加额外的上下文数据
+        Custom advertisement list view, add additional context data
         """
-        # 检查 Google AdSense 连接状态
+        # Check Google AdSense connection status
         adsense_status = self.check_adsense_connection()
 
-        # 准备额外的上下文数据
+        # Prepare additional context data
         if extra_context is None:
             extra_context = {}
 
@@ -209,17 +209,17 @@ class AdvertisementAdmin(admin.ModelAdmin):
             'valid_ads_count': adsense_status['valid_ads_count'],
         })
 
-        # 调用父类方法获取标准的changelist视图
+        # Call parent method to get standard changelist view
         return super().changelist_view(request, extra_context)
 
     def check_adsense_connection(self):
         """
-        检查 Google AdSense 连接状态
+        Check Google AdSense connection status
         """
-        # 获取所有广告单元
+        # Get all advertisement units
         all_ads = Advertisement.objects.all()
 
-        # 查找有效的 AdSense Publisher ID
+        # Find valid AdSense Publisher IDs
         valid_publisher_ids = []
         valid_ads_count = 0
 
@@ -228,18 +228,18 @@ class AdvertisementAdmin(admin.ModelAdmin):
                 ad.adsense_publisher_id != 'ca-pub-XXXXXXXXXXXXXXXX' and
                 ad.adsense_publisher_id.strip() != '' and
                 'ca-pub-' in ad.adsense_publisher_id and
-                not 'XXXX' in ad.adsense_publisher_id and  # 排除包含 XXXX 的占位符
-                len(ad.adsense_publisher_id) > 15):  # 确保是完整的 Publisher ID
+                not 'XXXX' in ad.adsense_publisher_id and  # Exclude placeholders containing XXXX
+                len(ad.adsense_publisher_id) > 15):  # Ensure it's a complete Publisher ID
 
                 if ad.adsense_publisher_id not in valid_publisher_ids:
                     valid_publisher_ids.append(ad.adsense_publisher_id)
                 valid_ads_count += 1
 
-        # 判断连接状态
+        # Determine connection status
         if valid_publisher_ids:
             return {
                 'connected': True,
-                'publisher_id': valid_publisher_ids[0],  # 使用第一个有效的 Publisher ID
+                'publisher_id': valid_publisher_ids[0],  # Use the first valid Publisher ID
                 'message': _('Your Google AdSense account is successfully connected. You can manage ad units, view revenue data, and optimize ad display performance.'),
                 'valid_ads_count': valid_ads_count,
             }
@@ -252,7 +252,7 @@ class AdvertisementAdmin(admin.ModelAdmin):
             }
 
     def get_urls(self):
-        """添加自定义URL"""
+        """Add custom URLs"""
         from django.urls import path
         urls = super().get_urls()
         custom_urls = [
@@ -262,13 +262,13 @@ class AdvertisementAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def update_adsense_settings(self, request):
-        """更新 AdSense 设置"""
+        """Update AdSense settings"""
         if request.method == 'POST':
             try:
                 global_publisher_id = request.POST.get('global_publisher_id', '').strip()
                 update_existing = request.POST.get('update_existing') == 'on'
 
-                # 验证 Publisher ID 格式
+                # Validate Publisher ID format
                 if global_publisher_id and not self.validate_publisher_id(global_publisher_id):
                     return JsonResponse({
                         'success': False,
@@ -278,7 +278,7 @@ class AdvertisementAdmin(admin.ModelAdmin):
                 updated_count = 0
 
                 if update_existing and global_publisher_id:
-                    # 更新所有现有的广告单元
+                    # Update all existing advertisement units
                     ads_to_update = Advertisement.objects.all()
                     for ad in ads_to_update:
                         ad.adsense_publisher_id = global_publisher_id
@@ -299,7 +299,7 @@ class AdvertisementAdmin(admin.ModelAdmin):
         return JsonResponse({'success': False, 'message': _('Invalid request method.')})
 
     def verify_adsense_connection(self, request):
-        """验证 AdSense 连接"""
+        """Verify AdSense connection"""
         if request.method == 'POST':
             try:
                 import json
@@ -308,7 +308,7 @@ class AdvertisementAdmin(admin.ModelAdmin):
                 data = json.loads(request.body)
                 publisher_id = data.get('publisher_id', '').strip()
 
-                # 使用真实的AdSense API进行验证
+                # Use real AdSense API for verification
                 success, verification_result = adsense_service.verify_publisher_id(publisher_id)
 
                 return JsonResponse(verification_result)
@@ -320,7 +320,7 @@ class AdvertisementAdmin(admin.ModelAdmin):
                     'message': _('Invalid JSON data.')
                 })
             except Exception as e:
-                # 记录详细错误信息
+                # Log detailed error information
                 import logging
                 logger = logging.getLogger('games')
                 logger.error(f'AdSense verification error: {e}', exc_info=True)
@@ -340,12 +340,12 @@ class AdvertisementAdmin(admin.ModelAdmin):
 
 
     def validate_publisher_id(self, publisher_id):
-        """验证 Publisher ID 格式"""
+        """Validate Publisher ID format"""
         from .adsense_api import adsense_service
         return adsense_service.validate_publisher_id_format(publisher_id)
 
 
-# 自定义AdminSite类，添加统计数据到首页
+# Custom AdminSite class, add statistics data to homepage
 class CustomAdminSite(AdminSite):
     site_header = _('HTML5 Games Administration')
     site_title = _('HTML5 Games Admin')
@@ -353,11 +353,11 @@ class CustomAdminSite(AdminSite):
 
     def index(self, request, extra_context=None):
         """
-        自定义admin首页，添加统计数据
+        Custom admin homepage, add statistics data
         """
         extra_context = extra_context or {}
 
-        # 获取统计数据
+        # Get statistics data
         try:
             extra_context.update({
                 'total_users': User.objects.count(),
@@ -366,7 +366,7 @@ class CustomAdminSite(AdminSite):
                 'total_ads': Advertisement.objects.count(),
             })
         except Exception:
-            # 如果数据库还没有创建表，使用默认值
+            # If database tables haven't been created yet, use default values
             extra_context.update({
                 'total_users': 0,
                 'total_games': 0,
@@ -377,56 +377,56 @@ class CustomAdminSite(AdminSite):
         return super().index(request, extra_context)
 
 
-# 自定义UserAdmin，设置每页显示10条记录
+# Custom UserAdmin, set 10 records per page
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 class CustomUserAdmin(BaseUserAdmin):
-    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'is_active')  # 在username前添加id列
-    list_per_page = 10  # 设置每页显示10条记录
-    ordering = ['id']  # 按ID正序排列
+    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'is_active')  # Add id column before username
+    list_per_page = 10  # Set 10 records per page
+    ordering = ['id']  # Sort by ID in ascending order
     change_list_template = 'admin/auth/user/change_list.html'
 
     def has_delete_permission(self, request, obj=None):
         """
-        控制删除权限，禁止删除ID为1的用户
+        Control delete permission, prohibit deleting user with ID=1
         """
-        # 如果是ID为1的用户，禁止删除
+        # If it's user with ID=1, prohibit deletion
         if obj and obj.id == 1:
             return False
-        # 其他情况使用默认权限检查
+        # Otherwise use default permission check
         return super().has_delete_permission(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
         """
-        为ID为1的用户设置只读字段，防止修改关键状态
+        Set readonly fields for user with ID=1, prevent modifying critical status
         """
         readonly_fields = list(super().get_readonly_fields(request, obj))
 
-        # 如果是ID为1的用户，将关键字段设为只读
+        # If it's user with ID=1, set critical fields as readonly
         if obj and obj.id == 1:
             readonly_fields.extend(['is_staff', 'is_superuser', 'is_active'])
 
         return readonly_fields
 
-# 自定义GroupAdmin，设置每页显示10条记录
+# Custom GroupAdmin, set 10 records per page
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 class CustomGroupAdmin(BaseGroupAdmin):
-    list_per_page = 10  # 设置每页显示10条记录
-    ordering = ['id']  # 按ID正序排列
+    list_per_page = 10  # Set 10 records per page
+    ordering = ['id']  # Sort by ID in ascending order
     change_list_template = 'admin/auth/group/change_list.html'
 
 
-# 创建自定义admin站点实例
+# Create custom admin site instance
 admin_site = CustomAdminSite(name='custom_admin')
 
-# 重新注册所有模型到自定义admin站点
+# Re-register all models to custom admin site
 admin_site.register(Game, GameAdmin)
 admin_site.register(Category, CategoryAdmin)
 admin_site.register(Advertisement, AdvertisementAdmin)
 
-# 注册Django内置模型
+# Register Django built-in models
 from django.contrib.auth.models import User, Group
-admin_site.register(User, CustomUserAdmin)  # 使用自定义的UserAdmin
-admin_site.register(Group, CustomGroupAdmin)  # 使用自定义的GroupAdmin
+admin_site.register(User, CustomUserAdmin)  # Use custom UserAdmin
+admin_site.register(Group, CustomGroupAdmin)  # Use custom GroupAdmin
 
 
 

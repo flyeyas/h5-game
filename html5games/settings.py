@@ -42,26 +42,26 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     'django.contrib.humanize',
 
-    # 第三方应用
+    # Third-party applications
     'crispy_forms',
     'crispy_bootstrap5',
     'django_bootstrap5',
     'django_countries',
 
-    # 自定义应用
+    # Custom applications
     'games',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',  # 多语言支持
+    'django.middleware.locale.LocaleMiddleware',  # Multi-language support
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 自定义中间件
+    # Custom middleware
     'games.middleware.BrowserLanguageDetectionMiddleware',
 ]
 
@@ -137,7 +137,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-# 多语言设置
+# Multi-language settings
 LANGUAGES = [
     ('en', 'English'),
     ('zh', '中文'),
@@ -226,31 +226,31 @@ LOGGING = {
 if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
     os.makedirs(os.path.join(BASE_DIR, 'logs'))
 
-# Google AdSense API 配置
-# 获取这些值的步骤：
-# 1. 访问 Google Cloud Console (https://console.cloud.google.com/)
-# 2. 创建新项目或选择现有项目
-# 3. 启用 AdSense Management API
-# 4. 创建服务账户并下载JSON密钥文件
-# 5. 将JSON文件路径设置为 CREDENTIALS_FILE
+# Google AdSense API Configuration
+# Steps to get these values:
+# 1. Visit Google Cloud Console (https://console.cloud.google.com/)
+# 2. Create a new project or select an existing project
+# 3. Enable AdSense Management API
+# 4. Create a service account and download JSON key file
+# 5. Set the JSON file path as CREDENTIALS_FILE
 
 GOOGLE_ADSENSE_API_CONFIG = {
-    # Google服务账户JSON密钥文件路径
-    # 请将此路径替换为您的实际服务账户密钥文件路径
+    # Google service account JSON key file path
+    # Please replace this path with your actual service account key file path
     'CREDENTIALS_FILE': 'path/to/your/service-account-key.json',
 
-    # Google AdSense API配置
+    # Google AdSense API configuration
     'API_VERSION': 'v2',
     'SCOPES': [
         'https://www.googleapis.com/auth/adsense.readonly'
     ],
 
-    # API缓存设置（秒）
-    'CACHE_TIMEOUT': 300,  # 5分钟
+    # API cache settings (seconds)
+    'CACHE_TIMEOUT': 300,  # 5 minutes
 
-    # API请求限制
-    'QUOTA_USER': 'html5games-app',  # 您的应用名称
-    'REQUEST_TIMEOUT': 30,  # 30秒
+    # API request limits
+    'QUOTA_USER': 'html5games-app',  # Your application name
+    'REQUEST_TIMEOUT': 30,  # 30 seconds
 
     # 日志设置
     'LOG_LEVEL': 'INFO',

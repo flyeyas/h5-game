@@ -43,36 +43,36 @@ urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 ]
 
-# 国际化URL
+# Internationalization URLs
 urlpatterns += i18n_patterns(
-    # 自定义登出视图，支持GET方法
+    # Custom logout view that supports GET method
     path('admin/logout/', games_views.custom_logout, name='custom_logout'),
-    # 游戏编辑API - 使用api前缀避免被admin捕获
+    # Game edit API - use api prefix to avoid being captured by admin
     path('api/games/<int:game_id>/edit-json/', game_edit_json, name='game_edit_json'),
-    # 游戏状态切换API
+    # Game status toggle API
     path('api/games/<int:game_id>/toggle-status/', toggle_game_status, name='toggle_game_status'),
-    # 用户添加模态框API
+    # User add modal API
     path('api/users/add-modal/', add_user_modal, name='add_user_modal'),
-    # 用户状态切换API
+    # User status toggle API
     path('api/users/<int:user_id>/toggle-staff/', toggle_user_staff, name='toggle_user_staff'),
     path('api/users/<int:user_id>/toggle-superuser/', toggle_user_superuser, name='toggle_user_superuser'),
     path('api/users/<int:user_id>/toggle-active/', toggle_user_active, name='toggle_user_active'),
-    # 用户组管理API
+    # User group management API
     path('api/permissions/', get_permissions_api, name='get_permissions_api'),
     path('api/groups/add-modal/', add_group_modal, name='add_group_modal'),
     path('api/groups/<int:group_id>/json/', get_group_data, name='get_group_data'),
     path('api/groups/<int:group_id>/edit/', edit_group_modal, name='edit_group_modal'),
-    # 使用自定义admin站点 (基于Django admin二次开发)
+    # Use custom admin site (based on Django admin secondary development)
     path('admin/', admin_site.urls),
-    # 保留Django默认admin作为备用
+    # Keep Django default admin as backup
     path('django-admin/', admin.site.urls),
-    # 游戏应用URL
+    # Game application URLs
     path('', include('games.urls')),
-    # 添加语言后缀
+    # Add language suffix
     prefix_default_language=True
 )
 
-# 开发环境下的媒体文件服务
+# Media file service in development environment
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

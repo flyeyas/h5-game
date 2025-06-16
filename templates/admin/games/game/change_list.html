@@ -5,10 +5,10 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<!-- SimpleMDE Markdown 编辑器 CSS -->
+<!-- SimpleMDE Markdown Editor CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
 <style>
-        /* 游戏管理页面特定样式 */
+        /* Game management page specific styles */
         .card {
             border: none;
             border-radius: 10px;
@@ -83,7 +83,7 @@
             min-width: 200px;
         }
 
-        /* 筛选按钮样式 - 使用统一的按钮系统 */
+        /* Filter button styles - using unified button system */
         .pagination {
             margin-bottom: 0;
         }
@@ -157,7 +157,7 @@
             }
         }
 
-    /* 星级评分样式 - 按原型设计 */
+    /* Star rating styles - according to prototype design */
     .rating-stars {
         display: flex;
         align-items: center;
@@ -180,7 +180,7 @@
         font-size: 0.875rem;
     }
 
-    /* 表格悬浮效果 - 按原型设计 */
+    /* Table hover effects - according to prototype design */
     .table tbody tr {
         transition: all 0.2s ease;
     }
@@ -191,7 +191,7 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    /* 模态框样式 - 按原型设计 */
+    /* Modal styles - according to prototype design */
     .modal-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #e9ecef;
@@ -217,7 +217,7 @@
         margin-top: 10px;
     }
     
-    /* 添加游戏模态框样式 */
+    /* Add game modal styles */
     #addGameModal .modal-content {
         border: none;
         border-radius: 10px;
@@ -238,7 +238,7 @@
         padding: 15px 20px;
     }
     
-    /* 表单控件样式 */
+    /* Form control styles */
     .form-control, .form-select {
         border-radius: 5px;
         border: 1px solid #dee2e6;
@@ -263,7 +263,7 @@
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
     }
     
-    /* 表单复选框和单选框样式 */
+    /* Form checkbox and radio button styles */
     .form-check-input {
         width: 1.1em;
         height: 1.1em;
@@ -275,7 +275,7 @@
         border-color: #0d6efd;
     }
     
-    /* 缩略图预览容器 */
+    /* Thumbnail preview container */
     #thumbnailPreview {
         min-height: 100px;
         border: 1px dashed #dee2e6;
@@ -296,7 +296,7 @@
         max-height: 150px;
     }
 
-    /* 添加游戏模态框样式 - 按原型设计优化 */
+    /* Add game modal styles - optimized according to prototype design */
     #addGameModal .modal-content {
         border: none;
         border-radius: 10px;
@@ -327,7 +327,7 @@
         border-top: 1px solid #e9ecef;
     }
 
-    /* 表单控件样式优化 */
+    /* Form control styles optimization */
     #addGameModal .form-label {
         font-weight: 500;
         color: #495057;
@@ -355,12 +355,12 @@
         margin-top: 0.25rem;
     }
 
-    /* 表单布局优化 */
+    /* Form layout optimization */
     #addGameModal .row {
         margin-bottom: 1rem;
     }
 
-    /* 缩略图预览优化 */
+    /* Thumbnail preview optimization */
     #addGameModal #thumbnailPreview {
         margin-top: 10px;
         background-color: #f8f9fa;
@@ -378,7 +378,7 @@
         border-radius: 5px;
     }
 
-    /* 按钮样式优化 */
+    /* Button styles optimization */
     #addGameModal .btn-primary {
         background-color: #007bff;
         border-color: #007bff;
@@ -406,7 +406,7 @@
         border-color: #545b62;
     }
 
-    /* 复选框和单选框样式优化 */
+    /* Checkbox and radio button styles optimization */
     #addGameModal .form-check {
         padding-left: 1.75rem;
         margin-bottom: 0.5rem;
@@ -421,7 +421,7 @@
         font-weight: normal;
     }
 
-    /* 下拉框样式优化 */
+    /* Dropdown styles optimization */
     #addGameModal .form-select {
         background-position: right 0.75rem center;
         background-size: 16px 12px;
@@ -867,7 +867,7 @@
     </div>
 </div>
 
-<!-- 添加游戏模态框 -->
+<!-- Add Game Modal -->
 <div class="modal fade" id="addGameModal" tabindex="-1" aria-labelledby="addGameModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1270,10 +1270,10 @@
 
 {% block extrajs %}
 {{ block.super }}
-<!-- SimpleMDE Markdown 编辑器 JavaScript -->
+<!-- SimpleMDE Markdown Editor JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
 <script>
-// 预定义翻译文本为JavaScript变量
+// Predefined translation text as JavaScript variables
 const translations = {
     inactive: "{% trans 'No' %}",
     active: "{% trans 'Yes' %}",
@@ -1312,10 +1312,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // 初始更新页脚项目数量
+    // Initial update of footer item count
     updateFooterItemCount();
-    
-    // 搜索功能
+
+    // Search functionality
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
@@ -1335,17 +1335,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             });
-            
-            // 更新页脚显示的项目数量
+
+            // Update footer item count display
             updateFooterItemCount();
         });
     }
 
-    // 更新页脚显示项目数量
+    // Update footer item count display
     const updateItemCount = function() {
         const itemCountElement = document.querySelector('.card-footer .text-muted');
         const totalItems = document.querySelectorAll('tbody tr').length;
-        
+
         if (itemCountElement) {
             itemCountElement.textContent = totalItems + ' items';
             if (totalItems === 1) {
@@ -1353,11 +1353,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     };
-    
-    // 页面加载时更新项目数量
+
+    // Update item count on page load
     updateItemCount();
 
-    // 表格行悬浮效果 - 完全按原型
+    // Table row hover effects - fully according to prototype
     const tableRows = document.querySelectorAll('tbody tr');
     tableRows.forEach(row => {
         row.addEventListener('mouseenter', function() {
@@ -1374,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 操作按钮悬浮效果 - 完全按原型
+    // Action button hover effects - fully according to prototype
     const actionButtons = document.querySelectorAll('.action-buttons .btn');
     actionButtons.forEach(btn => {
         btn.addEventListener('mouseenter', function() {
@@ -1387,72 +1387,72 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 删除确认 - 使用Bootstrap模态框替换原有的JavaScript确认对话框
+    // Delete confirmation - use Bootstrap modal to replace original JavaScript confirmation dialog
     const deleteButtons = document.querySelectorAll('.delete-game-btn');
     const deleteModal = document.getElementById('deleteGameModal');
     const deleteModalInstance = new bootstrap.Modal(deleteModal);
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const deleteGameTitle = document.getElementById('deleteGameTitle');
     
-    // 获取当前URL中的语言前缀
+    // Get language prefix from current URL
     function getLanguagePrefix() {
         const urlPath = window.location.pathname;
         const match = urlPath.match(/^\/([a-z]{2})\//);
         return match ? `/${match[1]}` : '';
     }
-    
+
     deleteButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             const gameId = this.dataset.gameId;
             const gameTitle = this.dataset.gameTitle;
-            
-            // 设置模态框内容
+
+            // Set modal content
             deleteGameTitle.textContent = gameTitle;
-            
-            // 考虑语言前缀
+
+            // Consider language prefix
             const langPrefix = getLanguagePrefix();
             confirmDeleteBtn.href = `${langPrefix}/admin/games/game/${gameId}/delete/`;
-            
-            // 显示模态框
+
+            // Show modal
             deleteModalInstance.show();
         });
     });
-    
-    // 添加确认删除按钮的动画效果
+
+    // Add animation effects for confirm delete button
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('mouseenter', function() {
             this.classList.add('btn-pulse');
         });
-        
+
         confirmDeleteBtn.addEventListener('mouseleave', function() {
             this.classList.remove('btn-pulse');
         });
     }
 
-    // 状态标签点击切换 - 完全按原型
+    // Status badge click toggle - fully according to prototype
     const statusBadges = document.querySelectorAll('.badge-status');
     statusBadges.forEach(badge => {
         badge.addEventListener('click', function() {
-            // 获取游戏ID - 需要从父级表格行获取
+            // Get game ID - need to get from parent table row
             const row = this.closest('tr');
             if (!row) return;
-            
-            // 从操作按钮中获取游戏ID
+
+            // Get game ID from action buttons
             const actionButton = row.querySelector('.delete-game-btn, .edit-game-btn, a[href*="/change/"]');
             if (!actionButton) return;
-            
+
             const gameId = actionButton.dataset.gameId || actionButton.href.match(/\/game\/(\d+)\/change\//)?.[1];
             if (!gameId) return;
-            
-            // 设置加载状态
+
+            // Set loading state
             const originalText = this.textContent;
             this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-            
-            // 获取语言前缀
+
+            // Get language prefix
             const langPrefix = getLanguagePrefix();
-            
-            // 调用API进行状态切换
+
+            // Call API for status toggle
             fetch(`${langPrefix}/api/games/${gameId}/toggle-status/`, {
                 method: 'POST',
                 headers: {
@@ -1470,7 +1470,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 if (data.success) {
-                    // 更新状态标签
+                    // Update status badge
                     if (data.is_active) {
                         this.classList.remove('badge-inactive');
                         this.classList.add('badge-active');
@@ -1481,14 +1481,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.textContent = translations.inactive;
                     }
                 } else {
-                    // 恢复原状态
+                    // Restore original state
                     this.textContent = originalText;
                     console.error('Error toggling status:', data.error);
                     alert(data.message || 'Error toggling status');
                 }
             })
             .catch(error => {
-                // 恢复原状态
+                // Restore original state
                 this.textContent = originalText;
                 console.error('Error:', error);
                 alert(error.message);
@@ -1499,7 +1499,7 @@ document.addEventListener('DOMContentLoaded', function() {
         badge.title = translations.clickToToggleStatus;
     });
 
-    // 筛选下拉菜单高亮当前选项
+    // Highlight current option in filter dropdown menu
     const currentUrl = window.location.href;
     const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item');
     dropdownItems.forEach(item => {
@@ -1508,19 +1508,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 表格排序功能
+    // Table sorting functionality
     const tableHeaders = document.querySelectorAll('th');
     tableHeaders.forEach(header => {
         if (header.textContent.trim() && !header.querySelector('input')) {
             header.style.cursor = 'pointer';
             header.addEventListener('click', function() {
-                // 简单的客户端排序示例
+                // Simple client-side sorting example
                 console.log('Sort by:', this.textContent);
             });
         }
     });
     
-    // 缩略图预览功能
+    // Thumbnail preview functionality
     const thumbnailInput = document.getElementById('id_thumbnail');
     const thumbnailPreview = document.getElementById('thumbnailPreview');
     if (thumbnailInput && thumbnailPreview) {
@@ -1538,13 +1538,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // 自动生成slug功能
+
+    // Auto-generate slug functionality
     const titleInput = document.getElementById('id_title');
     const slugInput = document.getElementById('id_slug');
     if (titleInput && slugInput) {
         titleInput.addEventListener('input', function() {
-            // 将标题转换为slug格式：小写，空格替换为连字符，移除特殊字符
+            // Convert title to slug format: lowercase, replace spaces with hyphens, remove special characters
             const slug = this.value
                 .toLowerCase()
                 .replace(/\s+/g, '-')
@@ -1552,12 +1552,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 .replace(/\-\-+/g, '-')
                 .replace(/^-+/, '')
                 .replace(/-+$/, '');
-            
+
             slugInput.value = slug;
         });
     }
     
-    // 初始化Markdown编辑器
+    // Initialize Markdown editor
     let markdownEditor = null;
     const initMarkdownEditor = function() {
         const editorElement = document.querySelector('.markdown-editor');
@@ -1579,19 +1579,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     };
-    
-    // 页面加载时初始化编辑器
+
+    // Initialize editor on page load
     initMarkdownEditor();
     
-    // 表单验证
+    // Form validation
     const addGameForm = document.getElementById('addGameForm');
     if (addGameForm) {
         addGameForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // 阻止表单默认提交
-            
+            e.preventDefault(); // Prevent default form submission
+
             let isValid = true;
-            
-            // 检查必填字段
+
+            // Check required fields
             const requiredFields = this.querySelectorAll('[required]');
             requiredFields.forEach(field => {
                 if (!field.value.trim()) {
@@ -1601,12 +1601,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     field.classList.remove('is-invalid');
                 }
             });
-            
-            // 检查至少有一个游戏源：URL或文件
+
+            // Check at least one game source: URL or file
             const gameUrl = document.getElementById('id_game_url');
             const gameFile = document.getElementById('id_game_file');
-            
-            if ((!gameUrl.value || !gameUrl.value.trim()) && 
+
+            if ((!gameUrl.value || !gameUrl.value.trim()) &&
                 (!gameFile || !gameFile.files || gameFile.files.length === 0)) {
                 gameUrl.classList.add('is-invalid');
                 if (gameFile) gameFile.classList.add('is-invalid');
@@ -1615,84 +1615,84 @@ document.addEventListener('DOMContentLoaded', function() {
                 gameUrl.classList.remove('is-invalid');
                 if (gameFile) gameFile.classList.remove('is-invalid');
             }
-            
-            // 如果使用了Markdown编辑器，将其内容同步到textarea
+
+            // If Markdown editor is used, sync its content to textarea
             if (markdownEditor) {
                 markdownEditor.codemirror.save();
             }
             
             if (isValid) {
-                // 使用FormData收集表单数据
+                // Use FormData to collect form data
                 const formData = new FormData(this);
-                
-                // 设置提交按钮为加载状态
+
+                // Set submit button to loading state
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalBtnText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Saving..." %}';
-                
-                // 发送AJAX请求
+
+                // Send AJAX request
                 fetch(this.action, {
                     method: 'POST',
                     body: formData,
-                    credentials: 'same-origin' // 包含cookies
+                    credentials: 'same-origin' // Include cookies
                 })
                 .then(response => {
                     console.log(`Response status: ${response.status}`);
                     console.log(`Response headers:`, response.headers);
                     
                     if (response.redirected) {
-                        // 成功后重定向到管理页面
+                        // Redirect to admin page after success
                         console.log('Redirected to:', response.url);
                         window.location.href = response.url;
                     } else if (response.ok) {
-                        // 刷新当前页面
+                        // Refresh current page
                         console.log('Update successful, refreshing page');
                         window.location.reload();
                     } else {
-                        // 显示错误信息
+                        // Show error information
                         console.error('Server error response:', response.status);
-                        
+
                         return response.text().then(html => {
                             console.log('Error response body:', html.substring(0, 500) + '...');
-                            
-                            // 如果Django返回的是错误页面，则提取错误信息
+
+                            // If Django returns an error page, extract error information
                             const tempDiv = document.createElement('div');
                             tempDiv.innerHTML = html;
                             
-                            // 查找错误信息
+                            // Find error information
                             const errorLists = tempDiv.querySelectorAll('.errorlist');
                             if (errorLists.length > 0) {
                                 console.log('Found error lists:', errorLists.length);
-                                
-                                // 处理字段错误
+
+                                // Handle field errors
                                 errorLists.forEach(errorList => {
                                     const fieldName = errorList.closest('.form-row, .fieldWrapper')?.querySelector('label')?.getAttribute('for');
                                     console.log('Field with error:', fieldName);
-                                    
+
                                     const fieldInput = document.getElementById(fieldName);
                                     if (fieldInput) {
                                         fieldInput.classList.add('is-invalid');
-                                        
-                                        // 添加错误反馈
+
+                                        // Add error feedback
                                         const feedback = document.createElement('div');
                                         feedback.className = 'invalid-feedback';
                                         feedback.textContent = errorList.textContent.trim();
                                         console.log('Error message:', errorList.textContent.trim());
-                                        
-                                        // 移除任何现有的反馈
+
+                                        // Remove any existing feedback
                                         const existingFeedback = fieldInput.parentNode.querySelector('.invalid-feedback');
                                         if (existingFeedback) {
                                             existingFeedback.remove();
                                         }
-                                        
+
                                         fieldInput.parentNode.appendChild(feedback);
                                     } else {
                                         console.error('Field input not found:', fieldName);
                                     }
                                 });
                             } else {
-                                // 一般错误
+                                // General error
                                 console.error('No specific error lists found, showing general error');
                                 alert('Error updating game. Please check all fields and try again.');
                             }
@@ -1704,7 +1704,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert(`${translations.errorUpdatingGame}: ${error.message}`);
                 })
                 .finally(() => {
-                    // 恢复提交按钮状态
+                    // Restore submit button state
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalBtnText;
                 });
@@ -1712,60 +1712,60 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 模态框相关功能
+    // Modal related functionality
     const addGameModal = document.getElementById('addGameModal');
     if (addGameModal) {
-        // 模态框显示前重置表单
+        // Reset form before modal shows
         addGameModal.addEventListener('show.bs.modal', function() {
-            // 重置表单
+            // Reset form
             const form = document.getElementById('addGameForm');
             if (form) form.reset();
-            
-            // 重置缩略图预览
+
+            // Reset thumbnail preview
             if (thumbnailPreview) {
                 thumbnailPreview.innerHTML = '<div class="text-center text-muted"><i class="fas fa-image fa-3x mb-2"></i><p>{% trans "Image preview will appear here" %}</p></div>';
             }
-            
-            // 确保分类下拉框显示为默认选择状态
+
+            // Ensure category dropdown shows default selection state
             const categorySelect = document.getElementById('id_categories');
             if (categorySelect) {
                 categorySelect.selectedIndex = 0;
             }
         });
-        
-        // 模态框完全显示后初始化Markdown编辑器
+
+        // Initialize Markdown editor after modal is fully shown
         addGameModal.addEventListener('shown.bs.modal', function() {
-            // 销毁现有编辑器实例（如果存在）
+            // Destroy existing editor instance (if exists)
             if (markdownEditor) {
                 markdownEditor.toTextArea();
                 markdownEditor = null;
             }
-            // 重新初始化编辑器
+            // Re-initialize editor
             setTimeout(initMarkdownEditor, 100);
         });
         
-        // 模态框隐藏后清理资源
+        // Clean up resources after modal is hidden
         addGameModal.addEventListener('hidden.bs.modal', function() {
             const form = this.querySelector('form');
             if (form) {
                 form.reset();
-                
-                // 清除所有错误提示
+
+                // Clear all error prompts
                 form.querySelectorAll('.is-invalid').forEach(el => {
                     el.classList.remove('is-invalid');
                 });
-                
-                // 清除所有错误消息
+
+                // Clear all error messages
                 form.querySelectorAll('.invalid-feedback').forEach(el => {
                     el.remove();
                 });
-                
-                // 清除缩略图预览
+
+                // Clear thumbnail preview
                 if (thumbnailPreview) {
                     thumbnailPreview.innerHTML = '';
                 }
-                
-                // 销毁Markdown编辑器
+
+                // Destroy Markdown editor
                 if (markdownEditor) {
                     markdownEditor.toTextArea();
                     markdownEditor = null;
@@ -1774,12 +1774,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 初始化编辑游戏模态框
+    // Initialize edit game modal
     let editMarkdownEditor = null;
     const editGameModal = document.getElementById('editGameModal');
     const editGameButtons = document.querySelectorAll('.edit-game-btn');
-    
-    // 初始化编辑模态框中的Markdown编辑器
+
+    // Initialize Markdown editor in edit modal
     const initEditMarkdownEditor = function() {
         const editorElement = document.getElementById('edit_description');
         if (editorElement && typeof SimpleMDE !== 'undefined') {
@@ -1800,16 +1800,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     };
-    
-    // 编辑按钮点击事件
+
+    // Edit button click event
     editGameButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             const gameId = this.dataset.gameId;
             loadGameData(gameId);
         });
     });
-    
-    // 辅助函数：安全设置元素值
+
+    // Helper function: safely set element value
     function safeSetValue(elementId, value) {
         const element = document.getElementById(elementId);
         if (element) {

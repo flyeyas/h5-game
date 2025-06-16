@@ -11,7 +11,7 @@
 {% block extrastyle %}
 <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
 <style>
-/* 群组编辑页面专用样式 - 按原型设计 */
+/* Group edit page specific styles - based on prototype design */
 .group-edit-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -391,11 +391,11 @@
 </div>
 {% endif %}
 
-<!-- Toast容器 -->
+<!-- Toast Container -->
 <div class="toast-container position-fixed top-0 end-0 p-3"></div>
 
 {% block admin_change_form_document_ready %}
-    <!-- Django默认的admin_change_form_document_ready块内容 -->
+    <!-- Django default admin_change_form_document_ready block content -->
     <script id="django-admin-form-add-constants"
             src="{% static 'admin/js/change_form.js' %}"
             {% if adminform and add %}

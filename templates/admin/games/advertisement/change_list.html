@@ -1174,7 +1174,7 @@
     </div>
   </div>
 
-  <!-- 添加Google广告单元模态框 -->
+  <!-- Add Google Ad Unit Modal -->
   <div class="modal fade" id="addGoogleAdModal" tabindex="-1" aria-labelledby="addGoogleAdModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -1367,7 +1367,7 @@
     </div>
   </div>
 
-  <!-- 添加广告位置模态框 -->
+  <!-- Add Ad Placement Modal -->
   <div class="modal fade" id="addPlacementModal" tabindex="-1" aria-labelledby="addPlacementModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -1452,7 +1452,7 @@
     </div>
   </div>
 
-  <!-- 显示广告代码模态框 -->
+  <!-- Show Ad Code Modal -->
   <div class="modal fade" id="adCodeModal" tabindex="-1" aria-labelledby="adCodeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -1462,7 +1462,7 @@
         </div>
         <div class="modal-body">
           <div class="google-ad-code" id="adCodeContent">
-            <!-- 广告代码将在这里显示 -->
+            <!-- Ad code will be displayed here -->
           </div>
           <div class="mt-3">
             <button class="btn btn-outline-primary" onclick="copyAdCode()">
@@ -1540,7 +1540,7 @@
     </div>
   </div>
 
-  <!-- 显示广告位置代码模态框 -->
+  <!-- Show Ad Placement Code Modal -->
   <div class="modal fade" id="placementCodeModal" tabindex="-1" aria-labelledby="placementCodeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -1553,7 +1553,7 @@
             <i class="fas fa-info-circle me-2"></i>{% trans 'Use this code to display ads in the selected placement position.' %}
           </div>
           <div class="google-ad-code" id="placementCodeContent">
-            <!-- 广告位置代码将在这里显示 -->
+            <!-- Ad placement code will be displayed here -->
           </div>
           <div class="mt-3">
             <button class="btn btn-outline-primary" onclick="copyPlacementCode()">
@@ -1673,7 +1673,7 @@
         if (reportCTREl) reportCTREl.textContent = data.avg_ctr.toFixed(1) + '%';
       }
 
-      // 格式化数字显示
+      // Format number display
       function formatNumber(num) {
         if (num >= 1000000) {
           return (num / 1000000).toFixed(1) + 'M';
@@ -1683,7 +1683,7 @@
         return num.toString();
       }
 
-      // 搜索功能
+      // Search functionality
       const searchInput = document.getElementById('searchInput');
       if (searchInput) {
         searchInput.addEventListener('input', function() {
@@ -2552,7 +2552,7 @@
         }
       }
 
-      // 显示广告位置代码
+      // Show ad placement code
       function showPlacementCode(placement) {
         const placementCodes = {
           'header': '<!-- {% trans "Header Ad Placement" %} -->\n' +
@@ -2605,7 +2605,7 @@
         }
       }
 
-      // 获取CSRF Token
+      // Get CSRF Token
       function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -2621,7 +2621,7 @@
         return cookieValue;
       }
       
-      // 显示提示消息
+      // Show notification message
       function showToast(type, message) {
         const toastContainer = document.querySelector('.toast-container') || (() => {
           const container = document.createElement('div');
@@ -2651,14 +2651,14 @@
 
         toastContainer.appendChild(toast);
 
-        // 创建Bootstrap Toast实例并显示
+        // Create Bootstrap Toast instance and show
         const bsToast = new bootstrap.Toast(toast, {
           autohide: true,
           delay: 3000
         });
         bsToast.show();
 
-        // 3秒后移除
+        // Remove after 3 seconds
         setTimeout(() => {
           if (toast.parentNode) {
             toast.remove();
@@ -2666,10 +2666,10 @@
         }, 3500);
       }
 
-      // 复制文本到剪贴板
+      // Copy text to clipboard
       function copyToClipboard(text) {
         if (navigator.clipboard && window.isSecureContext) {
-          // 使用现代的 Clipboard API
+          // Use modern Clipboard API
           navigator.clipboard.writeText(text).then(function() {
             showToast('success', '{% trans "Copied to clipboard" %}');
           }).catch(function(err) {
@@ -2677,7 +2677,7 @@
             showToast('danger', '{% trans "Failed to copy to clipboard" %}');
           });
         } else {
-          // 回退到传统方法
+          // Fallback to traditional method
           const textArea = document.createElement('textarea');
           textArea.value = text;
           textArea.style.position = 'fixed';
@@ -2703,20 +2703,20 @@
         }
       }
 
-      // AdSense 设置编辑功能
+      // AdSense settings edit functionality
       function toggleAdSenseEdit() {
         const displayMode = document.getElementById('adsense-display-mode');
         const editMode = document.getElementById('adsense-edit-mode');
         const editBtn = document.getElementById('editAdSenseBtn');
 
         if (editMode.style.display === 'none') {
-          // 切换到编辑模式
+          // Switch to edit mode
           displayMode.style.display = 'none';
           editMode.style.display = 'block';
           editBtn.innerHTML = '<i class="fas fa-times me-1"></i> {% trans "Cancel" %}';
           editBtn.className = 'btn btn-outline-secondary btn-sm';
         } else {
-          // 切换到显示模式
+          // Switch to display mode
           displayMode.style.display = 'block';
           editMode.style.display = 'none';
           editBtn.innerHTML = '<i class="fas fa-edit me-1"></i> {% trans "Edit Settings" %}';
@@ -2728,19 +2728,19 @@
         toggleAdSenseEdit();
       }
 
-      // 添加编辑按钮事件监听器
+      // Add edit button event listener
       const editAdSenseBtn = document.getElementById('editAdSenseBtn');
       if (editAdSenseBtn) {
         editAdSenseBtn.addEventListener('click', toggleAdSenseEdit);
       }
 
-      // 添加取消按钮事件监听器
+      // Add cancel button event listener
       const cancelAdSenseBtn = document.getElementById('cancelAdSenseBtn');
       if (cancelAdSenseBtn) {
         cancelAdSenseBtn.addEventListener('click', cancelAdSenseEdit);
       }
 
-      // 处理 AdSense 设置表单提交
+      // Handle AdSense settings form submission
       const adsenseForm = document.getElementById('adsenseSettingsForm');
       if (adsenseForm) {
         adsenseForm.addEventListener('submit', function(e) {
@@ -2750,7 +2750,7 @@
           const submitBtn = this.querySelector('button[type="submit"]');
           const originalText = submitBtn.innerHTML;
 
-          // 显示加载状态
+          // Show loading state
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> {% trans "Saving..." %}';
           submitBtn.disabled = true;
 
@@ -2766,7 +2766,7 @@
           .then(data => {
             if (data.success) {
               showToast('success', data.message || '{% trans "AdSense settings updated successfully" %}');
-              // 刷新页面以显示更新后的状态
+              // Refresh page to show updated status
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
@@ -2779,14 +2779,14 @@
             showToast('danger', '{% trans "An error occurred while updating settings" %}');
           })
           .finally(() => {
-            // 恢复按钮状态
+            // Restore button state
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
           });
         });
       }
 
-      // AdSense 设置已在后端处理，这里只需要处理复制功能
+      // AdSense settings are handled on the backend, only need to handle copy functionality here
       function copyToClipboard(text) {
         if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(text).then(function() {
@@ -2796,7 +2796,7 @@
             showToast('danger', '{% trans "Failed to copy to clipboard" %}');
           });
         } else {
-          // 降级方案：使用传统的复制方法
+          // Fallback: use traditional copy method
           const textArea = document.createElement('textarea');
           textArea.value = text;
           document.body.appendChild(textArea);
@@ -2813,7 +2813,7 @@
         }
       }
 
-      // AdSense连接验证函数
+      // AdSense connection verification function
       window.verifyAdSenseConnection = function() {
         const publisherId = document.getElementById('adsense-publisher-id-input').value;
         const verifyBtn = document.getElementById('verify-adsense-btn');
@@ -2822,17 +2822,17 @@
         const successDiv = document.getElementById('verification-success');
         const errorDiv = document.getElementById('verification-error');
 
-        // 重置状态
+        // Reset status
         statusDiv.style.display = 'block';
         loadingDiv.style.display = 'block';
         successDiv.style.display = 'none';
         errorDiv.style.display = 'none';
 
-        // 禁用验证按钮
+        // Disable verification button
         verifyBtn.disabled = true;
         verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> {% trans "Verifying..." %}';
 
-        // 发送验证请求
+        // Send verification request
         fetch('{% url "admin:verify_adsense_connection" %}', {
           method: 'POST',
           headers: {
@@ -2848,17 +2848,17 @@
           loadingDiv.style.display = 'none';
 
           if (data.success && data.status === 'verified') {
-            // 验证成功
+            // Verification successful
             successDiv.style.display = 'block';
             document.getElementById('verification-success-message').textContent = data.message;
 
-            // 更新账户状态
+            // Update account status
             const accountStatusInput = document.getElementById('account-status-input');
             const accountStatusText = document.getElementById('account-status-text');
             accountStatusInput.value = '{% trans "Verified & Active" %}';
             accountStatusText.textContent = data.message;
 
-            // 如果有账户信息，显示支付信息
+            // If account info exists, show payment information
             if (data.account_info) {
               const paymentSection = document.getElementById('payment-info-section');
               const paymentSuccess = document.getElementById('payment-success');
@@ -2867,17 +2867,17 @@
               }
             }
 
-            // 5秒后隐藏成功消息
+            // Hide success message after 5 seconds
             setTimeout(() => {
               statusDiv.style.display = 'none';
             }, 5000);
 
           } else {
-            // 验证失败
+            // Verification failed
             errorDiv.style.display = 'block';
             document.getElementById('verification-error-message').textContent = data.message;
 
-            // 如果有建议，显示建议列表
+            // If suggestions exist, show suggestion list
             if (data.suggestions && data.suggestions.length > 0) {
               let suggestionHtml = data.message + '<br><small>{% trans "Suggestions:" %}<ul>';
               data.suggestions.forEach(suggestion => {
@@ -2895,7 +2895,7 @@
           document.getElementById('verification-error-message').textContent = '{% trans "Network error occurred during verification. Please try again." %}';
         })
         .finally(() => {
-          // 重新启用验证按钮
+          // Re-enable verification button
           verifyBtn.disabled = false;
           verifyBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i> {% trans "Verify Connection" %}';
         });

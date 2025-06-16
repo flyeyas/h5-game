@@ -5,9 +5,9 @@ from django.conf import settings
 
 def advertisements(request):
     """
-    广告上下文处理器，提供广告内容
+    Advertisement context processor that provides advertisement content
     """
-    # 默认返回空字典
+    # Return empty dictionary by default
     ads = {
         'header_ads': [],
         'sidebar_ads': [],
@@ -16,21 +16,21 @@ def advertisements(request):
     }
     
     current_time = timezone.now()
-    
-    # 获取所有活跃的广告
+
+    # Get all active advertisements
     active_ads = Advertisement.objects.filter(
         is_active=True
     ).filter(
-        # 开始日期为空或者已经开始
+        # Start date is empty or has already started
         (models.Q(start_date__isnull=True) | models.Q(start_date__lte=current_time))
     ).filter(
-        # 结束日期为空或者还未结束
+        # End date is empty or has not ended yet
         (models.Q(end_date__isnull=True) | models.Q(end_date__gte=current_time))
     )
-    
-    # 按位置分组广告
+
+    # Group advertisements by position
     for ad in active_ads:
-        # 增加广告展示次数
+        # Increase advertisement view count
         ad.view_count += 1
         ad.save(update_fields=['view_count'])
         
@@ -46,8 +46,8 @@ def advertisements(request):
     return ads
 
 def website_settings(request):
-    """添加网站设置到上下文"""
-    # 提供导航菜单的分类数据
+    """Add website settings to context"""
+    # Provide category data for navigation menu
     categories = Category.objects.filter(parent=None, is_active=True)[:10]
 
     return {

@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 #: games/admin.py:20
-msgid "分类"
+msgid "Categories"
 msgstr ""
 
 #: games/admin.py:33
@@ -35,7 +35,7 @@ msgid "Icon"
 msgstr ""
 
 #: games/apps.py:8
-msgid "游戏管理"
+msgid "Game Management"
 msgstr ""
 
 #: games/cms_plugins.py:10
@@ -47,23 +47,23 @@ msgid "Category List"
 msgstr ""
 
 #: games/models.py:9
-msgid "分类名称"
+msgid "Category Name"
 msgstr ""
 
 #: games/models.py:10 games/models.py:34
-msgid "URL别名"
+msgid "URL Slug"
 msgstr ""
 
 #: games/models.py:11
-msgid "分类描述"
+msgid "Category Description"
 msgstr ""
 
 #: games/models.py:12
-msgid "父级分类"
+msgid "Parent Category"
 msgstr ""
 
 #: games/models.py:14
-msgid "分类图片"
+msgid "Category Image"
 msgstr ""
 
 #: games/models.py:16 templates/admin/menu_item_form.html:90
@@ -75,119 +75,119 @@ msgid "Font Awesome 6+ icon class, e.g., \"fa-solid fa-gamepad\""
 msgstr ""
 
 #: games/models.py:17
-msgid "排序"
+msgid "Sort Order"
 msgstr ""
 
 #: games/models.py:18 games/models.py:42 games/models.py:82
-msgid "是否激活"
+msgid "Is Active"
 msgstr ""
 
 #: games/models.py:19 games/models.py:45 games/models.py:87
-msgid "创建时间"
+msgid "Created At"
 msgstr ""
 
 #: games/models.py:20 games/models.py:46 games/models.py:88
-msgid "更新时间"
+msgid "Updated At"
 msgstr ""
 
 #: games/models.py:23 games/models.py:24 games/models.py:39
-msgid "游戏分类"
+msgid "Game Categories"
 msgstr ""
 
 #: games/models.py:33
-msgid "游戏标题"
+msgid "Game Title"
 msgstr ""
 
 #: games/models.py:35
-msgid "游戏描述"
+msgid "Game Description"
 msgstr ""
 
 #: games/models.py:36
-msgid "游戏iframe地址"
+msgid "Game iframe URL"
 msgstr ""
 
 #: games/models.py:37
-msgid "游戏缩略图"
+msgid "Game Thumbnail"
 msgstr ""
 
 #: games/models.py:40
-msgid "游戏内容"
+msgid "Game Content"
 msgstr ""
 
 #: games/models.py:41
-msgid "是否推荐"
+msgid "Is Featured"
 msgstr ""
 
 #: games/models.py:43
-msgid "浏览次数"
+msgid "View Count"
 msgstr ""
 
 #: games/models.py:44
-msgid "评分"
+msgid "Rating"
 msgstr ""
 
 #: games/models.py:49 games/models.py:50
-msgid "游戏"
+msgid "Game"
 msgstr ""
 
 #: games/models.py:70
-msgid "页面顶部"
+msgid "Page Top"
 msgstr ""
 
 #: games/models.py:71
-msgid "侧边栏"
+msgid "Sidebar"
 msgstr ""
 
 #: games/models.py:72
-msgid "游戏间隙"
+msgid "Game Gap"
 msgstr ""
 
 #: games/models.py:73
-msgid "页面底部"
+msgid "Page Bottom"
 msgstr ""
 
 #: games/models.py:76
-msgid "广告名称"
+msgid "Advertisement Name"
 msgstr ""
 
 #: games/models.py:77
-msgid "广告位置"
+msgid "Advertisement Position"
 msgstr ""
 
 #: games/models.py:78
-msgid "广告图片"
+msgid "Advertisement Image"
 msgstr ""
 
 #: games/models.py:80
-msgid "广告链接"
+msgid "Advertisement URL"
 msgstr ""
 
 #: games/models.py:81
-msgid "HTML代码"
+msgid "HTML Code"
 msgstr ""
 
 #: games/models.py:81
-msgid "如果使用第三方广告代码，请填写此字段"
+msgid "Fill this field if using third-party advertisement code"
 msgstr ""
 
 #: games/models.py:83
-msgid "开始日期"
+msgid "Start Date"
 msgstr ""
 
 #: games/models.py:84
-msgid "结束日期"
+msgid "End Date"
 msgstr ""
 
 #: games/models.py:85
-msgid "点击次数"
+msgid "Click Count"
 msgstr ""
 
 #: games/models.py:86
-msgid "展示次数"
+msgid "View Count"
 msgstr ""
 
 #: games/models.py:91 games/models.py:92
-msgid "广告"
+msgid "Advertisement"
 msgstr ""
 
 #: games/models_cms.py:8
